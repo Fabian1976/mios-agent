@@ -1,0 +1,2 @@
+type=oracle
+select count(*) from gv$locked_object where locked_mode = 2

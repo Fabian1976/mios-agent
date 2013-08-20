@@ -1,0 +1,3 @@
+type=oracle
+select sum(blocks) from dba_data_files
+where tablespace_name = (select value from v$parameter where name = 'undo_tablespace')

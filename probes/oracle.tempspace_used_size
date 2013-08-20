@@ -1,0 +1,2 @@
+type=oracle
+select sum (bytes_used) from v$temp_extent_pool where tablespace_name = 'MIOS_ARG_2'

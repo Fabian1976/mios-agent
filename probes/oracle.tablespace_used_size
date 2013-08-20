@@ -1,0 +1,19 @@
+type=oracle
+select sizing.used_bytes
+  from (select datafile.tablespace_name,
+               datafile.bytes - freespace.free_size used_bytes
+          from (select tablespace_name,
+                       sum(bytes) bytes
+                  from (select df.tablespace_name,
+                               df.bytes
+                          from dba_data_files df)
+                 group by tablespace_name) datafile,
+               (select fs.tablespace_name,
+                       sum(fs.bytes) free_size
+                  from dba_free_space fs
+                 group by fs.tablespace_name) freespace
+                where datafile.tablespace_name = freespace.tablespace_name
+                  and datafile.tablespace_name <> (select upper(value)
+                                                     from v$parameter
+                                                    where name = 'undo_tablespace')) sizing
+                                                    where sizing.tablespace_name = 'MIOS_ARG_2'

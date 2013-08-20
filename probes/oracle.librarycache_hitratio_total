@@ -1,0 +1,2 @@
+type=oracle
+select sum(pinhits) / sum(pins) * 100 from v$librarycache

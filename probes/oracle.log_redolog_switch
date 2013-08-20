@@ -1,0 +1,2 @@
+type=oracle
+select * from (select sequence# from v$log_history order by first_time desc) where rownum = 1

@@ -1,0 +1,2 @@
+type=oracle
+select round(current_size,2) from v$memory_dynamic_components where component = 'DEFAULT buffer cache'

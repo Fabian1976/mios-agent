@@ -1,0 +1,59 @@
+#!/usr/bin/perl
+
+use strict;
+
+my $YEAR  = 2011;
+my $MONTH = 8;
+
+my $backup_dir="/var/log/smo/";
+chdir($backup_dir);
+
+my $ds = sprintf("%04d-%02d", $YEAR, $MONTH);
+my $i = 24;
+my $on = 0;
+my $backup;
+my $status;
+my $time;
+my $date;
+my $start_time;
+
+while ($i > 0) {
+    my $logfile = sprintf("server.log.%d", $i);
+    if ( ! -f $logfile) {
+        exit(0);
+    }
+    open(F, $backup_dir . $logfile);
+    while (<F>) {
+        if (/^((\d\d\d\d-\d\d)-\d\d)\s(\d\d:\d\d:\d\d)/) {
+            if ($2 eq $ds) {
+                $on = 1;
+                $date = $2;
+                $start_time = $3;
+            }
+        } elsif (/^(\d\d\d\d-\d\d)-\d\d / && $on) {
+            $on = 0;
+        }
+        if ($on && /^\[ INFO\]\sSMO-13046.*\s(\S+)$/) {
+            $backup = $1;
+        }
+        if ($on && /^\[ INFO\]\sSMO-13048.*\s(\S+)$/) {
+            $status = $1;
+        }
+        if ($on && /^\[ INFO\]\sSMO-13049.*\s(\S+)$/) {
+            $time = $1;
+            print sprintf("%s %s %-23s %s duration: %s\n", $date, $start_time, $backup, $status, $time);
+        }
+    }
+    #print "$logfile\n";
+    
+    $i--;
+}
+
+
+
+__DATA__
+2011-08-20 05:01:52,772 [Thread-65] [DEBUG]: operationResultActivityMap of size 1 add result for ID 2c9e809031e559050131e5590a890001
+[ INFO] SMO-13046: Operation GUID 2c9e809031e559050131e5590a890001 starting on Profile SCIFULL_DAILY_ONLINE
+[ INFO] SMO-13048: Backup Create Operation Status: SUCCESS
+[ INFO] SMO-13049: Elapsed Time: 0:01:29.093
+

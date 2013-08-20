@@ -1,0 +1,2 @@
+type=proc
+/proc/sys/fs/aio-max-nr 0 0

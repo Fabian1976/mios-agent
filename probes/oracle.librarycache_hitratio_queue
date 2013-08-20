@@ -1,0 +1,2 @@
+type=oracle
+select pinhits / pins * 100 from v$librarycache where namespace = 'QUEUE'

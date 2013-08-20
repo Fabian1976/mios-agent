@@ -1,0 +1,2 @@
+type=oracle
+select sum(maxbytes) from dba_data_files where tablespace_name = 'MIOS_ARG_2'

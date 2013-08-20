@@ -1,0 +1,2 @@
+type=oracle
+SELECT ROUND(SUM(decode(pool,NULL,decode(name,'log_buffer',(bytes),0),0)),2) FROM V$SGASTAT

@@ -1,0 +1,11 @@
+type=oracle
+select
+	case
+		when
+			(select retention from dba_tablespaces
+			where tablespace_name = ( select value from v$parameter where name = 'undo_tablespace' ) ) = 'NOGUARANTEE'
+			then activeblks
+		else 
+			activeblks + unexpiredblks
+		end
+from v$undostat where sysdate - 5/60/60/24 between begin_time and end_time

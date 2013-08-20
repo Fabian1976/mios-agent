@@ -1,0 +1,2 @@
+type=proc
+/proc/net/rpc/nfs 3 8

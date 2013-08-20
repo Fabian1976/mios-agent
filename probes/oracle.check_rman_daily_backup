@@ -1,0 +1,2 @@
+type=oracle
+select count(*) from V$RMAN_BACKUP_JOB_DETAILS where input_type = 'DB FULL' and end_time between sysdate - 1 and sysdate
