@@ -31,7 +31,6 @@
 #      (field 9) times the number of milliseconds spent doing I/O since the
 #      last update of this field.  This can provide an easy measure of both
 #      I/O completion time and the backlog that may be accumulating.
-#
 
 __author__    = "Jan van de Beek"
 __copyright__ = "Copyright (C) 2013 Vermont 24x7"
