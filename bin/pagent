@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # Explenation fields /proc/diskstats
-#   Field  1 -- # of reads completed
+#  Field  1 -- # of reads completed
 #      This is the total number of reads completed successfully.
 #  Field  2 -- # of reads merged, field 6 -- # of writes merged
 #      Reads and writes which are adjacent to each other may be merged for
@@ -34,7 +34,7 @@
 
 __author__    = "Jan van de Beek"
 __copyright__ = "Copyright (C) 2013 Vermont 24x7"
-__version__   = "2.1"
+__version__   = "2.2"
 
 import sys, os, time, getopt
 from threading import *
@@ -54,698 +54,718 @@ disk_stat = None
 
 class VPrint:
 
-    def __init__(self):
+	def __init__(self):
 
-        self.config = None
-        self.fd     = None
+		self.config = None
+		self.fd     = None
 
-        global config
-        self.config = config
+		global config
+		self.config = config
 
-        try:
-#            for i in self.config.output:
-#                if i != 'screen':
-            self.fd = open(self.config.logfile, "a")
-        except:
-            raise
+		try:
+			self.fd = open(self.config.logfile, "a")
+		except:
+			raise
 
-        message   = time.strftime("[%Y/%m/%d %H:%M:%S] ", time.localtime()) + "============================= Start pagent ======================================"
-#        for i in config.output:
-#            if i != 'screen':
-        self.fd.write(message + "\n")
-#            else:
-#                print message
+		message   = time.strftime("[%Y/%m/%d %H:%M:%S] ", time.localtime()) + "============================= Start pagent ======================================"
+		self.fd.write(message + "\n")
 
-    def log(self, message):
-        timestamp = time.strftime("[%Y/%m/%d %H:%M:%S] ", time.localtime())
-#        for i in self.config.output:
-#            if i != 'screen':
-        self.fd.write(timestamp + str(message) + "\n")
-        self.fd.flush()
-#            else:
-#                print timestamp + str(message)
+	def log(self, message):
+		timestamp = time.strftime("[%Y/%m/%d %H:%M:%S] ", time.localtime())
+		self.fd.write(timestamp + str(message) + "\n")
+		self.fd.flush()
 
 class Config:
 
-    def __init__(self, ini_file):
+	def __init__(self, ini_file):
 
-        self.config          = None
-        self.ini_file        = ''
-        self.output          = ''
-        self.listen_ip       = ''
-        self.listen_port     = 0
-        self.logfile         = ''
-        self.hostname        = ''
-        self.zabbix_server   = ''
-        self.zabbix_port     = 0
-        self.oracle_sids     = {}
-        self.oracle_oa_dir   = ''
-        try:
-            self.pagent_home     = os.environ['PAGENT_HOME']
-        except:
-            self.pagent_home = "/home/mios/pagent"
+		self.config          = None
+		self.ini_file        = ''
+		self.output          = ''
+		self.listen_ip       = ''
+		self.listen_port     = 0
+		self.logfile         = ''
+		self.hostname        = ''
+		self.zabbix_server   = ''
+		self.zabbix_port     = 0
+		self.oracle_sids     = {}
+		self.oracle_oa_dir   = ''
+		try:
+			self.pagent_home     = os.environ['PAGENT_HOME']
+		except:
+			self.pagent_home = "/home/mios/pagent"
 
-        self.ini_file = ini_file
-        if not os.path.exists(self.ini_file):
-            print "Can't open config file %s" % self.ini_file
+		self.ini_file = ini_file
+		if not os.path.exists(self.ini_file):
+			print "Can't open config file %s" % self.ini_file
 
-        self.config = ConfigParser.ConfigParser()
-        self.config.read(self.ini_file)
+		self.config = ConfigParser.ConfigParser()
+		self.config.read(self.ini_file)
 
-    def parse(self):
+	def parse(self):
 
-        try:
-            self.output         = self.config.get('common', 'output')
-            self.output         = [strip(x) for x in self.output]
-        except:
-#            self.output         = ['screen', '/tmp/debug.out']
-	    pass
+		try:
+			self.output         = self.config.get('common', 'output')
+			self.output         = [strip(x) for x in self.output]
+		except:
+			pass
 
-        try:
-            self.listen_ip      = self.config.get('common', 'listen_ip')
-        except:
-            self.listen_ip      = '0.0.0.0'
+		try:
+			self.listen_ip      = self.config.get('common', 'listen_ip')
+		except:
+			self.listen_ip      = '0.0.0.0'
 
-        try:
-            self.listen_port    = int(self.config.get('common', 'listen_port'))
-        except:
-            self.listen_port    = 10050
+		try:
+			self.listen_port    = int(self.config.get('common', 'listen_port'))
+		except:
+			self.listen_port    = 10050
 
-        try:
-            self.logfile        = self.config.get('common', 'logfile')
-        except:
-            self.logfile        = self.pagent_home + '/log/pagent.log'
+		try:
+			self.logfile        = self.config.get('common', 'logfile')
+		except:
+			self.logfile        = self.pagent_home + '/log/pagent.log'
 
-        try:
-            self.hostname       = self.config.get('common', 'hostname')
-        except:
-            self.hostname       = platform.node()
+		try:
+			self.hostname       = self.config.get('common', 'hostname')
+		except:
+			self.hostname       = platform.node()
 
-        try:
-            self.zabbix_server  = self.config.get('common', 'zabbix_server')
-        except:
-            self.zabbix_server  = 'pvermon1'
+		try:
+			self.zabbix_server  = self.config.get('common', 'zabbix_server')
+		except:
+			self.zabbix_server  = 'pvermon1'
 
-        try:
-            self.zabbix_port    = self.config.getint('common', 'zabbix_port')
-        except:
-            self.zabbix_port    = 10051
+		try:
+			self.zabbix_port    = self.config.getint('common', 'zabbix_port')
+		except:
+			self.zabbix_port    = 10051
 
-        print "INI file             : %s" % self.ini_file
-        print "Output               :", self.output
-        print "Listen on ip address : %s" % self.listen_ip
-        print "Listen on port       : %d" % self.listen_port
-        print "Log file             : %s" % self.logfile
-        print "Hostname             : %s" % self.hostname
-        print "Zabbix server        : %s" % self.zabbix_server
-        print "Zabbix server port   : %s" % self.zabbix_port
+		print "INI file             : %s" % self.ini_file
+		print "Output               :", self.output
+		print "Listen on ip address : %s" % self.listen_ip
+		print "Listen on port       : %d" % self.listen_port
+		print "Log file             : %s" % self.logfile
+		print "Hostname             : %s" % self.hostname
+		print "Zabbix server        : %s" % self.zabbix_server
+		print "Zabbix server port   : %s" % self.zabbix_port
 
-        sections = self.config.sections()
-        for section in sections:
-            if section == 'common':
-                continue
-            user                    = self.config.get(section, 'user', 'mios')
-            password                = self.config.get(section, 'password', 'mios')
-            self.oracle_sids[section] = (user, password)
-            self.oracle_oa_dir      = self.config.get(section, 'oa_dir', '/oracle/admin')
-            global OA_DIR
-            OA_DIR                  = self.oracle_oa_dir
-            print ""
-            print "Oracle SID           : %s" % section
-            print "Oracle user          : %s" % user
-            print "Oracle password      : %s" % password
-            print "Oracle OA_DIR        : %s" % self.oracle_oa_dir
-
+		sections = self.config.sections()
+		for section in sections:
+			if section == 'common':
+				continue
+			user                    = self.config.get(section, 'user', 'mios')
+			password                = self.config.get(section, 'password', 'mios')
+			self.oracle_sids[section] = (user, password)
+			self.oracle_oa_dir      = self.config.get(section, 'oa_dir', '/oracle/admin')
+			global OA_DIR
+			OA_DIR                  = self.oracle_oa_dir
+			print ""
+			print "Oracle SID           : %s" % section
+			print "Oracle user          : %s" % user
+			print "Oracle password      : %s" % password
+			print "Oracle OA_DIR        : %s" % self.oracle_oa_dir
 
 class Probes:
 
-    def __init__(self):
-        
-        self.probe_list = {}
+	def __init__(self):
 
-        for file in os.listdir(config.pagent_home + '/probes'):
-            f = open(config.pagent_home + '/probes/' + file)
-            type = f.readline()
-            try:
-                type = type.split('=')[1].strip()
-            except:
-                type = 'oracle'
-            action = f.read()
-            #print "type:", type," action:", action
-            self.probe_list[file] = [type, action]
-            f.close()
-    
-    def get_action(self, probe):
+		self.probe_list = {}
 
-        try:
-            return self.probe_list[probe][1]
-        except KeyError:
-            print "Load new probe:", probe
-            if os.path.exists(config.pagent_home + '/probes/' + probe):
-                f = open(config.pagent_home + '/probes/' + probe)
-                type = f.readline()
-                try:
-                    type = type.split('=')[1].strip()
-                except:
-                    type = 'oracle'
-                action = f.read()
-                self.probe_list[probe] = [type, action]
-                f.close()
-                return self.probe_list[probe][1]
-            else:
-                vp.log("No probe file: %s" % probe)
-                return -1
+		for file in os.listdir(config.pagent_home + '/probes'):
+			f = open(config.pagent_home + '/probes/' + file)
+			type = f.readline()
+			try:
+				type = type.split('=')[1].strip()
+			except:
+				type = 'oracle'
+			action = f.read()
+			#print "type:", type," action:", action
+			self.probe_list[file] = [type, action]
+			f.close()
+
+	def get_action(self, probe):
+
+		try:
+			return self.probe_list[probe][1]
+		except KeyError:
+			print "Load new probe:", probe
+			if os.path.exists(config.pagent_home + '/probes/' + probe):
+				f = open(config.pagent_home + '/probes/' + probe)
+				type = f.readline()
+				try:
+					type = type.split('=')[1].strip()
+				except:
+					type = 'oracle'
+				action = f.read()
+				self.probe_list[probe] = [type, action]
+				f.close()
+				return self.probe_list[probe][1]
+			else:
+				vp.log("No probe file: %s" % probe)
+				return -1
 
 class Oracle(object):
 
-    def __init__(self, instances):
+	def __init__(self, instances):
 
-        self.oracle_support  = 0
-        self.connections     = []
-        self.cursor          = []
-        self.version         = []
-        self.user            = []
-        self.password        = []
-        self.sids            = []
-        self.instances       = instances
-        self.last_connect    = []
+		self.oracle_support  = 0
+		self.connections     = []
+		self.cursor          = []
+		self.version         = []
+		self.user            = []
+		self.password        = []
+		self.sids            = []
+		self.instances       = instances
+		self.last_connect    = []
 
-        try:
-            import cx_Oracle
-            self.cx_Oracle = cx_Oracle
-            self.oracle_support = 1
-            vp.log("Sucessfully loaded cx_Oracle module")
-        except ImportError:
-            vp.log("Module cx_Oracle is not installed, please install it!")
-            raise
-        except:
-            vp.log("Error while loading Module cx_Oracle!")
-            raise
+		try:
+			import cx_Oracle
+			self.cx_Oracle = cx_Oracle
+			self.oracle_support = 1
+			vp.log("Sucessfully loaded cx_Oracle module")
+		except ImportError:
+			vp.log("Module cx_Oracle is not installed, please install it!")
+			raise
+		except:
+			vp.log("Error while loading Module cx_Oracle!")
+			raise
 
-        if self.oracle_support == 0:
-            return None
+		if self.oracle_support == 0:
+			return None
 
-        for instance in instances:
+		for instance in instances:
+			user, password = instances[instance]
 
-            user, password = instances[instance]
+			sql_file = OA_DIR + "/" + instance + "/sql/mios.sql"
+			if os.path.exists(sql_file):
+				sql = open(sql_file, "r")
+				line = sql.read()
+				m = re.search('^\s*connect\s+(\w+)\/(\S+)\s', line)
+				if m:
+					self.user.append(m.group(1))
+					self.password.append(m.group(2))
+				else:
+					vp.log("instance %s has no file %s" % (instance, sql_file))
+				sql.close()
+			elif user == '' or password == '':
+				vp.log("File: %s doesn't exist" % sql_file)
+				sys.exit(1)
 
-            sql_file = OA_DIR + "/" + instance + "/sql/mios.sql"
-            if os.path.exists(sql_file):
-                sql = open(sql_file, "r")
-                line = sql.read()
-                m = re.search('^\s*connect\s+(\w+)\/(\S+)\s', line)
-                if m:
-                    self.user.append(m.group(1))
-                    self.password.append(m.group(2))
-                else:
-                    vp.log("instance %s has no file %s" % (instance, sql_file))
-                sql.close()
-            elif user == '' or password == '':
-                vp.log("File: %s doesn't exist" % sql_file)
-                sys.exit(1)
+			self.user.append(user)
+			self.password.append(password)
+			self.sids.append(instance)
+			self.connections.append(None)
+			self.cursor.append(None)
+			self.version.append('')
+			indx = self.sids.index(instance)
+			self.last_connect.append(0)
+			self.connect(indx)
 
-            self.user.append(user)
-            self.password.append(password)
-            self.sids.append(instance)
-            self.connections.append(None)
-            self.cursor.append(None)
-            self.version.append('')
-            indx = self.sids.index(instance)
-            self.last_connect.append(0)
-            self.connect(indx)
+	def connect(self, indx):
 
-    def connect(self, indx):
+		self.connections[indx] = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
+		self.cursor[indx]      = self.connections[indx].cursor()
+		self.version[indx]    = self.connections[indx].version
+		vp.log("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
+		self.last_connect[indx] = time.time()
 
-        self.connections[indx] = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
-        self.cursor[indx]      = self.connections[indx].cursor()
-        self.version[indx]    = self.connections[indx].version
-        vp.log("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
-        self.last_connect[indx] = time.time()
+	def reconnect(self, data):
 
-    def reconnect(self, data):
+		if  data.find('[') > 0:
+			(item, arguments) = data.split('[')
+			arguments = arguments.replace(']','')
+		else:
+			vp.log("no oracle sid specified")
+			return None
+		arguments = arguments.replace(' ','')
+		arguments = arguments.rstrip()
+		sid = ''
+		if  data.find(',') > 0:
+			fields = arguments.split(',')
+			sid = fields[0]
+		else:
+			sid = arguments
 
-        if  data.find('[') > 0:
-            (item, arguments) = data.split('[')
-            arguments = arguments.replace(']','')
-        else:
-            vp.log("no oracle sid specified")
-            return None
-        arguments = arguments.replace(' ','')
-        arguments = arguments.rstrip()
-        sid = ''
-        if  data.find(',') > 0:
-            fields = arguments.split(',')
-            sid = fields[0]
-        else:
-            sid = arguments
+		if not sid in self.sids:
+			return
 
-        if not sid in self.sids:
-            return
+		indx = self.sids.index(sid)
+		print "indx", indx
 
-        indx = self.sids.index(sid)
-        print "indx", indx
+		self.connections[indx] = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
+		self.cursor[indx]      = self.connections[indx].cursor()
+		self.version[indx]    = self.connections[indx].version
+		vp.log("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
+		self.last_connect[indx] = time.time()
 
-        self.connections[indx] = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
-        self.cursor[indx]      = self.connections[indx].cursor()
-        self.version[indx]    = self.connections[indx].version
-        vp.log("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
-        self.last_connect[indx] = time.time()
+	def get(self, data):
 
+		fields=[]
 
-    def get(self, data):
+		if self.oracle_support == 0:
+			vp.log("Oracle not supported")
+			return None
 
-        fields=[]
+		if  data.find('[') > 0:
+			(item, arguments) = data.split('[')
+			arguments = arguments.replace(']','')
+		else:
+			vp.log("no oracle sid specified")
+			return None
+		arguments = arguments.replace(' ','')
+		arguments = arguments.rstrip()
+		sid = ''
+		if  data.find(',') > 0:
+			fields = arguments.split(',')
+			sid = fields[0]
+		else:
+			sid = arguments
+		top_item = item.split('.')
+		action=probes.get_action(item)
+		m = re.search('MIOS_ARG_2', action)
+		if m:
+			action = re.sub('MIOS_ARG_2', fields[1], action)
 
-        if self.oracle_support == 0:
-            vp.log("Oracle not supported")
-            return None
+		if not sid in self.sids:
+			return -1
 
-        if  data.find('[') > 0:
-            (item, arguments) = data.split('[')
-            arguments = arguments.replace(']','')
-        else:
-            vp.log("no oracle sid specified")
-            return None
-        arguments = arguments.replace(' ','')
-        arguments = arguments.rstrip()
-        sid = ''
-        if  data.find(',') > 0:
-            fields = arguments.split(',')
-            sid = fields[0]
-        else:
-            sid = arguments
-        top_item = item.split('.')
-        action=probes.get_action(item)
-        m = re.search('MIOS_ARG_2', action)
-        if m:
-            action = re.sub('MIOS_ARG_2', fields[1], action)
+		try:
+			indx = self.sids.index(sid)
+			try:
+				self.cursor[indx].execute(action)
+			except Exception, e:
+				print e
+				return -1
 
-        if not sid in self.sids:
-            return -1
+			try:
+				value = self.cursor[indx].fetchone()[0]
+			except Exception, e:
+				print e
+				return -1
 
-        try:
-            indx = self.sids.index(sid)
-            try:
-                self.cursor[indx].execute(action)
-            except Exception, e:
-                print e
-                return -1
-            
-            try:
-                value = self.cursor[indx].fetchone()[0]
-            except Exception, e:
-                print e
-                return -1
-            
-            vp.log("indx: %d sid: %s action: %s value: %s" % (indx, sid, action.rstrip("\n\r"), str(value)))
-            return value
-        except:
-            vp.log("Error in Oracle connection SID: %s" % sid)
-            raise
-            return None
-        
+			vp.log("indx: %d sid: %s action: %s value: %s" % (indx, sid, action.rstrip("\n\r"), str(value)))
+			return value
+		except:
+			vp.log("Error in Oracle connection SID: %s" % sid)
+			raise
+			return None
+
+	def execute(self, sid, query):
+
+		if self.oracle_support == 0:
+			vp.log("Oracle not supported")
+			return None
+
+		if not sid in self.sids:
+			return -1
+		try:
+			indx = self.sids.index(sid)
+			try:
+				self.cursor[indx].execute(query)
+			except Exception, e:
+				print e
+				return -1
+
+			try:
+				value = self.cursor[indx].fetchall()
+			except Exception, e:
+				print e
+				return -1
+
+			vp.log("indx: %d sid: %s action: %s value: %s" % (indx, sid, query, str(value)))
+			return value
+		except:
+			vp.log("Error in Oracle connection SID: %s" % sid)
+			raise
+			return None
 
 class DiskStats(object):
 
-    def __init__(self):
+	def __init__(self):
 
-        self.device_name = []
-        self.major_minor = []
-        self.filesystems = []
-        self.fs_type     = []
-        self.read_write  = []
-        self.no_probes   = 0
-        self.data        = []
-        self.last_update = 0
-        self.stats       = []
+		self.device_name = []
+		self.major_minor = []
+		self.filesystems = []
+		self.fs_type     = []
+		self.read_write  = []
+		self.no_probes   = 0
+		self.data        = []
+		self.last_update = 0
+		self.stats       = []
 
-        self.MIN_INTERVAL = 30
+		self.MIN_INTERVAL = 30
 
-        self.get_fs_mapping()
-        self.init_stats()
-        self.update_stats();
+		self.get_fs_mapping()
+		self.init_stats()
+		self.update_stats();
 
-    def init_stats(self):
+	def init_stats(self):
 
-        f = open('/proc/diskstats', 'r')
-        for line in f:
-             fields = line.split()
-             try:
-                a="%s-%s" % (fields[0],fields[1])
-                i = self.major_minor.index(a)
-                fs = self.filesystems[i]
-                self.data[i] = fields
-                now = time.time()
-                self.last_update = now
-                self.stats[i] = [0,0,0,0,0,0]
-             except:
-		        pass
-        f.close()
-        self.last_update = time.time()
-        self.no_probes+=1
+		f = open('/proc/diskstats', 'r')
+		for line in f:
+			fields = line.split()
+			try:
+				a="%s-%s" % (fields[0],fields[1])
+				i = self.major_minor.index(a)
+				fs = self.filesystems[i]
+				self.data[i] = fields
+				now = time.time()
+				self.last_update = now
+				self.stats[i] = [0,0,0,0,0,0]
+			except:
+				pass
+		f.close()
+		self.last_update = time.time()
+		self.no_probes+=1
 
-    def get_fs_mapping(self):
+	def get_fs_mapping(self):
 
-        f = open('/etc/mtab', 'r')
-        for line in f:
-            fields = line.split()
-            self.device_name.append(fields[0].replace("/dev/",""))
-            if fields[2] == "ext3":
-               stat  = os.stat(fields[0])
-               inode = stat.st_rdev
-               self.major_minor.append( "%d-%d" % ( os.major(inode), os.minor(inode)))
-               #print "%s-%s %s" % ( os.major(inode), os.minor(inode), fields[1] )
-               self.filesystems.append(fields[1])
-               self.fs_type.append(fields[2])
-               self.read_write.append(fields[3])
-               self.data.append([0,0,0,0,0,0,0,0,0,0,0])
-               self.stats.append([0,0,float(0.0),0,0,float(0.0)])
-               now = time.time()
-               self.last_update = now
-        f.close()
+		f = open('/etc/mtab', 'r')
+		for line in f:
+			fields = line.split()
+			self.device_name.append(fields[0].replace("/dev/",""))
+			if fields[2] == "ext3":
+				stat  = os.stat(fields[0])
+				inode = stat.st_rdev
+				self.major_minor.append( "%d-%d" % ( os.major(inode), os.minor(inode)))
+#				print "%s-%s %s" % ( os.major(inode), os.minor(inode), fields[1] )
+				self.filesystems.append(fields[1])
+				self.fs_type.append(fields[2])
+				self.read_write.append(fields[3])
+				self.data.append([0,0,0,0,0,0,0,0,0,0,0])
+				self.stats.append([0,0,float(0.0),0,0,float(0.0)])
+				now = time.time()
+				self.last_update = now
+		f.close()
 
-    def list_fs(self):
+	def list_fs(self):
 
-        for fs in filesystems:
-            print fd + "\n"
+		for fs in filesystems:
+			print fd + "\n"
 
-    def update_stats(self):
+	def update_stats(self):
 
-        f = open('/proc/diskstats', 'r')
-        diff = 0
-        if self.last_update > 0:
-           diff = time.time() - self.last_update
-        for line in f:
-             fields = line.split()
-             a="%s-%s" % (fields[0],fields[1])
-             try: 
-                i = self.major_minor.index(a)
-                try:
-                   self.stats[i] = [ ( int(fields[3]) - int(self.data[i][3]) ) / diff,
-                                     ( int(fields[5]) - int(self.data[i][5]) ) * 512 / diff,
-                                     float( ( float(fields[6]) - float(self.data[i][6]) ) / ( float(fields[3]) - float(self.data[i][3]) ) ),
-                                     ( int(fields[7]) - int(self.data[i][7]) ) / diff,
-                                     ( int(fields[9]) - int(self.data[i][9]) ) * 512 / diff,
-                                     float( ( float(fields[10]) - float(self.data[i][10]) ) / ( float(fields[7]) - float(self.data[i][7]) ) )
-                                   ]
-		
-                except:
-                   pass
-                #print "STATS: %d - %d - %d - %d" % ( self.stats[i][0], self.stats[i][1], self.stats[i][3], self.stats[i][4] )
-                self.data[i] = fields
-             except:
-                pass
-        f.close()
-        self.last_update = time.time()
+		f = open('/proc/diskstats', 'r')
+		diff = 0
+		if self.last_update > 0:
+			diff = time.time() - self.last_update
+		for line in f:
+			fields = line.split()
+			a="%s-%s" % (fields[0],fields[1])
+			try:
+				i = self.major_minor.index(a)
+				try:
+					self.stats[i] = [ ( int(fields[3]) - int(self.data[i][3]) ) / diff,
+								( int(fields[5]) - int(self.data[i][5]) ) * 512 / diff,
+								float( ( float(fields[6]) - float(self.data[i][6]) ) / ( float(fields[3]) - float(self.data[i][3]) ) ),
+								( int(fields[7]) - int(self.data[i][7]) ) / diff,
+								( int(fields[9]) - int(self.data[i][9]) ) * 512 / diff,
+								float( ( float(fields[10]) - float(self.data[i][10]) ) / ( float(fields[7]) - float(self.data[i][7]) ) )
+							]
 
-    def get_attr(self, fs, nof):
+				except:
+					pass
+#				print "STATS: %d - %d - %d - %d" % ( self.stats[i][0], self.stats[i][1], self.stats[i][3], self.stats[i][4] )
+				self.data[i] = fields
+			except:
+				pass
+		f.close()
+		self.last_update = time.time()
 
-        ret = 0
-        now = time.time()
-        if now - self.last_update > self.MIN_INTERVAL:
-           self.update_stats()
-        for line in self.filesystems:
-             i = self.filesystems.index(line)
-             _fs = self.filesystems[i]
-             if _fs == fs:
-                ret = self.stats[i][nof]
-        self.no_probes+=1
-        return ret
-        
+	def get_attr(self, fs, nof):
+
+		ret = 0
+		now = time.time()
+		if now - self.last_update > self.MIN_INTERVAL:
+			self.update_stats()
+		for line in self.filesystems:
+			 i = self.filesystems.index(line)
+			 _fs = self.filesystems[i]
+			 if _fs == fs:
+				ret = self.stats[i][nof]
+		self.no_probes+=1
+		return ret
 
 class ConnectionHandler:
 
-    def __init__(self, _conn):
+	def __init__(self, _conn):
 
-        self.conn = _conn
-        self.counter = 1
+		self.conn = _conn
+		self.counter = 1
 
-    def start(self):
+	def start(self):
 
-        mtype = "ZABBIX"
-        data = self.conn.recv(1024)
-        data_orig = data
-        vp.log("received: %s" % data.rstrip("\n\r"))
-        if len(data) >= 4 and data[0:4] == 'MIOS':
-            self.process_mios_call(data[4:])
-            self.conn.close()
-            return
+		mtype = "ZABBIX"
+		data = self.conn.recv(1024)
+		data_orig = data
+		vp.log("received: %s" % data.rstrip("\n\r"))
+		if len(data) >= 4 and data[0:4] == 'MIOS':
+			self.process_mios_call(data[4:])
+			self.conn.close()
+			return
 
-        # Handle probe update
-        if len(data) >= 4 and data[0:5] == 'PROBE':
-            self.update_probe(data[5:])
-            self.conn.close()
-            return
-            
-        data.replace(' ','')
-        item      = ''
-        arguments = ''
-        if  data.find('[') > 0:
-            (item, arguments) = data.split('[')
-            arguments = arguments.replace(']','')
-        else:
-            item = data
-            item = item.rstrip()
-        arguments = arguments.replace(' ','')
-        arguments = arguments.rstrip()
-        fields = arguments.split(',')
-        top_item = item.split('.')[0]
+		# Handle probe update
+		if len(data) >= 4 and data[0:5] == 'PROBE':
+			self.update_probe(data[5:])
+			self.conn.close()
+			return
 
-        if top_item == 'oracle':
-           value = oracle.get(data)
+		data.replace(' ','')
+		item      = ''
+		arguments = ''
+		if  data.find('[') > 0:
+			(item, arguments) = data.split('[')
+			arguments = arguments.replace(']','')
+		else:
+			item = data
+			item = item.rstrip()
+		arguments = arguments.replace(' ','')
+		arguments = arguments.rstrip()
+		fields = arguments.split(',')
+		top_item = item.split('.')[0]
 
-           if value == -1:
-               value = "ZBX_NOTSUPPORTED"
-           elif None:
-               while value == None:
-                   vp.log("sleep 5 seconds...")
-                   time.sleep(5)
-                   oracle.reconnect(data)
-                   value = oracle.get(data)
-                   if value != None:
-                       value = str(oracle.get(data))
-           else:
-               value = str(oracle.get(data))
-          
+		if top_item == 'oracle':
+			if item.split('.')[1] == 'tablespace_discover':
+				vp.log("DISCOVER TABLESPACES")
+				sid = arguments
+				rows = oracle.execute(sid, "select tablespace_name from dba_tablespaces where contents not in ('UNDO', 'TEMPORARY')")
+				if rows == -1:
+					value = "ZBX_NOTSUPPORTED"
+				else:
+					value = '{ "data":['
+					for row in rows:
+						vp.log('Tablespace found: %s' % row)
+						value += '{ "{#TBSNAME}":"%s" },' % row
+					value += '] }'
+			else:
+				value = oracle.get(data)
 
-           self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
-           self.conn.send( pack("Q%ds" % len(value), len(value), value) )
+				if value == -1:
+					value = "ZBX_NOTSUPPORTED"
+				elif None:
+					while value == None:
+						vp.log("sleep 5 seconds...")
+						time.sleep(5)
+						oracle.reconnect(data)
+						value = oracle.get(data)
+						if value != None:
+							value = str(oracle.get(data))
+				else:
+					value = str(oracle.get(data))
 
-        elif item == 'agent.ping':
-           vp.log("Received agent.ping")
-           sys.stdout.flush()
-           self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
-           self.conn.send( pack('QB', 1, 0x30 + 1 ))
+			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
+			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
 
-        elif item == 'perf.io':
-           args = { 'riops': 0, 'rbps': 1, 'rst': 2, 'wiops': 3, 'wbps': 4, 'wst': 5 }
-           self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
-           value = disk_stat.get_attr(fields[0], args[fields[1]] )
-           #vp.log("Received io arg1: %s arg2: %s send back: %s length: %d" % (arg1, arg2, value, len(str(value))))
+		elif item == 'agent.ping':
+#			vp.log("Received agent.ping")
+			sys.stdout.flush()
+			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
+			self.conn.send( pack('QB', 1, 0x30 + 1 ))
 
-           if fields[1][0:3] == 'rst' or fields[1][0:3] == 'wst':
-              value_s = str(value)
-              #print "float value: %s" % value_s
-              self.conn.send( pack("Q%ds" % len(value_s), len(value_s), str(value) ) )
+		elif item == 'perf.io':
+			args = { 'riops': 0, 'rbps': 1, 'rst': 2, 'wiops': 3, 'wbps': 4, 'wst': 5 }
+			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
+			value = disk_stat.get_attr(fields[0], args[fields[1]] )
+#			vp.log("Received io arg1: %s arg2: %s send back: %s length: %d" % (arg1, arg2, value, len(str(value))))
 
-           else:
-              value_s = str(int(value))
-              #print "int value: %s" % value_s
-              self.conn.send( pack("Q%ds" % len(value_s), len(value_s), str(value) ) )
+			if fields[1][0:3] == 'rst' or fields[1][0:3] == 'wst':
+				value_s = str(value)
+#				print "float value: %s" % value_s
+				self.conn.send( pack("Q%ds" % len(value_s), len(value_s), str(value) ) )
 
-        elif item == 'io.wt':
-           vp.log("Received io.wt")
-           self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
-           self.conn.send( pack('QB', 1, 0x30 + self.counter )[0:9] )
+			else:
+				value_s = str(int(value))
+#				print "int value: %s" % value_s
+				self.conn.send( pack("Q%ds" % len(value_s), len(value_s), str(value) ) )
 
-        elif item.split('.')[0] == 'oracle':
-            sub_item = item.split('.')[1]
-            ret = oracle.get(sub_item)
+		elif item == 'io.wt':
+			vp.log("Received io.wt")
+			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
+			self.conn.send( pack('QB', 1, 0x30 + self.counter )[0:9] )
 
-        elif top_item == 'proc':
+		elif item.split('.')[0] == 'oracle':
+			sub_item = item.split('.')[1]
+			ret = oracle.get(sub_item)
 
-            action = 0
-            file   = ''
-            row    = 0
-            col    = 0
-            value  = 0
+		elif top_item == 'proc':
 
-            action = probes.get_action(item)
+			action = 0
+			file   = ''
+			row    = 0
+			col    = 0
+			value  = 0
 
-            if action == -1:
-		# Let's give the job to the Zabbix agent
-           	s = socket(AF_INET, SOCK_STREAM)
-            	s.connect((config.zabbix_server, config.zabbix_port))
-            	s.send(data_orig)
-            	header = s.recv(5, MSG_WAITALL)
-            	bsize = s.recv(8, MSG_WAITALL)
-            	size = 0
-            	size = struct.unpack("Q", bsize)[0]
-            	message = s.recv(size, MSG_WAITALL)
-            	self.conn.send(header)
-            	self.conn.send(bsize + message)
-            	s.close()
-                self.conn.close()
-            	return
+			action = probes.get_action(item)
 
-            try:
-                file, row, col = action.split(' ')
-                row = int(row)
-                col = int(col)
-            except:
-                value = -1
+			if action == -1:
+				# Let's give the job to the Zabbix agent
+				s = socket(AF_INET, SOCK_STREAM)
+				s.connect((config.zabbix_server, config.zabbix_port))
+				s.send(data_orig)
+				header = s.recv(5, MSG_WAITALL)
+				bsize = s.recv(8, MSG_WAITALL)
+				size = 0
+				size = struct.unpack("Q", bsize)[0]
+				message = s.recv(size, MSG_WAITALL)
+				self.conn.send(header)
+				self.conn.send(bsize + message)
+				s.close()
+				self.conn.close()
+				return
 
-            if value == -1:
-                value = "ZBX_NOTSUPPORTED"
+			try:
+				file, row, col = action.split(' ')
+				row = int(row)
+				col = int(col)
+			except:
+				value = -1
 
-            else:
-                try:
-                    p = open(file, "r")
-                    r = 0
-                    c = 0
-                    while r <= row:
-                        line = p.readline()
-                        if r == row:
-                            field = line.split()
-                            value = field[col]
-                        r += 1
+			if value == -1:
+				value = "ZBX_NOTSUPPORTED"
 
-                    p.close()
-                except Exception, e:
-                    vp.log("Exception during proc probe: %s" % e)
-                    value = "ZBX_NOTSUPPORTED"
-                    
+			else:
+				try:
+					p = open(file, "r")
+					r = 0
+					c = 0
+					while r <= row:
+						line = p.readline()
+						if r == row:
+							field = line.split()
+							value = field[col]
+						r += 1
 
-            self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
-            self.conn.send( pack("Q%ds" % len(value), len(value), value) )
-
-
-        else:
-
-            s = socket(AF_INET, SOCK_STREAM)
-            s.connect((config.zabbix_server, config.zabbix_port))
-            s.send(data_orig)
-            header = s.recv(5, MSG_WAITALL)
-            bsize = s.recv(8, MSG_WAITALL)
-            size = 0
-            size = struct.unpack("Q", bsize)[0]
-            message = s.recv(size, MSG_WAITALL)
-            self.conn.send(header)
-            self.conn.send(bsize + message)
-            s.close()
-
-        self.conn.close()
-
-        def send_data(self, data):
-            self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
-            self.conn.close()
-            
-    def process_mios_call(self, data):
-
-        vp.log("Received MIOS call: %s" % data)
-        type, key, value = data.split('\0')
-        vp.log("type: %s key: %s value: %s" % (type, key, str(value)))
-        s = socket(AF_INET, SOCK_STREAM)
-        try:
-            s.connect((config.zabbix_server, config.zabbix_port))
-            ts = time.time()
-
-            message = "{\n\t\"request\":\"agent data\",\n\t\"data\":[\n\t\t{\n" \
-                    "\t\t\t\"host\":\"%s\",\n" \
-                    "\t\t\t\"key\":\"%s\",\n" \
-                    "\t\t\t\"value\":\"%d\"\n" \
-                    "\t\t\t\"clock\":%d\n"\
-                    "}\n" \
-                    "],\n" \
-                    "\t\"clock\":%d}" \
-                    % (config.hostname, key, int(value), ts, ts)
-
-            s.send(pack('4s B', 'ZBXD', 1 )[0:5] )
-            msize = len(message)
-            template = "Q%ds" % (msize)
-            s.send(pack(template, msize, message))
-            s.close()
-        except:
-            pass
-
-    def update_probe(self, data):
-
-        action      = data[0]
-        size_name   = int(data[1:10])
-        pointer     = 10 + size_name
-        name        = data[10:pointer]
-        size_data   = data[pointer:pointer + 9]
-        pointer     = pointer + 9
-        content     = data[pointer:]
-
-        f = open(config.pagent_home + "/probes/%s" % name, "w")
-        f.write(content)
-        f.close()
-        
-        
-        #data = self.conn.recv(1024)
+					p.close()
+				except Exception, e:
+					vp.log("Exception during proc probe: %s" % e)
+					value = "ZBX_NOTSUPPORTED"
 
 
+			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
+			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
+
+		else:
+
+			s = socket(AF_INET, SOCK_STREAM)
+			s.connect((config.zabbix_server, config.zabbix_port))
+			s.send(data_orig)
+			header = s.recv(5, MSG_WAITALL)
+			bsize = s.recv(8, MSG_WAITALL)
+			size = 0
+			size = struct.unpack("Q", bsize)[0]
+			message = s.recv(size, MSG_WAITALL)
+			self.conn.send(header)
+			self.conn.send(bsize + message)
+			s.close()
+
+		self.conn.close()
+
+	def send_data(self, data):
+		self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
+		self.conn.close()
+
+	def process_mios_call(self, data):
+
+		vp.log("Received MIOS call: %s" % data)
+		type, key, value = data.split('\0')
+		vp.log("type: %s key: %s value: %s" % (type, key, str(value)))
+		s = socket(AF_INET, SOCK_STREAM)
+		try:
+			s.connect((config.zabbix_server, config.zabbix_port))
+			ts = time.time()
+
+			message = "{\n\t\"request\":\"agent data\",\n\t\"data\":[\n\t\t{\n" \
+				"\t\t\t\"host\":\"%s\",\n" \
+				"\t\t\t\"key\":\"%s\",\n" \
+				"\t\t\t\"value\":\"%d\"\n" \
+				"\t\t\t\"clock\":%d\n"\
+				"}\n" \
+				"],\n" \
+				"\t\"clock\":%d}" \
+				% (config.hostname, key, int(value), ts, ts)
+
+			s.send(pack('4s B', 'ZBXD', 1 )[0:5] )
+			msize = len(message)
+			template = "Q%ds" % (msize)
+			s.send(pack(template, msize, message))
+			s.close()
+		except:
+			pass
+
+	def update_probe(self, data):
+
+		action      = data[0]
+		size_name   = int(data[1:10])
+		pointer     = 10 + size_name
+		name        = data[10:pointer]
+		size_data   = data[pointer:pointer + 9]
+		pointer     = pointer + 9
+		content     = data[pointer:]
+
+		f = open(config.pagent_home + "/probes/%s" % name, "w")
+		f.write(content)
+		f.close()
+
+#		data = self.conn.recv(1024)
 
 def main():
 
-    global vp
-    global config
-    global probes
-    global oracle
-    global disk_stat
-    
-    try:
-        pagent_home     = os.environ['PAGENT_HOME']
-    except:
-        pagent_home = "/home/mios/pagent"
+	global vp
+	global config
+	global probes
+	global oracle
+	global disk_stat
 
-    config_file = pagent_home + "/etc/" + sys.argv[0] + ".ini"
+	try:
+		pagent_home     = os.environ['PAGENT_HOME']
+	except:
+		pagent_home = "/home/mios/pagent"
 
-    try:
-        optlist, args = getopt.getopt(sys.argv[1:], 'c:', [])
-    except:
-        print "usage: %s -c <config file>" % (sys.argv[0])
+	config_file = pagent_home + "/etc/" + sys.argv[0] + ".ini"
 
-    for o, v in optlist:
-        if o == "-c":
-            config_file = v
+	try:
+		optlist, args = getopt.getopt(sys.argv[1:], 'c:', [])
+	except:
+		print "usage: %s -c <config file>" % (sys.argv[0])
 
-    config  = Config(config_file)
-    config.parse()
-    vp      = VPrint()
+	for o, v in optlist:
+		if o == "-c":
+			config_file = v
 
-    if len(sys.argv) == 1:
-        if os.fork(): sys.exit(0)
-        os.umask(0) 
-        os.setsid() 
-        if os.fork(): sys.exit(0)
-        sys.stdout.flush()
-        sys.stderr.flush()
-        stdin  = file('/dev/null', 'r')
-        stdout = file(config.logfile, 'a+')
-        stderr = file(config.logfile, 'a+', 0)
-        os.dup2(stdin.fileno(), sys.stdin.fileno())
-        os.dup2(stdout.fileno(), sys.stdout.fileno())
-        os.dup2(stderr.fileno(), sys.stderr.fileno())
+	config  = Config(config_file)
+	config.parse()
+	vp	= VPrint()
 
-    
-    disk_stat=DiskStats()
-    probes = Probes()
-    oracle = Oracle(config.oracle_sids)
-    s = socket(AF_INET,SOCK_STREAM)
-    s.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
-    s.bind((config.listen_ip, config.listen_port))
-    s.listen(5)
-    
-    while True:
-        try:
-            con,addr = s.accept()
-            ch = ConnectionHandler(con)
-            ch.start()
-        except:
-            pass
+	if len(sys.argv) == 1:
+		if os.fork(): sys.exit(0)
+		os.umask(0)
+		os.setsid()
+		if os.fork(): sys.exit(0)
+		sys.stdout.flush()
+		sys.stderr.flush()
+		stdin  = file('/dev/null', 'r')
+		stdout = file(config.logfile, 'a+')
+		stderr = file(config.logfile, 'a+', 0)
+		os.dup2(stdin.fileno(), sys.stdin.fileno())
+		os.dup2(stdout.fileno(), sys.stdout.fileno())
+		os.dup2(stderr.fileno(), sys.stderr.fileno())
+
+	disk_stat=DiskStats()
+	probes = Probes()
+	oracle = Oracle(config.oracle_sids)
+	s = socket(AF_INET,SOCK_STREAM)
+	s.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
+	s.bind((config.listen_ip, config.listen_port))
+	s.listen(5)
+
+	while True:
+		try:
+			con,addr = s.accept()
+			ch = ConnectionHandler(con)
+			ch.start()
+		except:
+			pass
 
 if __name__ == "__main__":
-   
-   main()
+
+	main()
