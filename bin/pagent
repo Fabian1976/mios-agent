@@ -49,32 +49,8 @@ import logging, logging.handlers
 
 oracle = None
 probes = None
-#vp     = None
 config = None
 disk_stat = None
-
-#class VPrint:
-
-#	def __init__(self):
-
-#		self.config = None
-#		self.fd     = None
-
-#		global config
-#		self.config = config
-
-#		try:
-#			self.fd = open(self.config.logfile, "a")
-#		except:
-#			raise
-
-#		message   = time.strftime("[%Y/%m/%d %H:%M:%S] ", time.localtime()) + "============================= Start pagent ======================================"
-#		self.fd.write(message + "\n")
-
-#	def log(self, message):
-#		timestamp = time.strftime("[%Y/%m/%d %H:%M:%S] ", time.localtime())
-#		self.fd.write(timestamp + str(message) + "\n")
-#		self.fd.flush()
 
 class Config:
 
@@ -567,16 +543,14 @@ class ConnectionHandler:
 			args = { 'riops': 0, 'rbps': 1, 'rst': 2, 'wiops': 3, 'wbps': 4, 'wst': 5 }
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			value = disk_stat.get_attr(fields[0], args[fields[1]] )
-#			logging.debug("Received io arg1: %s arg2: %s send back: %s length: %d" % (arg1, arg2, value, len(str(value))))
+			logging.debug("Received io arg1: %s arg2: %s send back: %s length: %d" % (arg1, arg2, value, len(str(value))))
 
 			if fields[1][0:3] == 'rst' or fields[1][0:3] == 'wst':
 				value_s = str(value)
-#				print "float value: %s" % value_s
 				self.conn.send( pack("Q%ds" % len(value_s), len(value_s), str(value) ) )
 
 			else:
 				value_s = str(int(value))
-#				print "int value: %s" % value_s
 				self.conn.send( pack("Q%ds" % len(value_s), len(value_s), str(value) ) )
 
 		elif item == 'io.wt':
