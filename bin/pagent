@@ -708,6 +708,12 @@ class ConnectionHandler:
 
 #		data = self.conn.recv(1024)
 
+def usage():
+	print "usage: %s -c <config file> (--loglevel=loglevel)" % (sys.argv[0])
+	print "\n<config file> - Location and name of the config file"
+	print "-l (--loglevel=) optional parameter. Defines loglevel (DEBUG, INFO, WARNING, ERROR, CRITICAL). Default = INFO"
+	print "The loglevel may also be configured in the config file"
+
 def main():
 
 	global vp
@@ -721,16 +727,22 @@ def main():
 	except:
 		pagent_home = "/home/mios/pagent"
 
-	config_file = pagent_home + "/etc/" + sys.argv[0] + ".ini"
-
 	try:
 		optlist, args = getopt.getopt(sys.argv[1:], 'c:', [])
 	except:
-		print "usage: %s -c <config file>" % (sys.argv[0])
+		usage()
+		sys.exit(-1)
+
+	if not optlist:
+		usage()
+		sys.exit(-1)
 
 	for o, v in optlist:
 		if o == "-c":
 			config_file = v
+		else:
+			usage()
+			sys.exit(-1)
 
 	config  = Config(config_file)
 	config.parse()
