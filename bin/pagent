@@ -32,7 +32,7 @@
 #      last update of this field.  This can provide an easy measure of both
 #      I/O completion time and the backlog that may be accumulating.
 
-__author__    = "Jan van de Beek"
+__author__    = "Jan van de Beek, Fabian van der Hoeven"
 __copyright__ = "Copyright (C) 2013 Vermont 24x7"
 __version__   = "2.2.1"
 
@@ -45,35 +45,36 @@ import re
 import ConfigParser
 import platform
 import getopt
+import logging, logging.handlers
 
 oracle = None
 probes = None
-vp     = None
+#vp     = None
 config = None
 disk_stat = None
 
-class VPrint:
+#class VPrint:
 
-	def __init__(self):
+#	def __init__(self):
 
-		self.config = None
-		self.fd     = None
+#		self.config = None
+#		self.fd     = None
 
-		global config
-		self.config = config
+#		global config
+#		self.config = config
 
-		try:
-			self.fd = open(self.config.logfile, "a")
-		except:
-			raise
+#		try:
+#			self.fd = open(self.config.logfile, "a")
+#		except:
+#			raise
 
-		message   = time.strftime("[%Y/%m/%d %H:%M:%S] ", time.localtime()) + "============================= Start pagent ======================================"
-		self.fd.write(message + "\n")
+#		message   = time.strftime("[%Y/%m/%d %H:%M:%S] ", time.localtime()) + "============================= Start pagent ======================================"
+#		self.fd.write(message + "\n")
 
-	def log(self, message):
-		timestamp = time.strftime("[%Y/%m/%d %H:%M:%S] ", time.localtime())
-		self.fd.write(timestamp + str(message) + "\n")
-		self.fd.flush()
+#	def log(self, message):
+#		timestamp = time.strftime("[%Y/%m/%d %H:%M:%S] ", time.localtime())
+#		self.fd.write(timestamp + str(message) + "\n")
+#		self.fd.flush()
 
 class Config:
 
@@ -201,7 +202,7 @@ class Probes:
 				f.close()
 				return self.probe_list[probe][1]
 			else:
-				vp.log("No probe file: %s" % probe)
+				logging.error("No probe file: %s" % probe)
 				return -1
 
 class Oracle(object):
@@ -222,12 +223,12 @@ class Oracle(object):
 			import cx_Oracle
 			self.cx_Oracle = cx_Oracle
 			self.oracle_support = 1
-			vp.log("Sucessfully loaded cx_Oracle module")
+			logging.info("Sucessfully loaded cx_Oracle module")
 		except ImportError:
-			vp.log("Module cx_Oracle is not installed, please install it!")
+			logging.critical("Module cx_Oracle is not installed, please install it!")
 			raise
 		except:
-			vp.log("Error while loading Module cx_Oracle!")
+			logging.critical("Error while loading Module cx_Oracle!")
 			raise
 
 		if self.oracle_support == 0:
@@ -245,10 +246,10 @@ class Oracle(object):
 					self.user.append(m.group(1))
 					self.password.append(m.group(2))
 				else:
-					vp.log("instance %s has no file %s" % (instance, sql_file))
+					logging.error("instance %s has no file %s" % (instance, sql_file))
 				sql.close()
 			elif user == '' or password == '':
-				vp.log("File: %s doesn't exist" % sql_file)
+				logging.error("File: %s doesn't exist" % sql_file)
 				sys.exit(1)
 
 			self.user.append(user)
@@ -266,7 +267,7 @@ class Oracle(object):
 		self.connections[indx] = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
 		self.cursor[indx]      = self.connections[indx].cursor()
 		self.version[indx]    = self.connections[indx].version
-		vp.log("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
+		logging.info("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
 		self.last_connect[indx] = time.time()
 
 	def reconnect(self, data):
@@ -275,7 +276,7 @@ class Oracle(object):
 			(item, arguments) = data.split('[')
 			arguments = arguments.replace(']','')
 		else:
-			vp.log("no oracle sid specified")
+			logging.error("no oracle sid specified")
 			return None
 		arguments = arguments.replace(' ','')
 		arguments = arguments.rstrip()
@@ -295,7 +296,7 @@ class Oracle(object):
 		self.connections[indx] = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
 		self.cursor[indx]      = self.connections[indx].cursor()
 		self.version[indx]    = self.connections[indx].version
-		vp.log("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
+		logging.info("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
 		self.last_connect[indx] = time.time()
 
 	def get(self, data):
@@ -303,14 +304,14 @@ class Oracle(object):
 		fields=[]
 
 		if self.oracle_support == 0:
-			vp.log("Oracle not supported")
+			logging.error("Oracle not supported")
 			return None
 
 		if  data.find('[') > 0:
 			(item, arguments) = data.split('[')
 			arguments = arguments.replace(']','')
 		else:
-			vp.log("no oracle sid specified")
+			logging.error("no oracle sid specified")
 			return None
 		arguments = arguments.replace(' ','')
 		arguments = arguments.rstrip()
@@ -343,17 +344,17 @@ class Oracle(object):
 				print e
 				return -1
 
-			vp.log("indx: %d sid: %s action: %s value: %s" % (indx, sid, action.rstrip("\n\r"), str(value)))
+			logging.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, action.rstrip("\n\r"), str(value)))
 			return value
 		except:
-			vp.log("Error in Oracle connection SID: %s" % sid)
+			logging.error("Error in Oracle connection SID: %s" % sid)
 			raise
 			return None
 
 	def execute(self, sid, query):
 
 		if self.oracle_support == 0:
-			vp.log("Oracle not supported")
+			logging.error("Oracle not supported")
 			return None
 
 		if not sid in self.sids:
@@ -372,10 +373,10 @@ class Oracle(object):
 				print e
 				return -1
 
-			vp.log("indx: %d sid: %s action: %s value: %s" % (indx, sid, query, str(value)))
+			logging.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, query, str(value)))
 			return value
 		except:
-			vp.log("Error in Oracle connection SID: %s" % sid)
+			logging.error("Error in Oracle connection SID: %s" % sid)
 			raise
 			return None
 
@@ -498,7 +499,7 @@ class ConnectionHandler:
 		mtype = "ZABBIX"
 		data = self.conn.recv(1024)
 		data_orig = data
-		vp.log("received: %s" % data.rstrip("\n\r"))
+		logging.info("received: %s" % data.rstrip("\n\r"))
 		if len(data) >= 4 and data[0:4] == 'MIOS':
 			self.process_mios_call(data[4:])
 			self.conn.close()
@@ -526,7 +527,7 @@ class ConnectionHandler:
 
 		if top_item == 'oracle':
 			if item.split('.')[1] == 'tablespace_discover':
-				vp.log("DISCOVER TABLESPACES")
+				logging.debug("DISCOVER TABLESPACES")
 				sid = arguments
 				rows = oracle.execute(sid, "select tablespace_name from dba_tablespaces where contents not in ('UNDO', 'TEMPORARY')")
 				if rows == -1:
@@ -534,7 +535,7 @@ class ConnectionHandler:
 				else:
 					value = '{ "data":['
 					for row in rows:
-						vp.log('Tablespace found: %s' % row)
+						logging.debug('Tablespace found: %s' % row)
 						value += '{ "{#TBSNAME}":"%s" },' % row
 					value += '] }'
 			else:
@@ -544,7 +545,7 @@ class ConnectionHandler:
 					value = "ZBX_NOTSUPPORTED"
 				elif None:
 					while value == None:
-						vp.log("sleep 5 seconds...")
+						logging.info("sleep 5 seconds...")
 						time.sleep(5)
 						oracle.reconnect(data)
 						value = oracle.get(data)
@@ -557,7 +558,7 @@ class ConnectionHandler:
 			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
 
 		elif item == 'agent.ping':
-#			vp.log("Received agent.ping")
+#			logging.info("Received agent.ping")
 			sys.stdout.flush()
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack('QB', 1, 0x30 + 1 ))
@@ -566,7 +567,7 @@ class ConnectionHandler:
 			args = { 'riops': 0, 'rbps': 1, 'rst': 2, 'wiops': 3, 'wbps': 4, 'wst': 5 }
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			value = disk_stat.get_attr(fields[0], args[fields[1]] )
-#			vp.log("Received io arg1: %s arg2: %s send back: %s length: %d" % (arg1, arg2, value, len(str(value))))
+#			logging.debug("Received io arg1: %s arg2: %s send back: %s length: %d" % (arg1, arg2, value, len(str(value))))
 
 			if fields[1][0:3] == 'rst' or fields[1][0:3] == 'wst':
 				value_s = str(value)
@@ -579,7 +580,7 @@ class ConnectionHandler:
 				self.conn.send( pack("Q%ds" % len(value_s), len(value_s), str(value) ) )
 
 		elif item == 'io.wt':
-			vp.log("Received io.wt")
+			logging.debug("Received io.wt")
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack('QB', 1, 0x30 + self.counter )[0:9] )
 
@@ -637,7 +638,7 @@ class ConnectionHandler:
 
 					p.close()
 				except Exception, e:
-					vp.log("Exception during proc probe: %s" % e)
+					logging.error("Exception during proc probe: %s" % e)
 					value = "ZBX_NOTSUPPORTED"
 
 
@@ -666,9 +667,9 @@ class ConnectionHandler:
 
 	def process_mios_call(self, data):
 
-		vp.log("Received MIOS call: %s" % data)
+		logging.info("Received MIOS call: %s" % data)
 		type, key, value = data.split('\0')
-		vp.log("type: %s key: %s value: %s" % (type, key, str(value)))
+		logging.debug("type: %s key: %s value: %s" % (type, key, str(value)))
 		s = socket(AF_INET, SOCK_STREAM)
 		try:
 			s.connect((config.zabbix_server, config.zabbix_port))
@@ -721,6 +722,9 @@ def main():
 	global probes
 	global oracle
 	global disk_stat
+	
+	config_file = ''
+	loglevel = 'INFO'
 
 	try:
 		pagent_home     = os.environ['PAGENT_HOME']
@@ -728,25 +732,34 @@ def main():
 		pagent_home = "/home/mios/pagent"
 
 	try:
-		optlist, args = getopt.getopt(sys.argv[1:], 'c:', [])
+		optlist, args = getopt.getopt(sys.argv[1:], 'lc:', ['loglevel='])
 	except:
 		usage()
 		sys.exit(-1)
 
 	if not optlist:
+		print "No options specified"
 		usage()
 		sys.exit(-1)
 
 	for o, v in optlist:
 		if o == "-c":
 			config_file = v
-		else:
-			usage()
-			sys.exit(-1)
+		elif o in ('-l', '--loglevel'):
+			loglevel = v
+
+	if not config_file:
+		print "No config file specified"
+		usage()
+		sys.exit(-1)
 
 	config  = Config(config_file)
 	config.parse()
-	vp	= VPrint()
+	numeric_loglevel = getattr(logging, loglevel.upper(), None)
+	if not isinstance(numeric_loglevel, int):
+		raise ValueError('Invalid log level: %s' % loglevel)
+	logging.basicConfig(level=numeric_loglevel, filename=config.logfile, format='[%(asctime)s] %(levelname)7s - %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
+	logging.info('============================= Start pagent ======================================')
 
 	if len(sys.argv) == 1:
 		if os.fork(): sys.exit(0)
