@@ -64,7 +64,7 @@ class Config:
 		self.logfile         = ''
 		self.loglevel        = ''
 		self.hostname        = ''
-		self.zabbix_server   = ''
+		self.zabbix_agent   = ''
 		self.zabbix_port     = 0
 		self.oracle_sids     = {}
 		self.oracle_oa_dir   = ''
@@ -115,9 +115,9 @@ class Config:
 			self.hostname       = platform.node()
 
 		try:
-			self.zabbix_server  = self.config.get('common', 'zabbix_server')
+			self.zabbix_agent  = self.config.get('common', 'zabbix_agent')
 		except:
-			self.zabbix_server  = 'pvermon1'
+			self.zabbix_agent  = 'localhost'
 
 		try:
 			self.zabbix_port    = self.config.getint('common', 'zabbix_port')
@@ -130,7 +130,7 @@ class Config:
 		print "Listen on port       : %d" % self.listen_port
 		print "Log file             : %s" % self.logfile
 		print "Hostname             : %s" % self.hostname
-		print "Zabbix server        : %s" % self.zabbix_server
+		print "Zabbix server        : %s" % self.zabbix_agent
 		print "Zabbix server port   : %s" % self.zabbix_port
 
 		sections = self.config.sections()
@@ -596,7 +596,7 @@ class ConnectionHandler:
 			if action == -1:
 				# Let's give the job to the Zabbix agent
 				s = socket(AF_INET, SOCK_STREAM)
-				s.connect((config.zabbix_server, config.zabbix_port))
+				s.connect((config.zabbix_agent, config.zabbix_port))
 				s.send(data_orig)
 				header = s.recv(5, MSG_WAITALL)
 				bsize = s.recv(8, MSG_WAITALL)
@@ -643,7 +643,7 @@ class ConnectionHandler:
 		else:
 
 			s = socket(AF_INET, SOCK_STREAM)
-			s.connect((config.zabbix_server, config.zabbix_port))
+			s.connect((config.zabbix_agent, config.zabbix_port))
 			s.send(data_orig)
 			header = s.recv(5, MSG_WAITALL)
 			bsize = s.recv(8, MSG_WAITALL)
@@ -667,7 +667,7 @@ class ConnectionHandler:
 		logging.debug("type: %s key: %s value: %s" % (type, key, str(value)))
 		s = socket(AF_INET, SOCK_STREAM)
 		try:
-			s.connect((config.zabbix_server, config.zabbix_port))
+			s.connect((config.zabbix_agent, config.zabbix_port))
 			ts = time.time()
 
 			message = "{\n\t\"request\":\"agent data\",\n\t\"data\":[\n\t\t{\n" \
