@@ -62,6 +62,7 @@ class Config:
 		self.listen_ip       = ''
 		self.listen_port     = 0
 		self.logfile         = ''
+		self.loglevel        = ''
 		self.hostname        = ''
 		self.zabbix_server   = ''
 		self.zabbix_port     = 0
@@ -102,6 +103,11 @@ class Config:
 			self.logfile        = self.config.get('common', 'logfile')
 		except:
 			self.logfile        = self.pagent_home + '/log/pagent.log'
+
+		try:
+			self.loglevel       = self.config.get('common', 'loglevel')
+		except:
+			self.loglevel       = 'INFO'
 
 		try:
 			self.hostname       = self.config.get('common', 'hostname')
@@ -713,7 +719,6 @@ def main():
 	global disk_stat
 	
 	config_file = ''
-	loglevel = 'INFO'
 
 	try:
 		pagent_home     = os.environ['PAGENT_HOME']
@@ -734,8 +739,6 @@ def main():
 	for o, v in optlist:
 		if o == "-c":
 			config_file = v
-		elif o in ('-l', '--loglevel'):
-			loglevel = v
 
 	if not config_file:
 		print "No config file specified"
@@ -744,6 +747,12 @@ def main():
 
 	config  = Config(config_file)
 	config.parse()
+	loglevel = config.loglevel
+	# Loglevel parameter trumps loglevel in config file so arguments have to be parsed again
+	for o, v in optlist:
+		if o in ('-l', '--loglevel'):
+			loglevel = v
+
 	numeric_loglevel = getattr(logging, loglevel.upper(), None)
 	if not isinstance(numeric_loglevel, int):
 		raise ValueError('Invalid log level: %s' % loglevel)
