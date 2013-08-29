@@ -67,6 +67,7 @@ class Config:
 		self.zabbix_port     = 0
 		self.oracle_sids     = {}
 		self.oracle_oa_dir   = ''
+		self.postgres_dbs    = {}
 		try:
 			self.pagent_home     = os.environ['PAGENT_HOME']
 		except:
@@ -130,17 +131,31 @@ class Config:
 		for section in sections:
 			if section == 'common':
 				continue
-			user                    = self.config.get(section, 'user', 'mios')
-			password                = self.config.get(section, 'password', 'mios')
-			self.oracle_sids[section] = (user, password)
-			self.oracle_oa_dir      = self.config.get(section, 'oa_dir', '/oracle/admin')
-			global OA_DIR
-			OA_DIR                  = self.oracle_oa_dir
-			print ""
-			print "Oracle SID           : %s" % section
-			print "Oracle user          : %s" % user
-			print "Oracle password      : %s" % password
-			print "Oracle OA_DIR        : %s" % self.oracle_oa_dir
+			dbtype = section.split('.')[0]
+			if dbtype == 'oracle':
+				sid                     = section.split('.')[1]
+				user                    = self.config.get(section, 'user')
+				password                = self.config.get(section, 'password')
+				self.oracle_sids[sid]   = (user, password)
+				self.oracle_oa_dir      = self.config.get(section, 'oa_dir')
+				global OA_DIR
+				OA_DIR                  = self.oracle_oa_dir
+				print ""
+				print "Oracle SID		: %s" % sid
+				print "Oracle user		: %s" % user
+				print "Oracle password		: %s" % password
+				print "Oracle OA_DIR		: %s" % self.oracle_oa_dir
+			if dbtype == 'postgres':
+				dbname			= section.split('.')[1]
+				schema			= self.config.get(section, 'schema')
+				password		= self.config.get(section, 'password')
+				self.postgres_dbs[dbname] = (user, password)
+				print ""
+				print "Postgres DB		: %s" % dbname
+				print "Postgres user		: %s" % user
+				print "Postgres password	: %s" % password
+			if dbtype not in ('oracle', 'postgres'):
+				print "Unsupported database type: %s" % dbtype
 
 class Probes:
 
