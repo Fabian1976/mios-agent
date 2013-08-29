@@ -153,11 +153,15 @@ class Config:
 				print "Oracle OA_DIR		: %s" % self.oracle_oa_dir
 			if dbtype == 'postgres':
 				dbname			= section.split('.')[1]
-				schema			= self.config.get(section, 'schema')
+				host			= self.config.get(section, 'host')
+				port			= self.config.get(section, 'port')
+				user			= self.config.get(section, 'user')
 				password		= self.config.get(section, 'password')
-				self.postgres_dbs[dbname] = (user, password)
+				self.postgres_dbs[dbname] = (host, port, user, password)
 				print ""
 				print "Postgres DB		: %s" % dbname
+				print "Postgres host		: %s" % host
+				print "Postgres port		: %s" % port
 				print "Postgres user		: %s" % user
 				print "Postgres password	: %s" % password
 			if dbtype not in ('oracle', 'postgres'):
@@ -261,11 +265,11 @@ class Oracle(object):
 
 	def connect(self, indx):
 
-		self.connections[indx] = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
-		self.cursor[indx]      = self.connections[indx].cursor()
-		self.version[indx]    = self.connections[indx].version
-		logging.info("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
+		self.connections[indx]  = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
+		self.cursor[indx]       = self.connections[indx].cursor()
+		self.version[indx]      = self.connections[indx].version
 		self.last_connect[indx] = time.time()
+		logging.info("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
 
 	def reconnect(self, data):
 
@@ -376,6 +380,63 @@ class Oracle(object):
 			logging.error("Error in Oracle connection SID: %s" % sid)
 			raise
 			return None
+
+class Postgres(object):
+
+	def __init__(self, instances):
+
+		self.postgres_support = 0
+		self.connections      = []
+		self.cursor           = []
+		self.version          = []
+		self.host             = []
+		self.port             = []
+		self.user             = []
+		self.password         = []
+		self.dbs              = []
+		self.instances        = instances
+		self.last_connect     = []
+
+		try:
+			import psycopg2
+			self.psycopg2 = psycopg2
+			self.postgres_support = 1
+			logging.info("Successfully loaded psycopg2 module")
+		except ImportError:
+			logging.error("Module psycopg2 is not installed, please install it!")
+			raise
+		except:
+			logging.error("Error while loading psycopg2 module!")
+			raise
+
+		if self.postgres_support == 0:
+			return None
+
+		for instance in instances:
+			host, port, user, password = instances[instance]
+			self.host.append(host)
+			self.port.append(port)
+			self.user.append(user)
+			self.password.append(password)
+			self.dbs.append(instance)
+			self.connections.append(None)
+			self.cursor.append(None)
+			self.version.append('')
+			indx = self.dbs.index(instance)
+			self.last_connect.append(0)
+			self.connect(indx)
+
+	def connect(self, indx):
+#		conn_string = "host='localhost' port='9999' dbname='tverdbp01' user='postgres' password='postgres'"
+#		conn = psycopg2.connect(conn_string)
+#		cursor = conn.cursor()
+#		cursor.execute('select hostid, host from zabbix.hosts')
+		self.connections[indx] = self.psycopg2.connect("host='%s' port='%s' dbname='%s' user='%s' password='%s'" % (self.host[indx], self.port[indx], self.dbs[indx], self.user[indx], self.password[indx]))
+		self.cursor[indx]      = self.connections[indx].cursor()
+		self.cursor[indx].execute('select version()')
+		self.version[indx]     = self.cursor[indx].fetchone()
+		self.last_connect      = time.time()
+		logging.info("Connect to Postgres version %s DB: %s" % (self.version[indx], self.dbs[indx]))
 
 class DiskStats(object):
 
@@ -768,6 +829,7 @@ def main():
 		raise ValueError('Invalid log level: %s' % loglevel)
 	logging.basicConfig(level=numeric_loglevel, filename=config.logfile, format='[%(asctime)s] %(levelname)7s - %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
 	logging.info('============================= Start pagent ======================================')
+	logging.info(config.postgres_dbs)
 
 	if len(sys.argv) == 1:
 		if os.fork(): sys.exit(0)
@@ -785,7 +847,16 @@ def main():
 
 	disk_stat=DiskStats()
 	probes = Probes()
-	oracle = Oracle(config.oracle_sids)
+	if not config.oracle_sids:
+		logging.info('No Oracle database present in config file')
+	else:
+		oracle = Oracle(config.oracle_sids)
+
+	if not config.postgres_dbs:
+		logging.info('No Postgres database present in config file')
+	else:
+		postgres = Postgres(config.postgres_dbs)
+
 	s = socket(AF_INET,SOCK_STREAM)
 	s.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
 	s.bind((config.listen_ip, config.listen_port))
