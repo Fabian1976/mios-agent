@@ -596,7 +596,11 @@ class ConnectionHandler:
 			if action == -1:
 				# Let's give the job to the Zabbix agent
 				s = socket(AF_INET, SOCK_STREAM)
-				s.connect((config.zabbix_agent, config.zabbix_port))
+				try:
+					s.connect((config.zabbix_agent, config.zabbix_port))
+					logging.debug("PROC: Connection to Zabbix agent on %s:%s succesfull" % (config.zabbix_agent, config.zabbix_port))
+				except:
+					logging.error("PROC: Connection to Zabbix agent on %s:%s failed" % (config.zabbix_agent, config.zabbix_port))
 				s.send(data_orig)
 				header = s.recv(5, MSG_WAITALL)
 				bsize = s.recv(8, MSG_WAITALL)
@@ -643,7 +647,11 @@ class ConnectionHandler:
 		else:
 
 			s = socket(AF_INET, SOCK_STREAM)
-			s.connect((config.zabbix_agent, config.zabbix_port))
+			try:
+				s.connect((config.zabbix_agent, config.zabbix_port))
+				logging.debug("ZBX: Connection to Zabbix agent on %s:%s succesfull" % (config.zabbix_agent, config.zabbix_port))
+			except:
+				logging.error("ZBX: Connection to Zabbix agent on %s:%s failed" % (config.zabbix_agent, config.zabbix_port))
 			s.send(data_orig)
 			header = s.recv(5, MSG_WAITALL)
 			bsize = s.recv(8, MSG_WAITALL)
@@ -668,6 +676,7 @@ class ConnectionHandler:
 		s = socket(AF_INET, SOCK_STREAM)
 		try:
 			s.connect((config.zabbix_agent, config.zabbix_port))
+			logging.debug("MIOS_call: Connection to Zabbix agent on %s:%s succesfull" % (config.zabbix_agent, config.zabbix_port))
 			ts = time.time()
 
 			message = "{\n\t\"request\":\"agent data\",\n\t\"data\":[\n\t\t{\n" \
@@ -686,6 +695,7 @@ class ConnectionHandler:
 			s.send(pack(template, msize, message))
 			s.close()
 		except:
+			logging.error("MIOS_call: Connection to Zabbix agent on %s:%s failed" % (config.zabbix_agent, config.zabbix_port))
 			pass
 
 	def update_probe(self, data):
