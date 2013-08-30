@@ -306,7 +306,11 @@ class Oracle(object):
 		indx = self.sids.index(sid)
 		logging.debug("indx: %s" % indx)
 
-		self.connections[indx] = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
+		try:
+			self.connections[indx] = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
+		except Exception, e:
+			logging.critical("Unable to connect to Oracle")
+			logging.critical("ORA: Additional information: %s" % e)
 		self.cursor[indx]      = self.connections[indx].cursor()
 		self.version[indx]    = self.connections[indx].version
 		logging.info("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
@@ -699,12 +703,10 @@ class ConnectionHandler:
 					value += '] }'
 			else:
 				value = oracle.get(data)
-				logging.info("Value1: %s" % value)
 				if value == -1:
 					value = "ZBX_NOTSUPPORTED"
-					logging.info("Value2: %s" % value)
 				elif value == -2:
-					logging.info("Value3: %s, force reconnect" % value)
+					logging.info("ORA: Lost connection. Trying to reconnect" % value)
 					while value == -2:
 						logging.info("sleep 5 seconds...")
 						time.sleep(5)
