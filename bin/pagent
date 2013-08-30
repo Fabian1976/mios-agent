@@ -93,7 +93,7 @@ class Config:
 		try:
 			self.listen_ip      = self.config.get('common', 'listen_ip')
 		except:
-			self.listen_ip      = '0.0.0.0'
+			self.listen_ip      = 'localhost'
 
 		try:
 			self.listen_port    = int(self.config.get('common', 'listen_port'))
@@ -125,6 +125,7 @@ class Config:
 		except:
 			self.zabbix_port    = 10051
 
+		print "[common]"
 		print "INI file             : %s" % self.ini_file
 		print "Output               :", self.output
 		print "Listen on ip address : %s" % self.listen_ip
@@ -148,6 +149,7 @@ class Config:
 				global OA_DIR
 				OA_DIR                  = self.oracle_oa_dir
 				print ""
+				print section
 				print "Oracle SID		: %s" % sid
 				print "Oracle user		: %s" % user
 				print "Oracle password		: %s" % password
@@ -160,6 +162,7 @@ class Config:
 				password		= self.config.get(section, 'password')
 				self.postgres_dbs[dbname] = (host, port, user, password)
 				print ""
+				print section
 				print "Postgres DB		: %s" % dbname
 				print "Postgres host		: %s" % host
 				print "Postgres port		: %s" % port
@@ -180,9 +183,10 @@ class Probes:
 			try:
 				type = type.split('=')[1].strip()
 			except:
-				type = 'oracle'
+				logging.error("Found probes with no type definition on the first line: %s" % file)
+				type = 'unknown'
 			action = f.read()
-			#print "type:", type," action:", action
+			logging.debug("type: %s, action: %s" % (type, action))
 			self.probe_list[file] = [type, action]
 			f.close()
 
@@ -198,7 +202,8 @@ class Probes:
 				try:
 					type = type.split('=')[1].strip()
 				except:
-					type = 'oracle'
+					logging.error("Found probes with no type definition on the first line: %s" % probe)
+					type = 'unknown'
 				action = f.read()
 				self.probe_list[probe] = [type, action]
 				f.close()
@@ -290,10 +295,12 @@ class Oracle(object):
 			sid = arguments
 
 		if not sid in self.sids:
+			logging.error("Unknown SID: %s" % sid)
+			logging.error("Additional info: %s" % data)
 			return
 
 		indx = self.sids.index(sid)
-		print "indx", indx
+		logging.debug("indx: %s" % indx)
 
 		self.connections[indx] = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
 		self.cursor[indx]      = self.connections[indx].cursor()
@@ -330,6 +337,7 @@ class Oracle(object):
 			action = re.sub('MIOS_ARG_2', fields[1], action)
 
 		if not sid in self.sids:
+			logging.error("SID not found in list of SIDS from config file")
 			return -1
 
 		try:
@@ -337,13 +345,15 @@ class Oracle(object):
 			try:
 				self.cursor[indx].execute(action)
 			except Exception, e:
-				print e
+				logging.error("ORA: Failed to execute query: %s" % action)
+				logging.error("ORA: Additional info: %s" % e)
 				return -1
 
 			try:
 				value = self.cursor[indx].fetchone()[0]
 			except Exception, e:
-				print e
+				logging.error("ORA: Failed to fetch result from resultset")
+				logging.error("ORA: Additional info: %s" % e)
 				return -1
 
 			logging.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, action.rstrip("\n\r"), str(value)))
@@ -366,13 +376,15 @@ class Oracle(object):
 			try:
 				self.cursor[indx].execute(query)
 			except Exception, e:
-				print e
+				logging.error("ORA: Failed to execute query: %s" % action)
+				logging.error("ORA: Additional info: %s" % e)
 				return -1
 
 			try:
 				value = self.cursor[indx].fetchall()
 			except Exception, e:
-				print e
+				logging.error("ORA: Failed to fetch resultset")
+				logging.error("ORA: Additional info: %s" % e)
 				return -1
 
 			logging.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, query, str(value)))
@@ -503,13 +515,15 @@ class Postgres(object):
 			try:
 				self.cursor[indx].execute(action)
 			except Exception, e:
-				logging.error(e)
+				logging.error("PG: Failed to execute query: %s" % action)
+				logging.error("PG: Additional info: %s" % e)
 				return -1
 
 			try:
 				value = self.cursor[indx].fetchone()[0]
 			except Exception, e:
-				logging.error(e)
+				logging.error("PG: Failed to fetch result from resultset")
+				logging.error("PG: Additional info: %s" % e)
 				return -1
 
 			logging.debug("indx: %d db: %s action: %s value: %s" % (indx, db, action.rstrip("\n\r"), str(value)))
@@ -568,7 +582,7 @@ class DiskStats(object):
 				stat  = os.stat(fields[0])
 				inode = stat.st_rdev
 				self.major_minor.append( "%d-%d" % ( os.major(inode), os.minor(inode)))
-#				print "%s-%s %s" % ( os.major(inode), os.minor(inode), fields[1] )
+				logging.debug("%s-%s %s" % ( os.major(inode), os.minor(inode), fields[1] ))
 				self.filesystems.append(fields[1])
 				self.fs_type.append(fields[2])
 				self.read_write.append(fields[3])
@@ -605,7 +619,7 @@ class DiskStats(object):
 
 				except:
 					pass
-#				print "STATS: %d - %d - %d - %d" % ( self.stats[i][0], self.stats[i][1], self.stats[i][3], self.stats[i][4] )
+				logging.debug("STATS: %d - %d - %d - %d" % ( self.stats[i][0], self.stats[i][1], self.stats[i][3], self.stats[i][4] ))
 				self.data[i] = fields
 			except:
 				pass
@@ -711,7 +725,6 @@ class ConnectionHandler:
 			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
 
 		elif item == 'agent.ping':
-#			logging.info("Received agent.ping")
 			sys.stdout.flush()
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack('QB', 1, 0x30 + 1 ))
