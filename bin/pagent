@@ -271,7 +271,11 @@ class Oracle(object):
 
 	def connect(self, indx):
 
-		self.connections[indx]  = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
+		try:
+			self.connections[indx]  = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
+		except Exception, e:
+			logging.critical("Unable to connect to Oracle")
+			logging.critical("ORA: Additional information: %s" % e)
 		self.cursor[indx]       = self.connections[indx].cursor()
 		self.version[indx]      = self.connections[indx].version
 		self.last_connect[indx] = time.time()
@@ -347,7 +351,11 @@ class Oracle(object):
 			except Exception, e:
 				logging.error("ORA: Failed to execute query: %s" % action)
 				logging.error("ORA: Additional info: %s" % e)
-				return -1
+				ORA_error = e.split(':')[0]
+				if ORA_error == 'ORA-03113': #Not connected to Oracle
+					return -2 #Forces parent to reconnect
+				else:
+					return -1
 
 			try:
 				value = self.cursor[indx].fetchone()[0]
@@ -360,8 +368,7 @@ class Oracle(object):
 			return value
 		except:
 			logging.error("Error in Oracle connection SID: %s" % sid)
-			raise
-			return None
+			return -2
 
 	def execute(self, sid, query):
 
@@ -391,8 +398,7 @@ class Oracle(object):
 			return value
 		except:
 			logging.error("Error in Oracle connection SID: %s" % sid)
-			raise
-			return None
+			return -2
 
 class Postgres(object):
 
@@ -693,17 +699,19 @@ class ConnectionHandler:
 					value += '] }'
 			else:
 				value = oracle.get(data)
-
+				logging.info("Value1: %s" % value)
 				if value == -1:
 					value = "ZBX_NOTSUPPORTED"
-				elif None:
-					while value == None:
+					logging.info("Value2: %s" % value)
+				elif value == -2:
+					logging.info("Value3: %s, force reconnect" % value)
+					while value == -2:
 						logging.info("sleep 5 seconds...")
 						time.sleep(5)
 						oracle.reconnect(data)
 						value = oracle.get(data)
-						if value != None:
-							value = str(oracle.get(data))
+						if value != -2:
+							value = str(value)
 				else:
 					value = str(value)
 
