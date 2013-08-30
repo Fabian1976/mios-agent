@@ -691,7 +691,7 @@ class ConnectionHandler:
 						if value != None:
 							value = str(oracle.get(data))
 				else:
-					value = str(oracle.get(data))
+					value = str(value)
 
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
@@ -705,7 +705,7 @@ class ConnectionHandler:
 				#reconnect
 				pass
 			else:
-				value = str(postgres.get(data))
+				value = str(value)
 
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
