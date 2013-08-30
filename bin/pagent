@@ -51,6 +51,7 @@ oracle = None
 probes = None
 config = None
 disk_stat = None
+postgres = None
 
 class Config:
 
@@ -427,16 +428,96 @@ class Postgres(object):
 			self.connect(indx)
 
 	def connect(self, indx):
-#		conn_string = "host='localhost' port='9999' dbname='tverdbp01' user='postgres' password='postgres'"
-#		conn = psycopg2.connect(conn_string)
-#		cursor = conn.cursor()
-#		cursor.execute('select hostid, host from zabbix.hosts')
+
 		self.connections[indx] = self.psycopg2.connect("host='%s' port='%s' dbname='%s' user='%s' password='%s'" % (self.host[indx], self.port[indx], self.dbs[indx], self.user[indx], self.password[indx]))
 		self.cursor[indx]      = self.connections[indx].cursor()
 		self.cursor[indx].execute('select version()')
 		self.version[indx]     = self.cursor[indx].fetchone()
 		self.last_connect      = time.time()
 		logging.info("Connect to Postgres version %s DB: %s" % (self.version[indx], self.dbs[indx]))
+
+	def reconnect(self,data):
+
+		if data.find('[') > 0:
+			(item, arguments) = data.split('[')
+			arguments = arguments.replace(']','')
+		else:
+			logging.error("no postgres db specified")
+			return None
+		arguments = arguments.replace(' ','')
+		arguments = arguments.rstrip()
+		db = ''
+		if data.find(',') > 0:
+			fields = arguments.split(',')
+			db = fields[0]
+		else:
+			db = arguments
+
+		if not db in self.dbs:
+			return
+
+		indx = self.dbs.index(db)
+		print "indx", indx
+
+		self.connections[indx] = self.psycopg2.connect("host='%s' port='%s' dbname='%s' user='%s' password='%s'" % (self.host[indx], self.port[indx], self.dbs[indx], self.user[indx], self.password[indx]))
+		self.cursor[indx]      = self.connections[indx].cursor()
+		self.cursor[indx].execute('select version()')
+		self.version[indx]     = self.cursor[indx].fetchone()
+		self.last_connect      = time.time()
+		logging.info("Connect to Postgres version %s DB: %s" % (self.version[indx], self.dbs[indx]))
+
+	def get(self, data):
+
+		fields = []
+
+		if self.postgres_support == 0:
+			logging.error("Postgres not supported")
+			return None
+
+		if  data.find('[') > 0:
+			(item, arguments) = data.split('[')
+			arguments = arguments.replace(']','')
+		else:
+			logging.error("no postgres db specified")
+			return None
+		arguments = arguments.replace(' ','')
+		arguments = arguments.rstrip()
+		db = ''
+		if  data.find(',') > 0:
+			fields = arguments.split(',')
+			db = fields[0]
+		else:
+			db = arguments
+		top_item = item.split('.')
+		action=probes.get_action(item)
+		m = re.search('MIOS_ARG_2', action)
+		if m:
+			action = re.sub('MIOS_ARG_2', fields[1], action)
+
+		if not db in self.dbs:
+			logging.error("DB not found in list of DBS from config file")
+			return -1
+
+		try:
+			indx = self.dbs.index(db)
+			try:
+				self.cursor[indx].execute(action)
+			except Exception, e:
+				logging.error(e)
+				return -1
+
+			try:
+				value = self.cursor[indx].fetchone()[0]
+			except Exception, e:
+				logging.error(e)
+				return -1
+
+			logging.debug("indx: %d db: %s action: %s value: %s" % (indx, db, action.rstrip("\n\r"), str(value)))
+			return value
+		except:
+			logging.error("Error in Postgres connection DB: %s" % db)
+			raise
+			return None
 
 class DiskStats(object):
 
@@ -615,6 +696,20 @@ class ConnectionHandler:
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
 
+		elif top_item == 'postgres':
+			value = postgres.get(data)
+
+			if value == -1:
+				value = "ZBX_NOTSUPPORTED"
+			elif None:
+				#reconnect
+				pass
+			else:
+				value = str(postgres.get(data))
+
+			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
+			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
+
 		elif item == 'agent.ping':
 #			logging.info("Received agent.ping")
 			sys.stdout.flush()
@@ -643,6 +738,10 @@ class ConnectionHandler:
 		elif item.split('.')[0] == 'oracle':
 			sub_item = item.split('.')[1]
 			ret = oracle.get(sub_item)
+
+		elif item.split('.')[0] == 'postgres':
+			sub_item = item.split('.')[1]
+			ret = postgres.get(sub_item)
 
 		elif top_item == 'proc':
 
@@ -788,6 +887,7 @@ def main():
 	global probes
 	global oracle
 	global disk_stat
+	global postgres
 	
 	config_file = ''
 
