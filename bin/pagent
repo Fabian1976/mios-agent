@@ -32,9 +32,9 @@
 #      last update of this field.  This can provide an easy measure of both
 #      I/O completion time and the backlog that may be accumulating.
 
-__author__    = "Jan van de Beek"
+__author__    = "Jan van de Beek, Fabian van der Hoeven"
 __copyright__ = "Copyright (C) 2013 Vermont 24x7"
-__version__   = "2.2"
+__version__   = "3.0"
 
 import sys, os, time, getopt
 from threading import *
@@ -45,35 +45,13 @@ import re
 import ConfigParser
 import platform
 import getopt
+import logging, logging.handlers
 
 oracle = None
 probes = None
-vp     = None
 config = None
 disk_stat = None
-
-class VPrint:
-
-	def __init__(self):
-
-		self.config = None
-		self.fd     = None
-
-		global config
-		self.config = config
-
-		try:
-			self.fd = open(self.config.logfile, "a")
-		except:
-			raise
-
-		message   = time.strftime("[%Y/%m/%d %H:%M:%S] ", time.localtime()) + "============================= Start pagent ======================================"
-		self.fd.write(message + "\n")
-
-	def log(self, message):
-		timestamp = time.strftime("[%Y/%m/%d %H:%M:%S] ", time.localtime())
-		self.fd.write(timestamp + str(message) + "\n")
-		self.fd.flush()
+postgres = None
 
 class Config:
 
@@ -85,11 +63,13 @@ class Config:
 		self.listen_ip       = ''
 		self.listen_port     = 0
 		self.logfile         = ''
+		self.loglevel        = ''
 		self.hostname        = ''
-		self.zabbix_server   = ''
+		self.zabbix_agent   = ''
 		self.zabbix_port     = 0
 		self.oracle_sids     = {}
 		self.oracle_oa_dir   = ''
+		self.postgres_dbs    = {}
 		try:
 			self.pagent_home     = os.environ['PAGENT_HOME']
 		except:
@@ -113,7 +93,7 @@ class Config:
 		try:
 			self.listen_ip      = self.config.get('common', 'listen_ip')
 		except:
-			self.listen_ip      = '0.0.0.0'
+			self.listen_ip      = 'localhost'
 
 		try:
 			self.listen_port    = int(self.config.get('common', 'listen_port'))
@@ -126,44 +106,70 @@ class Config:
 			self.logfile        = self.pagent_home + '/log/pagent.log'
 
 		try:
+			self.loglevel       = self.config.get('common', 'loglevel')
+		except:
+			self.loglevel       = 'INFO'
+
+		try:
 			self.hostname       = self.config.get('common', 'hostname')
 		except:
 			self.hostname       = platform.node()
 
 		try:
-			self.zabbix_server  = self.config.get('common', 'zabbix_server')
+			self.zabbix_agent  = self.config.get('common', 'zabbix_agent')
 		except:
-			self.zabbix_server  = 'pvermon1'
+			self.zabbix_agent  = 'localhost'
 
 		try:
 			self.zabbix_port    = self.config.getint('common', 'zabbix_port')
 		except:
 			self.zabbix_port    = 10051
 
+		print "[common]"
 		print "INI file             : %s" % self.ini_file
 		print "Output               :", self.output
 		print "Listen on ip address : %s" % self.listen_ip
 		print "Listen on port       : %d" % self.listen_port
 		print "Log file             : %s" % self.logfile
 		print "Hostname             : %s" % self.hostname
-		print "Zabbix server        : %s" % self.zabbix_server
-		print "Zabbix server port   : %s" % self.zabbix_port
+		print "Zabbix agent ip      : %s" % self.zabbix_agent
+		print "Zabbix agent port    : %s" % self.zabbix_port
 
 		sections = self.config.sections()
 		for section in sections:
 			if section == 'common':
 				continue
-			user                    = self.config.get(section, 'user', 'mios')
-			password                = self.config.get(section, 'password', 'mios')
-			self.oracle_sids[section] = (user, password)
-			self.oracle_oa_dir      = self.config.get(section, 'oa_dir', '/oracle/admin')
-			global OA_DIR
-			OA_DIR                  = self.oracle_oa_dir
-			print ""
-			print "Oracle SID           : %s" % section
-			print "Oracle user          : %s" % user
-			print "Oracle password      : %s" % password
-			print "Oracle OA_DIR        : %s" % self.oracle_oa_dir
+			dbtype = section.split('.')[0]
+			if dbtype == 'oracle':
+				sid                     = section.split('.')[1]
+				user                    = self.config.get(section, 'user')
+				password                = self.config.get(section, 'password')
+				self.oracle_sids[sid]   = (user, password)
+				self.oracle_oa_dir      = self.config.get(section, 'oa_dir')
+				global OA_DIR
+				OA_DIR                  = self.oracle_oa_dir
+				print ""
+				print section
+				print "Oracle SID		: %s" % sid
+				print "Oracle user		: %s" % user
+				print "Oracle password		: %s" % password
+				print "Oracle OA_DIR		: %s" % self.oracle_oa_dir
+			if dbtype == 'postgres':
+				dbname			= section.split('.')[1]
+				host			= self.config.get(section, 'host')
+				port			= self.config.get(section, 'port')
+				user			= self.config.get(section, 'user')
+				password		= self.config.get(section, 'password')
+				self.postgres_dbs[dbname] = (host, port, user, password)
+				print ""
+				print section
+				print "Postgres DB		: %s" % dbname
+				print "Postgres host		: %s" % host
+				print "Postgres port		: %s" % port
+				print "Postgres user		: %s" % user
+				print "Postgres password	: %s" % password
+			if dbtype not in ('oracle', 'postgres'):
+				print "Unsupported database type: %s" % dbtype
 
 class Probes:
 
@@ -177,9 +183,10 @@ class Probes:
 			try:
 				type = type.split('=')[1].strip()
 			except:
-				type = 'oracle'
+				logging.error("Found probes with no type definition on the first line: %s" % file)
+				type = 'unknown'
 			action = f.read()
-			#print "type:", type," action:", action
+			logging.debug("type: %s, action: %s" % (type, action))
 			self.probe_list[file] = [type, action]
 			f.close()
 
@@ -195,13 +202,14 @@ class Probes:
 				try:
 					type = type.split('=')[1].strip()
 				except:
-					type = 'oracle'
+					logging.error("Found probes with no type definition on the first line: %s" % probe)
+					type = 'unknown'
 				action = f.read()
 				self.probe_list[probe] = [type, action]
 				f.close()
 				return self.probe_list[probe][1]
 			else:
-				vp.log("No probe file: %s" % probe)
+				logging.error("No probe file: %s" % probe)
 				return -1
 
 class Oracle(object):
@@ -222,12 +230,12 @@ class Oracle(object):
 			import cx_Oracle
 			self.cx_Oracle = cx_Oracle
 			self.oracle_support = 1
-			vp.log("Sucessfully loaded cx_Oracle module")
+			logging.info("Sucessfully loaded cx_Oracle module")
 		except ImportError:
-			vp.log("Module cx_Oracle is not installed, please install it!")
+			logging.critical("Module cx_Oracle is not installed, please install it!")
 			raise
 		except:
-			vp.log("Error while loading Module cx_Oracle!")
+			logging.critical("Error while loading Module cx_Oracle!")
 			raise
 
 		if self.oracle_support == 0:
@@ -245,10 +253,10 @@ class Oracle(object):
 					self.user.append(m.group(1))
 					self.password.append(m.group(2))
 				else:
-					vp.log("instance %s has no file %s" % (instance, sql_file))
+					logging.error("instance %s has no file %s" % (instance, sql_file))
 				sql.close()
 			elif user == '' or password == '':
-				vp.log("File: %s doesn't exist" % sql_file)
+				logging.error("File: %s doesn't exist" % sql_file)
 				sys.exit(1)
 
 			self.user.append(user)
@@ -263,11 +271,20 @@ class Oracle(object):
 
 	def connect(self, indx):
 
-		self.connections[indx] = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
-		self.cursor[indx]      = self.connections[indx].cursor()
-		self.version[indx]    = self.connections[indx].version
-		vp.log("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
+		while self.connections[indx] == None:
+			try:
+				self.connections[indx]  = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
+				logging.info("Connection succesful")
+				time.sleep(2)
+			except Exception, e:
+				logging.critical("Unable to connect to Oracle")
+				logging.critical("ORA: Additional information: %s" % e)
+				logging.info("Trying to reconnect in 10 seconds")
+				time.sleep(10)
+		self.cursor[indx]       = self.connections[indx].cursor()
+		self.version[indx]      = self.connections[indx].version
 		self.last_connect[indx] = time.time()
+		logging.info("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
 
 	def reconnect(self, data):
 
@@ -275,7 +292,7 @@ class Oracle(object):
 			(item, arguments) = data.split('[')
 			arguments = arguments.replace(']','')
 		else:
-			vp.log("no oracle sid specified")
+			logging.error("no oracle sid specified")
 			return None
 		arguments = arguments.replace(' ','')
 		arguments = arguments.rstrip()
@@ -287,15 +304,21 @@ class Oracle(object):
 			sid = arguments
 
 		if not sid in self.sids:
+			logging.error("Unknown SID: %s" % sid)
+			logging.error("Additional info: %s" % data)
 			return
 
 		indx = self.sids.index(sid)
-		print "indx", indx
+		logging.debug("indx: %s" % indx)
 
-		self.connections[indx] = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
+		try:
+			self.connections[indx] = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
+		except Exception, e:
+			logging.critical("Unable to connect to Oracle")
+			logging.critical("ORA: Additional information: %s" % e)
 		self.cursor[indx]      = self.connections[indx].cursor()
 		self.version[indx]    = self.connections[indx].version
-		vp.log("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
+		logging.info("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
 		self.last_connect[indx] = time.time()
 
 	def get(self, data):
@@ -303,14 +326,14 @@ class Oracle(object):
 		fields=[]
 
 		if self.oracle_support == 0:
-			vp.log("Oracle not supported")
+			logging.error("Oracle not supported")
 			return None
 
 		if  data.find('[') > 0:
 			(item, arguments) = data.split('[')
 			arguments = arguments.replace(']','')
 		else:
-			vp.log("no oracle sid specified")
+			logging.error("no oracle sid specified")
 			return None
 		arguments = arguments.replace(' ','')
 		arguments = arguments.rstrip()
@@ -327,6 +350,7 @@ class Oracle(object):
 			action = re.sub('MIOS_ARG_2', fields[1], action)
 
 		if not sid in self.sids:
+			logging.error("SID not found in list of SIDS from config file")
 			return -1
 
 		try:
@@ -334,26 +358,31 @@ class Oracle(object):
 			try:
 				self.cursor[indx].execute(action)
 			except Exception, e:
-				print e
-				return -1
+				logging.error("ORA: Failed to execute query: %s" % action)
+				logging.error("ORA: Additional info: %s" % e)
+				ORA_error = e.split(':')[0]
+				if ORA_error == 'ORA-03113': #Not connected to Oracle
+					return -2 #Forces parent to reconnect
+				else:
+					return -1
 
 			try:
 				value = self.cursor[indx].fetchone()[0]
 			except Exception, e:
-				print e
+				logging.error("ORA: Failed to fetch result from resultset")
+				logging.error("ORA: Additional info: %s" % e)
 				return -1
 
-			vp.log("indx: %d sid: %s action: %s value: %s" % (indx, sid, action.rstrip("\n\r"), str(value)))
+			logging.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, action.rstrip("\n\r"), str(value)))
 			return value
 		except:
-			vp.log("Error in Oracle connection SID: %s" % sid)
-			raise
-			return None
+			logging.error("Error in Oracle connection SID: %s" % sid)
+			return -2
 
 	def execute(self, sid, query):
 
 		if self.oracle_support == 0:
-			vp.log("Oracle not supported")
+			logging.error("Oracle not supported")
 			return None
 
 		if not sid in self.sids:
@@ -363,21 +392,169 @@ class Oracle(object):
 			try:
 				self.cursor[indx].execute(query)
 			except Exception, e:
-				print e
+				logging.error("ORA: Failed to execute query: %s" % action)
+				logging.error("ORA: Additional info: %s" % e)
 				return -1
 
 			try:
 				value = self.cursor[indx].fetchall()
 			except Exception, e:
-				print e
+				logging.error("ORA: Failed to fetch resultset")
+				logging.error("ORA: Additional info: %s" % e)
 				return -1
 
-			vp.log("indx: %d sid: %s action: %s value: %s" % (indx, sid, query, str(value)))
+			logging.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, query, str(value)))
 			return value
 		except:
-			vp.log("Error in Oracle connection SID: %s" % sid)
+			logging.error("Error in Oracle connection SID: %s" % sid)
+			return -2
+
+class Postgres(object):
+
+	def __init__(self, instances):
+
+		self.postgres_support = 0
+		self.connections      = []
+		self.cursor           = []
+		self.version          = []
+		self.host             = []
+		self.port             = []
+		self.user             = []
+		self.password         = []
+		self.dbs              = []
+		self.instances        = instances
+		self.last_connect     = []
+
+		try:
+			import psycopg2
+			self.psycopg2 = psycopg2
+			self.postgres_support = 1
+			logging.info("Successfully loaded psycopg2 module")
+		except ImportError:
+			logging.error("Module psycopg2 is not installed, please install it!")
 			raise
+		except:
+			logging.error("Error while loading psycopg2 module!")
+			raise
+
+		if self.postgres_support == 0:
 			return None
+
+		for instance in instances:
+			host, port, user, password = instances[instance]
+			self.host.append(host)
+			self.port.append(port)
+			self.user.append(user)
+			self.password.append(password)
+			self.dbs.append(instance)
+			self.connections.append(None)
+			self.cursor.append(None)
+			self.version.append('')
+			indx = self.dbs.index(instance)
+			self.last_connect.append(0)
+			self.connect(indx)
+
+	def connect(self, indx):
+
+		while self.connections[indx] == None:
+			try:
+				self.connections[indx] = self.psycopg2.connect("host='%s' port='%s' dbname='%s' user='%s' password='%s'" % (self.host[indx], self.port[indx], self.dbs[indx], self.user[indx], self.password[indx]))
+				logging.info("Connection succesful")
+				time.sleep(2)
+			except Exception, e:
+				logging.critical("Unable to connect to Postgres")
+				logging.critical("PG: Additional information: %s" % e)
+				logging.info("Trying to reconnect in 10 seconds")
+				time.sleep(10)
+		self.cursor[indx]      = self.connections[indx].cursor()
+		self.cursor[indx].execute('select version()')
+		self.version[indx]     = self.cursor[indx].fetchone()
+		self.last_connect      = time.time()
+		logging.info("Connect to Postgres version %s DB: %s" % (self.version[indx], self.dbs[indx]))
+
+	def reconnect(self,data):
+
+		if data.find('[') > 0:
+			(item, arguments) = data.split('[')
+			arguments = arguments.replace(']','')
+		else:
+			logging.error("no postgres db specified")
+			return None
+		arguments = arguments.replace(' ','')
+		arguments = arguments.rstrip()
+		db = ''
+		if data.find(',') > 0:
+			fields = arguments.split(',')
+			db = fields[0]
+		else:
+			db = arguments
+
+		if not db in self.dbs:
+			return
+
+		indx = self.dbs.index(db)
+		print "indx", indx
+
+		self.connections[indx] = self.psycopg2.connect("host='%s' port='%s' dbname='%s' user='%s' password='%s'" % (self.host[indx], self.port[indx], self.dbs[indx], self.user[indx], self.password[indx]))
+		self.cursor[indx]      = self.connections[indx].cursor()
+		self.cursor[indx].execute('select version()')
+		self.version[indx]     = self.cursor[indx].fetchone()
+		self.last_connect      = time.time()
+		logging.info("Connect to Postgres version %s DB: %s" % (self.version[indx], self.dbs[indx]))
+
+	def get(self, data):
+
+		fields = []
+
+		if self.postgres_support == 0:
+			logging.error("Postgres not supported")
+			return None
+
+		if  data.find('[') > 0:
+			(item, arguments) = data.split('[')
+			arguments = arguments.replace(']','')
+		else:
+			logging.error("no postgres db specified")
+			return None
+		arguments = arguments.replace(' ','')
+		arguments = arguments.rstrip()
+		db = ''
+		if  data.find(',') > 0:
+			fields = arguments.split(',')
+			db = fields[0]
+		else:
+			db = arguments
+		top_item = item.split('.')
+		action=probes.get_action(item)
+		m = re.search('MIOS_ARG_2', action)
+		if m:
+			action = re.sub('MIOS_ARG_2', fields[1], action)
+
+		if not db in self.dbs:
+			logging.error("DB not found in list of DBS from config file")
+			return -1
+
+		try:
+			indx = self.dbs.index(db)
+			try:
+				self.cursor[indx].execute(action)
+			except Exception, e:
+				logging.error("PG: Failed to execute query: %s" % action)
+				logging.error("PG: Additional info: %s" % e)
+				return -1
+
+			try:
+				value = self.cursor[indx].fetchone()[0]
+			except Exception, e:
+				logging.error("PG: Failed to fetch result from resultset")
+				logging.error("PG: Additional info: %s" % e)
+				return -1
+
+			logging.debug("indx: %d db: %s action: %s value: %s" % (indx, db, action.rstrip("\n\r"), str(value)))
+			return value
+		except:
+			logging.error("Error in Postgres connection DB: %s" % db)
+			return -2
 
 class DiskStats(object):
 
@@ -428,7 +605,7 @@ class DiskStats(object):
 				stat  = os.stat(fields[0])
 				inode = stat.st_rdev
 				self.major_minor.append( "%d-%d" % ( os.major(inode), os.minor(inode)))
-#				print "%s-%s %s" % ( os.major(inode), os.minor(inode), fields[1] )
+				logging.debug("%s-%s %s" % ( os.major(inode), os.minor(inode), fields[1] ))
 				self.filesystems.append(fields[1])
 				self.fs_type.append(fields[2])
 				self.read_write.append(fields[3])
@@ -465,7 +642,7 @@ class DiskStats(object):
 
 				except:
 					pass
-#				print "STATS: %d - %d - %d - %d" % ( self.stats[i][0], self.stats[i][1], self.stats[i][3], self.stats[i][4] )
+				logging.debug("STATS: %d - %d - %d - %d" % ( self.stats[i][0], self.stats[i][1], self.stats[i][3], self.stats[i][4] ))
 				self.data[i] = fields
 			except:
 				pass
@@ -498,7 +675,7 @@ class ConnectionHandler:
 		mtype = "ZABBIX"
 		data = self.conn.recv(1024)
 		data_orig = data
-		vp.log("received: %s" % data.rstrip("\n\r"))
+		logging.info("received: %s" % data.rstrip("\n\r"))
 		if len(data) >= 4 and data[0:4] == 'MIOS':
 			self.process_mios_call(data[4:])
 			self.conn.close()
@@ -526,7 +703,7 @@ class ConnectionHandler:
 
 		if top_item == 'oracle':
 			if item.split('.')[1] == 'tablespace_discover':
-				vp.log("DISCOVER TABLESPACES")
+				logging.debug("DISCOVER TABLESPACES")
 				sid = arguments
 				rows = oracle.execute(sid, "select tablespace_name from dba_tablespaces where contents not in ('UNDO', 'TEMPORARY')")
 				if rows == -1:
@@ -534,30 +711,50 @@ class ConnectionHandler:
 				else:
 					value = '{ "data":['
 					for row in rows:
-						vp.log('Tablespace found: %s' % row)
+						logging.debug('Tablespace found: %s' % row)
 						value += '{ "{#TBSNAME}":"%s" },' % row
 					value += '] }'
 			else:
 				value = oracle.get(data)
-
 				if value == -1:
 					value = "ZBX_NOTSUPPORTED"
-				elif None:
-					while value == None:
-						vp.log("sleep 5 seconds...")
+				elif value == -2:
+					logging.info("ORA: Lost connection. Trying to reconnect" % value)
+					while value == -2:
+						logging.info("sleep 5 seconds...")
 						time.sleep(5)
 						oracle.reconnect(data)
 						value = oracle.get(data)
-						if value != None:
-							value = str(oracle.get(data))
+						if value != -2:
+							value = str(value)
 				else:
-					value = str(oracle.get(data))
+					value = str(value)
+
+			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
+			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
+
+		elif top_item == 'postgres':
+			value = postgres.get(data)
+
+			if value == -1:
+				value = "ZBX_NOTSUPPORTED"
+			elif value == -2:
+				logging.info("PG: Lost connection. Trying to reconnect" % value)
+				while value == -2:
+					logging.info("sleep 5 seconds...")
+					time.sleep(5)
+					postgres.reconnect(data)
+					value = postgres.get(data)
+					if value != -2:
+						value = str(value)
+				pass
+			else:
+				value = str(value)
 
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
 
 		elif item == 'agent.ping':
-#			vp.log("Received agent.ping")
 			sys.stdout.flush()
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack('QB', 1, 0x30 + 1 ))
@@ -566,26 +763,28 @@ class ConnectionHandler:
 			args = { 'riops': 0, 'rbps': 1, 'rst': 2, 'wiops': 3, 'wbps': 4, 'wst': 5 }
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			value = disk_stat.get_attr(fields[0], args[fields[1]] )
-#			vp.log("Received io arg1: %s arg2: %s send back: %s length: %d" % (arg1, arg2, value, len(str(value))))
+			logging.debug("Received io arg1: %s arg2: %s send back: %s length: %d" % (arg1, arg2, value, len(str(value))))
 
 			if fields[1][0:3] == 'rst' or fields[1][0:3] == 'wst':
 				value_s = str(value)
-#				print "float value: %s" % value_s
 				self.conn.send( pack("Q%ds" % len(value_s), len(value_s), str(value) ) )
 
 			else:
 				value_s = str(int(value))
-#				print "int value: %s" % value_s
 				self.conn.send( pack("Q%ds" % len(value_s), len(value_s), str(value) ) )
 
 		elif item == 'io.wt':
-			vp.log("Received io.wt")
+			logging.debug("Received io.wt")
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack('QB', 1, 0x30 + self.counter )[0:9] )
 
 		elif item.split('.')[0] == 'oracle':
 			sub_item = item.split('.')[1]
 			ret = oracle.get(sub_item)
+
+		elif item.split('.')[0] == 'postgres':
+			sub_item = item.split('.')[1]
+			ret = postgres.get(sub_item)
 
 		elif top_item == 'proc':
 
@@ -595,12 +794,19 @@ class ConnectionHandler:
 			col    = 0
 			value  = 0
 
-			action = probes.get_action(item)
+			if item not in ["proc.num", "proc.mem"]: #Ignore Zabbix own proc probes
+				action = probes.get_action(item)
+			else:
+				logging.debug("Ignored: %s, directly sent to zabbix agent" % item)
 
 			if action == -1:
 				# Let's give the job to the Zabbix agent
 				s = socket(AF_INET, SOCK_STREAM)
-				s.connect((config.zabbix_server, config.zabbix_port))
+				try:
+					s.connect((config.zabbix_agent, config.zabbix_port))
+					logging.debug("PROC: Connection to Zabbix agent on %s:%s succesfull" % (config.zabbix_agent, config.zabbix_port))
+				except:
+					logging.error("PROC: Connection to Zabbix agent on %s:%s failed" % (config.zabbix_agent, config.zabbix_port))
 				s.send(data_orig)
 				header = s.recv(5, MSG_WAITALL)
 				bsize = s.recv(8, MSG_WAITALL)
@@ -637,7 +843,7 @@ class ConnectionHandler:
 
 					p.close()
 				except Exception, e:
-					vp.log("Exception during proc probe: %s" % e)
+					logging.error("Exception during proc probe: %s" % e)
 					value = "ZBX_NOTSUPPORTED"
 
 
@@ -647,7 +853,11 @@ class ConnectionHandler:
 		else:
 
 			s = socket(AF_INET, SOCK_STREAM)
-			s.connect((config.zabbix_server, config.zabbix_port))
+			try:
+				s.connect((config.zabbix_agent, config.zabbix_port))
+				logging.debug("ZBX: Connection to Zabbix agent on %s:%s succesfull" % (config.zabbix_agent, config.zabbix_port))
+			except:
+				logging.error("ZBX: Connection to Zabbix agent on %s:%s failed" % (config.zabbix_agent, config.zabbix_port))
 			s.send(data_orig)
 			header = s.recv(5, MSG_WAITALL)
 			bsize = s.recv(8, MSG_WAITALL)
@@ -666,12 +876,13 @@ class ConnectionHandler:
 
 	def process_mios_call(self, data):
 
-		vp.log("Received MIOS call: %s" % data)
+		logging.info("Received MIOS call: %s" % data)
 		type, key, value = data.split('\0')
-		vp.log("type: %s key: %s value: %s" % (type, key, str(value)))
+		logging.debug("type: %s key: %s value: %s" % (type, key, str(value)))
 		s = socket(AF_INET, SOCK_STREAM)
 		try:
-			s.connect((config.zabbix_server, config.zabbix_port))
+			s.connect((config.zabbix_agent, config.zabbix_port))
+			logging.debug("MIOS_call: Connection to Zabbix agent on %s:%s succesfull" % (config.zabbix_agent, config.zabbix_port))
 			ts = time.time()
 
 			message = "{\n\t\"request\":\"agent data\",\n\t\"data\":[\n\t\t{\n" \
@@ -690,6 +901,7 @@ class ConnectionHandler:
 			s.send(pack(template, msize, message))
 			s.close()
 		except:
+			logging.error("MIOS_call: Connection to Zabbix agent on %s:%s failed" % (config.zabbix_agent, config.zabbix_port))
 			pass
 
 	def update_probe(self, data):
@@ -721,6 +933,9 @@ def main():
 	global probes
 	global oracle
 	global disk_stat
+	global postgres
+	
+	config_file = ''
 
 	try:
 		pagent_home     = os.environ['PAGENT_HOME']
@@ -728,25 +943,38 @@ def main():
 		pagent_home = "/home/mios/pagent"
 
 	try:
-		optlist, args = getopt.getopt(sys.argv[1:], 'c:', [])
+		optlist, args = getopt.getopt(sys.argv[1:], 'lc:', ['loglevel='])
 	except:
 		usage()
 		sys.exit(-1)
 
 	if not optlist:
+		print "No options specified"
 		usage()
 		sys.exit(-1)
 
 	for o, v in optlist:
 		if o == "-c":
 			config_file = v
-		else:
-			usage()
-			sys.exit(-1)
+
+	if not config_file:
+		print "No config file specified"
+		usage()
+		sys.exit(-1)
 
 	config  = Config(config_file)
 	config.parse()
-	vp	= VPrint()
+	loglevel = config.loglevel
+	# Loglevel parameter trumps loglevel in config file so arguments have to be parsed again
+	for o, v in optlist:
+		if o in ('-l', '--loglevel'):
+			loglevel = v
+
+	numeric_loglevel = getattr(logging, loglevel.upper(), None)
+	if not isinstance(numeric_loglevel, int):
+		raise ValueError('Invalid log level: %s' % loglevel)
+	logging.basicConfig(level=numeric_loglevel, filename=config.logfile, format='[%(asctime)s] %(levelname)7s - %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
+	logging.info('============================= Start pagent ======================================')
 
 	if len(sys.argv) == 1:
 		if os.fork(): sys.exit(0)
@@ -764,7 +992,16 @@ def main():
 
 	disk_stat=DiskStats()
 	probes = Probes()
-	oracle = Oracle(config.oracle_sids)
+	if not config.oracle_sids:
+		logging.info('No Oracle database present in config file')
+	else:
+		oracle = Oracle(config.oracle_sids)
+
+	if not config.postgres_dbs:
+		logging.info('No Postgres database present in config file')
+	else:
+		postgres = Postgres(config.postgres_dbs)
+
 	s = socket(AF_INET,SOCK_STREAM)
 	s.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
 	s.bind((config.listen_ip, config.listen_port))
