@@ -798,6 +798,7 @@ class ConnectionHandler:
 				action = probes.get_action(item)
 			else:
 				logging.debug("Ignored: %s, directly sent to zabbix agent" % item)
+				action = -1
 
 			if action == -1:
 				# Let's give the job to the Zabbix agent
