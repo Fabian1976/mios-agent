@@ -34,7 +34,7 @@
 
 __author__    = "Jan van de Beek, Fabian van der Hoeven"
 __copyright__ = "Copyright (C) 2013 Vermont 24x7"
-__version__   = "3.0"
+__version__   = "3.0.1"
 
 import sys, os, time, getopt
 from threading import *
@@ -798,6 +798,7 @@ class ConnectionHandler:
 				action = probes.get_action(item)
 			else:
 				logging.debug("Ignored: %s, directly sent to zabbix agent" % item)
+				action = -1
 
 			if action == -1:
 				# Let's give the job to the Zabbix agent
