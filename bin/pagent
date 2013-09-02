@@ -275,7 +275,7 @@ class Oracle(object):
 			try:
 				self.connections[indx]  = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
 				logging.info("Connection succesful")
-				time.sleep(5)
+				time.sleep(2)
 			except Exception, e:
 				logging.critical("Unable to connect to Oracle")
 				logging.critical("ORA: Additional information: %s" % e)
@@ -460,7 +460,7 @@ class Postgres(object):
 			try:
 				self.connections[indx] = self.psycopg2.connect("host='%s' port='%s' dbname='%s' user='%s' password='%s'" % (self.host[indx], self.port[indx], self.dbs[indx], self.user[indx], self.password[indx]))
 				logging.info("Connection succesful")
-				time.sleep(5)
+				time.sleep(2)
 			except Exception, e:
 				logging.critical("Unable to connect to Postgres")
 				logging.critical("PG: Additional information: %s" % e)
@@ -554,8 +554,7 @@ class Postgres(object):
 			return value
 		except:
 			logging.error("Error in Postgres connection DB: %s" % db)
-			raise
-			return None
+			return -2
 
 class DiskStats(object):
 
