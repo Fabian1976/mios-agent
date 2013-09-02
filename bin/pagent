@@ -456,7 +456,16 @@ class Postgres(object):
 
 	def connect(self, indx):
 
-		self.connections[indx] = self.psycopg2.connect("host='%s' port='%s' dbname='%s' user='%s' password='%s'" % (self.host[indx], self.port[indx], self.dbs[indx], self.user[indx], self.password[indx]))
+		while self.connections[indx] == None:
+			try:
+				self.connections[indx] = self.psycopg2.connect("host='%s' port='%s' dbname='%s' user='%s' password='%s'" % (self.host[indx], self.port[indx], self.dbs[indx], self.user[indx], self.password[indx]))
+				logging.info("Connection succesful")
+				time.sleep(5)
+			except Exception, e:
+				logging.critical("Unable to connect to Postgres")
+				logging.critical("PG: Additional information: %s" % e)
+				logging.info("Trying to reconnect in 10 seconds")
+				time.sleep(10)
 		self.cursor[indx]      = self.connections[indx].cursor()
 		self.cursor[indx].execute('select version()')
 		self.version[indx]     = self.cursor[indx].fetchone()
@@ -730,8 +739,15 @@ class ConnectionHandler:
 
 			if value == -1:
 				value = "ZBX_NOTSUPPORTED"
-			elif None:
-				#reconnect
+			elif value == -2:
+				logging.info("PG: Lost connection. Trying to reconnect" % value)
+				while value == -2:
+					logging.info("sleep 5 seconds...")
+					time.sleep(5)
+					postgres.reconnect(data)
+					value = postgres.get(data)
+					if value != -2:
+						value = str(value)
 				pass
 			else:
 				value = str(value)
