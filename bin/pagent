@@ -794,7 +794,10 @@ class ConnectionHandler:
 			col    = 0
 			value  = 0
 
-			action = probes.get_action(item)
+			if item not in ["proc.num", "proc.mem"]: #Ignore Zabbix own proc probes
+				action = probes.get_action(item)
+			else:
+				logging.debug("Ignored: %s, directly sent to zabbix agent" % item)
 
 			if action == -1:
 				# Let's give the job to the Zabbix agent
