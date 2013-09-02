@@ -132,8 +132,8 @@ class Config:
 		print "Listen on port       : %d" % self.listen_port
 		print "Log file             : %s" % self.logfile
 		print "Hostname             : %s" % self.hostname
-		print "Zabbix server        : %s" % self.zabbix_agent
-		print "Zabbix server port   : %s" % self.zabbix_port
+		print "Zabbix agent ip      : %s" % self.zabbix_agent
+		print "Zabbix agent port    : %s" % self.zabbix_port
 
 		sections = self.config.sections()
 		for section in sections:
