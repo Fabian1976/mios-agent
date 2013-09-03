@@ -195,7 +195,7 @@ class Probes:
 		try:
 			return self.probe_list[probe][1]
 		except KeyError:
-			print "Load new probe:", probe
+			logging.info("Probe not found in cache. Trying to load new probe: %s" % probe)
 			if os.path.exists(config.pagent_home + '/probes/' + probe):
 				f = open(config.pagent_home + '/probes/' + probe)
 				type = f.readline()
