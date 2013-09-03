@@ -34,7 +34,7 @@
 
 __author__    = "Jan van de Beek, Fabian van der Hoeven"
 __copyright__ = "Copyright (C) 2013 Vermont 24x7"
-__version__   = "3.1"
+__version__   = "3.2"
 
 import sys, os, time, getopt
 from threading import *
@@ -177,6 +177,7 @@ class Probes:
 
 		self.probe_list = {}
 
+		logging.info("Caching probes...")
 		for file in os.listdir(config.pagent_home + '/probes'):
 			f = open(config.pagent_home + '/probes/' + file)
 			type = f.readline()
@@ -186,7 +187,7 @@ class Probes:
 				logging.error("Found probes with no type definition on the first line: %s" % file)
 				type = 'unknown'
 			action = f.read()
-			logging.debug("type: %s, action: %s" % (type, action))
+			logging.debug("Probe cached - type: %s, action: %s" % (type, action))
 			self.probe_list[file] = [type, action]
 			f.close()
 
@@ -551,6 +552,9 @@ class Postgres(object):
 				return -1
 
 			logging.debug("indx: %d db: %s action: %s value: %s" % (indx, db, action.rstrip("\n\r"), str(value)))
+			# Postgres has to have a commit after each select or else the table (pg_stat_database) will seem static
+			# In future maybe filter query's to this table so that not every select has a commit
+			self.connections[indx].commit()
 			return value
 		except:
 			logging.error("Error in Postgres connection DB: %s" % db)
