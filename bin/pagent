@@ -34,7 +34,7 @@
 
 __author__    = "Jan van de Beek, Fabian van der Hoeven"
 __copyright__ = "Copyright (C) 2013 Vermont 24x7"
-__version__   = "3.0.1"
+__version__   = "3.1"
 
 import sys, os, time, getopt
 from threading import *
@@ -65,13 +65,13 @@ class Config:
 		self.logfile         = ''
 		self.loglevel        = ''
 		self.hostname        = ''
-		self.zabbix_agent   = ''
+		self.zabbix_agent    = ''
 		self.zabbix_port     = 0
 		self.oracle_sids     = {}
 		self.oracle_oa_dir   = ''
 		self.postgres_dbs    = {}
 		try:
-			self.pagent_home     = os.environ['PAGENT_HOME']
+			self.pagent_home = os.environ['PAGENT_HOME']
 		except:
 			self.pagent_home = "/home/mios/pagent"
 
@@ -116,9 +116,9 @@ class Config:
 			self.hostname       = platform.node()
 
 		try:
-			self.zabbix_agent  = self.config.get('common', 'zabbix_agent')
+			self.zabbix_agent   = self.config.get('common', 'zabbix_agent')
 		except:
-			self.zabbix_agent  = 'localhost'
+			self.zabbix_agent   = 'localhost'
 
 		try:
 			self.zabbix_port    = self.config.getint('common', 'zabbix_port')
@@ -195,7 +195,7 @@ class Probes:
 		try:
 			return self.probe_list[probe][1]
 		except KeyError:
-			print "Load new probe:", probe
+			logging.info("Probe not found in cache. Trying to load new probe: %s" % probe)
 			if os.path.exists(config.pagent_home + '/probes/' + probe):
 				f = open(config.pagent_home + '/probes/' + probe)
 				type = f.readline()
@@ -560,16 +560,15 @@ class DiskStats(object):
 
 	def __init__(self):
 
-		self.device_name = []
-		self.major_minor = []
-		self.filesystems = []
-		self.fs_type     = []
-		self.read_write  = []
-		self.no_probes   = 0
-		self.data        = []
-		self.last_update = 0
-		self.stats       = []
-
+		self.device_name  = []
+		self.major_minor  = []
+		self.filesystems  = []
+		self.fs_type      = []
+		self.read_write   = []
+		self.no_probes    = 0
+		self.data         = []
+		self.last_update  = 0
+		self.stats        = []
 		self.MIN_INTERVAL = 30
 
 		self.get_fs_mapping()
@@ -667,7 +666,7 @@ class ConnectionHandler:
 
 	def __init__(self, _conn):
 
-		self.conn = _conn
+		self.conn    = _conn
 		self.counter = 1
 
 	def start(self):
@@ -939,7 +938,7 @@ def main():
 	config_file = ''
 
 	try:
-		pagent_home     = os.environ['PAGENT_HOME']
+		pagent_home = os.environ['PAGENT_HOME']
 	except:
 		pagent_home = "/home/mios/pagent"
 

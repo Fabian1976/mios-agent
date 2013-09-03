@@ -1,0 +1,2 @@
+type=postgres
+select sum(pg_total_relation_size(schemaname || '."' || tablename || '"'))::bigint FROM pg_tables

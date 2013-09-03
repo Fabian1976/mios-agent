@@ -1,0 +1,2 @@
+type=postgres
+select sum(tup_inserted) from pg_stat_database

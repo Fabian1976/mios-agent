@@ -1,0 +1,2 @@
+type=postgres
+select sum(tup_deleted) from pg_stat_database

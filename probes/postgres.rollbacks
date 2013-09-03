@@ -1,0 +1,2 @@
+type=postgres
+select sum(xact_rollback) from pg_stat_database
