@@ -177,6 +177,7 @@ class Probes:
 
 		self.probe_list = {}
 
+		logging.info("Caching probes...")
 		for file in os.listdir(config.pagent_home + '/probes'):
 			f = open(config.pagent_home + '/probes/' + file)
 			type = f.readline()
@@ -186,7 +187,7 @@ class Probes:
 				logging.error("Found probes with no type definition on the first line: %s" % file)
 				type = 'unknown'
 			action = f.read()
-			logging.debug("type: %s, action: %s" % (type, action))
+			logging.debug("Probe cached - type: %s, action: %s" % (type, action))
 			self.probe_list[file] = [type, action]
 			f.close()
 
