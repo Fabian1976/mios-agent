@@ -1,0 +1,2 @@
+type=postgres
+select sum(tup_fetched) from pg_stat_database

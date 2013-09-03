@@ -1,0 +1,2 @@
+type=postgres
+select count(*) from pg_locks where mode='ShareRowExclusiveLock'

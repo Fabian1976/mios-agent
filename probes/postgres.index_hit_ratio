@@ -1,0 +1,2 @@
+type=postgres
+select (sum(heap_blks_hit) - sum(heap_blks_read)) / sum(heap_blks_hit) from pg_statio_all_tables
