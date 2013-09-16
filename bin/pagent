@@ -560,6 +560,81 @@ class Postgres(object):
 			logging.error("Error in Postgres connection DB: %s" % db)
 			return -2
 
+class NetStats(object):
+
+	# Stats is a dictionary of lists. The dictionary is for the devices and the list of that item is the stats
+	# Location items of list:
+	#       0 - rx_bytes
+	#       1 - rx_packets
+	#       2 - rx_errors
+	#       3 - rx_dropped
+	#       4 - tx_bytes
+	#       5 - tx_packets
+	#       6 - tx_errors
+	#       7 - tx_dropped
+	#
+	# So {'eth0':[0,1,2,3,4,5,6,7],'eth1':[0,1,2,3,4,5,6,7]} could be a dictionary
+
+	def __init__(self):
+
+		self.net_devices  = []
+		self.stats        = {}
+		self.last_update  = []
+		self.min_interval = 30
+
+		self.init_stats()
+		self.update_stats()
+
+	def init_stats(self):
+
+		# Discover ehternet devices
+		f = open('/proc/net/dev', 'r')
+		# Skip first 2 lines of file (header)
+		next(f)
+		next(f)
+		for line in f:
+				net_dev = line.split(':')[0].strip()
+				self.net_devices.append(net_dev)
+		f.close()
+
+	def update_stats(self):
+		f = open('/proc/net/dev', 'r')
+		# Skip first 2 lines of file (header)
+		next(f)
+		next(f)
+		# We will only read bytes, packets, errors and dropped per interface
+		for line in f:
+			dev_stats = []
+			net_dev = line.split(':')[0].strip()
+			fields = line.split(':')[1].split()
+			# append rx_bytes
+			dev_stats.append(fields[0])
+			# append rx_packets
+			dev_stats.append(fields[1])
+			# append rx_errors
+			dev_stats.append(fields[2])
+			# append rx_dropped
+			dev_stats.append(fields[3])
+			# append tx_bytes
+			dev_stats.append(fields[8])
+			# append tx_packets
+			dev_stats.append(fields[9])
+			# append tx_errors
+			dev_stats.append(fields[10])
+			# append tx_dropped
+			dev_stats.append(fields[11])
+			self.stats[net_dev] = dev_stats
+		f.close()
+		self.last_update = time.time()
+
+	def get_attr(self, net_dev, stat):
+
+		now = time.time()
+		if now - self.last_update > self.min_interval:
+			self.update_stats()
+		ret = self.stats[net_dev][stat]
+		return ret
+
 class DiskStats(object):
 
 	def __init__(self):
@@ -703,6 +778,7 @@ class ConnectionHandler:
 		arguments = arguments.rstrip()
 		fields = arguments.split(',')
 		top_item = item.split('.')[0]
+		logging.debug("Item: %s" % item)
 
 		if top_item == 'oracle':
 			if item.split('.')[1] == 'tablespace_discover':
@@ -854,6 +930,25 @@ class ConnectionHandler:
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
 
+		elif item == 'testnet.stats':
+			if item.split('.')[1] == 'discover':
+				logging.debug("Network Interface Discovery")
+				value = '{ "data":['
+				for net_dev in net_stat.net_devices:
+					logging.debug('Net device found: %s' % net_dev)
+					value += '{ "{#IFNAME}":"%s" },' % net_dev
+				value += '] }'
+			else:			
+				args = { 'rx_bytes': 0, 'rx_packets': 1, 'rx_errors': 2, 'rx_dropped': 3, 'tx_bytes': 4, 'tx_packets': 5, 'tx_errors': 6, 'tx_dropped': 7 }
+				try:
+					value = net_stat.get_attr(fields[0], args[fields[1]])
+				except:
+					logging.error("Exception while trying to obtain %s from %s." % (fields[1], fileds[0]))
+					value = "ZBX_NOTSUPPORTED"
+				logging.debug("Received: %s, %s(%s). Sent back: %s" % (fields[0], fields[1], args[fields[1]], value))
+				self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
+				self.conn.send( pack("Q%ds" % len(value), len(value), value) )
+
 		else:
 
 			s = socket(AF_INET, SOCK_STREAM)
@@ -938,6 +1033,7 @@ def main():
 	global oracle
 	global disk_stat
 	global postgres
+	global net_stat
 	
 	config_file = ''
 
@@ -994,8 +1090,10 @@ def main():
 		os.dup2(stdout.fileno(), sys.stdout.fileno())
 		os.dup2(stderr.fileno(), sys.stderr.fileno())
 
-	disk_stat=DiskStats()
+	disk_stat = DiskStats()
 	probes = Probes()
+	net_stat = NetStats()
+
 	if not config.oracle_sids:
 		logging.info('No Oracle database present in config file')
 	else:
