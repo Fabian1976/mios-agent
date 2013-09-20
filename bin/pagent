@@ -784,7 +784,7 @@ class ConnectionHandler:
 			if item.split('.')[1] == 'tablespace_discover':
 				logging.debug("DISCOVER TABLESPACES")
 				sid = arguments
-				rows = oracle.execute(sid, "select tablespace_name from dba_tablespaces where contents not in ('UNDO', 'TEMPORARY')")
+				rows = oracle.execute(sid, "select tablespace_name from dba_tablespaces where contents = 'PERMANENT'")
 				if rows == -1:
 					value = "ZBX_NOTSUPPORTED"
 				else:
