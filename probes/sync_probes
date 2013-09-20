@@ -33,5 +33,6 @@ for file in os.listdir('.'):
 	message   = "PROBE%c%09d" % ('A', size_name) + file
 	message  += "%09d" % size_file + content
 	sock.send(message)
+	sock.close()
 
 sys.exit(0)
