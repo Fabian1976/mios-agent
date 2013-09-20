@@ -930,15 +930,15 @@ class ConnectionHandler:
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
 
-		elif item == 'testnet.stats':
-			if item.split('.')[1] == 'discover':
+		elif top_item == 'testnet':
+			if item.split('.')[2] == 'discovery':
 				logging.debug("Network Interface Discovery")
 				value = '{ "data":['
 				for net_dev in net_stat.net_devices:
 					logging.debug('Net device found: %s' % net_dev)
 					value += '{ "{#IFNAME}":"%s" },' % net_dev
 				value += '] }'
-			else:			
+			else:
 				args = { 'rx_bytes': 0, 'rx_packets': 1, 'rx_errors': 2, 'rx_dropped': 3, 'tx_bytes': 4, 'tx_packets': 5, 'tx_errors': 6, 'tx_dropped': 7 }
 				try:
 					value = net_stat.get_attr(fields[0], args[fields[1]])
@@ -946,8 +946,8 @@ class ConnectionHandler:
 					logging.error("Exception while trying to obtain %s from %s." % (fields[1], fileds[0]))
 					value = "ZBX_NOTSUPPORTED"
 				logging.debug("Received: %s, %s(%s). Sent back: %s" % (fields[0], fields[1], args[fields[1]], value))
-				self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
-				self.conn.send( pack("Q%ds" % len(value), len(value), value) )
+			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
+			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
 
 		else:
 
