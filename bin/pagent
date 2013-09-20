@@ -930,7 +930,7 @@ class ConnectionHandler:
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
 
-		elif top_item == 'testnet':
+		elif top_item == 'net':
 			if item.split('.')[2] == 'discovery':
 				logging.debug("Network Interface Discovery")
 				value = '{ "data":['
@@ -938,14 +938,39 @@ class ConnectionHandler:
 					logging.debug('Net device found: %s' % net_dev)
 					value += '{ "{#IFNAME}":"%s" },' % net_dev
 				value += '] }'
-			else:
-				args = { 'rx_bytes': 0, 'rx_packets': 1, 'rx_errors': 2, 'rx_dropped': 3, 'tx_bytes': 4, 'tx_packets': 5, 'tx_errors': 6, 'tx_dropped': 7 }
+
+			elif item.split('.')[2] == 'in':
+				if len(fields) == 1:
+					logging.debug("NET: Nothing specified. Setting default option for bytes.")
+					fields.append('bytes')
+				else:
+					logging.debug("NET: Received request for %s" % fields[1])
+				# rx (in) is numbers 0 through 3
+				args = { 'bytes': 0, 'packets': 1, 'errors': 2, 'dropped': 3 }
 				try:
 					value = net_stat.get_attr(fields[0], args[fields[1]])
 				except:
 					logging.error("Exception while trying to obtain %s from %s." % (fields[1], fileds[0]))
 					value = "ZBX_NOTSUPPORTED"
 				logging.debug("Received: %s, %s(%s). Sent back: %s" % (fields[0], fields[1], args[fields[1]], value))
+
+			elif item.split('.')[2] == 'out':
+				if len(fields) == 1:
+					logging.debug("NET: Nothing specified. Setting default option for bytes.")
+					fields.append('bytes')
+				else:
+					logging.debug("NET: Received request for %s" % fields[1])
+				# tx (out) is numbers 4 through 7
+				args = { 'bytes': 4, 'packets': 5, 'errors': 6, 'dropped': 7 }
+				try:
+					value = net_stat.get_attr(fields[0], args[fields[1]])
+				except:
+					logging.error("Exception while trying to obtain %s from %s." % (fields[1], fileds[0]))
+					value = "ZBX_NOTSUPPORTED"
+				logging.debug("Received: %s, %s(%s). Sent back: %s" % (fields[0], fields[1], args[fields[1]], value))
+			else:
+				value = "ZBX_NOTSUPPORTED"
+
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
 
