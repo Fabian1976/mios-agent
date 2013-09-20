@@ -1042,8 +1042,6 @@ class ConnectionHandler:
 		f.write(content)
 		f.close()
 
-#		data = self.conn.recv(1024)
-
 def usage():
 	print "usage: %s -c <config file> (--loglevel=loglevel)" % (sys.argv[0])
 	print "\n<config file> - Location and name of the config file"
