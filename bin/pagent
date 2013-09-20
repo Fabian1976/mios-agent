@@ -751,7 +751,7 @@ class ConnectionHandler:
 	def start(self):
 
 		mtype = "ZABBIX"
-		data = self.conn.recv(1024)
+		data = self.conn.recv(2048)
 		data_orig = data
 		logging.info("received: %s" % data.rstrip("\n\r"))
 		if len(data) >= 4 and data[0:4] == 'MIOS':
