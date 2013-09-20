@@ -793,6 +793,18 @@ class ConnectionHandler:
 						logging.debug('Tablespace found: %s' % row)
 						value += '{ "{#TBSNAME}":"%s" },' % row
 					value += '] }'
+			elif item.split('.')[1] == 'tempspace_discover':
+				logging.debug("DISCOVER TEMPSPACES")
+				sid = arguments
+				rows = oracle.execute(sid, "select tablespace_name from dba_tablespaces where contents = 'TEMPORARY'")
+				if rows == -1:
+					value = "ZBX_NOTSUPPORTED"
+				else:
+					value = '{ "data":['
+					for row in rows:
+						logging.debug('Tempspace found: %s' % row)
+						value += '{ "{#TMPSNAME}":"%s" },' % row
+					value += '] }'
 			else:
 				value = oracle.get(data)
 				if value == -1:
