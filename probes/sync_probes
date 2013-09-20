@@ -1,0 +1,38 @@
+#!/usr/bin/python
+# This script sync probes with agent
+
+hostname_agent  = "10.10.3.11"
+port_agent      = 10050
+
+import socket
+import sys, os
+
+for file in os.listdir('.'):
+
+    # Skip sync script
+    if file == "sync_probes":
+        continue
+
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    except socket.error, msg:
+        sys.stderr.write("[ERROR] %s\n" % msg[1])
+        sys.exit(1)
+
+    try:
+        sock.connect((hostname_agent, port_agent))
+    except socket.error, msg:
+        sys.stderr.write("[ERROR] %s\n" % msg[1])
+        sys.exit(2)
+
+    f = open(file)
+    content = f.read()
+    print "sync %s" % file
+    size_name = len(file)
+    size_file = len(content)
+    message   = "PROBE%c%09d" % ('A', size_name) + file
+    message  += "%09d" % size_file + content
+    sock.send(message)
+
+
+sys.exit(0)
