@@ -1078,7 +1078,7 @@ def main():
 		pagent_home = "/home/mios/pagent"
 
 	try:
-		optlist, args = getopt.getopt(sys.argv[1:], 'lc:', ['loglevel='])
+		optlist, args = getopt.getopt(sys.argv[1:], 'c:')
 	except:
 		usage()
 		sys.exit(-1)
@@ -1100,10 +1100,6 @@ def main():
 	config  = Config(config_file)
 	config.parse()
 	loglevel = config.loglevel
-	# Loglevel parameter trumps loglevel in config file so arguments have to be parsed again
-	for o, v in optlist:
-		if o in ('-l', '--loglevel'):
-			loglevel = v
 
 	numeric_loglevel = getattr(logging, loglevel.upper(), None)
 	if not isinstance(numeric_loglevel, int):
