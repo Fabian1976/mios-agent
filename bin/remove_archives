@@ -1,6 +1,0 @@
-# Remove Oracle archives older than 45 days
-
-echo "================================================================================"
-/bin/date
-/usr/bin/find /oradata/scifull/arch_backup -maxdepth 1 -type f -mtime +45 -name '*.arc.zip' -exec /bin/rm -vf {} \;
-/usr/bin/find /oradata/fulfil/arch_backup -maxdepth 1 -type f -mtime +45 -name '*.arc.zip' -exec /bin/rm -vf {} \;
