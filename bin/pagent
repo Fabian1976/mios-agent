@@ -45,7 +45,8 @@ import re
 import ConfigParser
 import platform
 import getopt
-import logging, logging.handlers
+import logging, logging.handlers, logging.config
+import threading
 
 oracle = None
 probes = None
@@ -226,17 +227,19 @@ class Oracle(object):
 		self.sids            = []
 		self.instances       = instances
 		self.last_connect    = []
+		self.logger          = logging.getLogger(type(self).__name__)
 
 		try:
 			import cx_Oracle
 			self.cx_Oracle = cx_Oracle
 			self.oracle_support = 1
-			logging.info("Sucessfully loaded cx_Oracle module")
+			self.logger.info("Sucessfully loaded cx_Oracle module")
+			testLogger.info("Test")
 		except ImportError:
-			logging.critical("Module cx_Oracle is not installed, please install it!")
+			self.logger.critical("Module cx_Oracle is not installed, please install it!")
 			raise
 		except:
-			logging.critical("Error while loading Module cx_Oracle!")
+			self.logger.critical("Error while loading Module cx_Oracle!")
 			raise
 
 		if self.oracle_support == 0:
@@ -254,10 +257,10 @@ class Oracle(object):
 					self.user.append(m.group(1))
 					self.password.append(m.group(2))
 				else:
-					logging.error("instance %s has no file %s" % (instance, sql_file))
+					self.logger.error("instance %s has no file %s" % (instance, sql_file))
 				sql.close()
 			elif user == '' or password == '':
-				logging.error("File: %s doesn't exist" % sql_file)
+				self.logger.error("File: %s doesn't exist" % sql_file)
 				sys.exit(1)
 
 			self.user.append(user)
@@ -275,17 +278,17 @@ class Oracle(object):
 		while self.connections[indx] == None:
 			try:
 				self.connections[indx]  = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
-				logging.info("Connection succesful")
+				self.logger.info("Connection succesful")
 				time.sleep(2)
 			except Exception, e:
-				logging.critical("Unable to connect to Oracle")
-				logging.critical("ORA: Additional information: %s" % e)
-				logging.info("Trying to reconnect in 10 seconds")
+				self.logger.critical("Unable to connect to Oracle")
+				self.logger.critical("ORA: Additional information: %s" % e)
+				self.logger.info("Trying to reconnect in 10 seconds")
 				time.sleep(10)
 		self.cursor[indx]       = self.connections[indx].cursor()
 		self.version[indx]      = self.connections[indx].version
 		self.last_connect[indx] = time.time()
-		logging.info("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
+		self.logger.info("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
 
 	def reconnect(self, data):
 
@@ -293,7 +296,7 @@ class Oracle(object):
 			(item, arguments) = data.split('[')
 			arguments = arguments.replace(']','')
 		else:
-			logging.error("no oracle sid specified")
+			self.logger.error("no oracle sid specified")
 			return None
 		arguments = arguments.replace(' ','')
 		arguments = arguments.rstrip()
@@ -305,21 +308,21 @@ class Oracle(object):
 			sid = arguments
 
 		if not sid in self.sids:
-			logging.error("Unknown SID: %s" % sid)
-			logging.error("Additional info: %s" % data)
+			self.logger.error("Unknown SID: %s" % sid)
+			self.logger.error("Additional info: %s" % data)
 			return
 
 		indx = self.sids.index(sid)
-		logging.debug("indx: %s" % indx)
+		self.logger.debug("indx: %s" % indx)
 
 		try:
 			self.connections[indx] = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
 		except Exception, e:
-			logging.critical("Unable to connect to Oracle")
-			logging.critical("ORA: Additional information: %s" % e)
+			self.logger.critical("Unable to connect to Oracle")
+			self.logger.critical("ORA: Additional information: %s" % e)
 		self.cursor[indx]      = self.connections[indx].cursor()
 		self.version[indx]    = self.connections[indx].version
-		logging.info("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
+		self.logger.info("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
 		self.last_connect[indx] = time.time()
 
 	def get(self, data):
@@ -327,14 +330,14 @@ class Oracle(object):
 		fields=[]
 
 		if self.oracle_support == 0:
-			logging.error("Oracle not supported")
+			self.logger.error("Oracle not supported")
 			return None
 
 		if  data.find('[') > 0:
 			(item, arguments) = data.split('[')
 			arguments = arguments.replace(']','')
 		else:
-			logging.error("no oracle sid specified")
+			self.logger.error("no oracle sid specified")
 			return None
 		arguments = arguments.replace(' ','')
 		arguments = arguments.rstrip()
@@ -351,7 +354,7 @@ class Oracle(object):
 			action = re.sub('MIOS_ARG_2', fields[1], action)
 
 		if not sid in self.sids:
-			logging.error("SID not found in list of SIDS from config file")
+			self.logger.error("SID not found in list of SIDS from config file")
 			return -1
 
 		try:
@@ -359,8 +362,8 @@ class Oracle(object):
 			try:
 				self.cursor[indx].execute(action)
 			except Exception, e:
-				logging.error("ORA: Failed to execute query: %s" % action)
-				logging.error("ORA: Additional info: %s" % e)
+				self.logger.error("ORA: Failed to execute query: %s" % action)
+				self.logger.error("ORA: Additional info: %s" % e)
 				ORA_error = e.split(':')[0]
 				if ORA_error == 'ORA-03113': #Not connected to Oracle
 					return -2 #Forces parent to reconnect
@@ -370,20 +373,20 @@ class Oracle(object):
 			try:
 				value = self.cursor[indx].fetchone()[0]
 			except Exception, e:
-				logging.error("ORA: Failed to fetch result from resultset")
-				logging.error("ORA: Additional info: %s" % e)
+				self.logger.error("ORA: Failed to fetch result from resultset")
+				self.logger.error("ORA: Additional info: %s" % e)
 				return -1
 
-			logging.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, action.rstrip("\n\r"), str(value)))
+			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, action.rstrip("\n\r"), str(value)))
 			return value
 		except:
-			logging.error("Error in Oracle connection SID: %s" % sid)
+			self.logger.error("Error in Oracle connection SID: %s" % sid)
 			return -2
 
 	def execute(self, sid, query):
 
 		if self.oracle_support == 0:
-			logging.error("Oracle not supported")
+			self.logger.error("Oracle not supported")
 			return None
 
 		if not sid in self.sids:
@@ -393,21 +396,21 @@ class Oracle(object):
 			try:
 				self.cursor[indx].execute(query)
 			except Exception, e:
-				logging.error("ORA: Failed to execute query: %s" % action)
-				logging.error("ORA: Additional info: %s" % e)
+				self.logger.error("ORA: Failed to execute query: %s" % action)
+				self.logger.error("ORA: Additional info: %s" % e)
 				return -1
 
 			try:
 				value = self.cursor[indx].fetchall()
 			except Exception, e:
-				logging.error("ORA: Failed to fetch resultset")
-				logging.error("ORA: Additional info: %s" % e)
+				self.logger.error("ORA: Failed to fetch resultset")
+				self.logger.error("ORA: Additional info: %s" % e)
 				return -1
 
-			logging.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, query, str(value)))
+			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, query, str(value)))
 			return value
 		except:
-			logging.error("Error in Oracle connection SID: %s" % sid)
+			self.logger.error("Error in Oracle connection SID: %s" % sid)
 			return -2
 
 class Postgres(object):
@@ -1054,6 +1057,27 @@ class ConnectionHandler:
 		f.write(content)
 		f.close()
 
+class ConnectionThread(threading.Thread):
+	def __init__(self, threadID, name, interval):
+		threading.Thread.__init__(self)
+		self.threadID = threadID
+		self.name = name
+		self.interval = interval
+	def run(self):
+		rootLogger.info("Starting thread " + self.name)
+		s = socket(AF_INET,SOCK_STREAM)
+		s.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
+		s.bind((config.listen_ip, config.listen_port))
+		s.listen(5)
+		while True:
+			try:
+				con,addr = s.accept()
+				ch = ConnectionHandler(con)
+				ch.start()
+			except:
+				pass
+		rootLogger.info("Exiting thread " + self.name)
+
 def usage():
 	print "usage: %s -c <config file> (--loglevel=loglevel)" % (sys.argv[0])
 	print "\n<config file> - Location and name of the config file"
@@ -1069,6 +1093,8 @@ def main():
 	global disk_stat
 	global postgres
 	global net_stat
+	global testLogger
+	global rootLogger
 	
 	config_file = ''
 
@@ -1101,11 +1127,11 @@ def main():
 	config.parse()
 	loglevel = config.loglevel
 
-	numeric_loglevel = getattr(logging, loglevel.upper(), None)
-	if not isinstance(numeric_loglevel, int):
-		raise ValueError('Invalid log level: %s' % loglevel)
-	logging.basicConfig(level=numeric_loglevel, filename=config.logfile, format='[%(asctime)s] %(levelname)7s - %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
-	logging.info('============================= Start pagent ======================================')
+	logging.config.fileConfig('../etc/logging.conf')
+	rootLogger = logging.getLogger()
+	testLogger = logging.getLogger("test")
+
+	rootLogger.info('============================= Start pagent ======================================')
 
 	if len(sys.argv) == 1:
 		if os.fork(): sys.exit(0)
@@ -1135,18 +1161,8 @@ def main():
 	else:
 		postgres = Postgres(config.postgres_dbs)
 
-	s = socket(AF_INET,SOCK_STREAM)
-	s.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
-	s.bind((config.listen_ip, config.listen_port))
-	s.listen(5)
-
-	while True:
-		try:
-			con,addr = s.accept()
-			ch = ConnectionHandler(con)
-			ch.start()
-		except:
-			pass
+	connectionThread = ConnectionThread(1, "ConnectionThread", 0)
+	connectionThread.start()
 
 if __name__ == "__main__":
 
