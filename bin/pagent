@@ -1078,6 +1078,18 @@ class ConnectionThread(threading.Thread):
 				pass
 		rootLogger.info("Exiting thread " + self.name)
 
+class LoggingThread(threading.Thread):
+	def __init__(self, threadID, name, interval):
+		threading.Thread.__init__(self)
+		self.threadID = threadID
+		self.name = name
+		self.interval = interval
+	def run(self):
+		rootLogger.info("Starting thread " + self.name)
+		while True:
+			logging.config.fileConfig('../etc/logging.conf')
+			time.sleep(self.interval)
+		rootLogger.info("Exiting thread " + self.name)
 def usage():
 	print "usage: %s -c <config file> (--loglevel=loglevel)" % (sys.argv[0])
 	print "\n<config file> - Location and name of the config file"
@@ -1162,7 +1174,9 @@ def main():
 		postgres = Postgres(config.postgres_dbs)
 
 	connectionThread = ConnectionThread(1, "ConnectionThread", 0)
+	loggingThread = LoggingThread(2, "LoggingThread", 60)
 	connectionThread.start()
+	loggingThread.start()
 
 if __name__ == "__main__":
 
