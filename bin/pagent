@@ -55,10 +55,10 @@ postgres = None
 
 class Config:
 
-	def __init__(self, ini_file):
+	def __init__(self, conf_file):
 
 		self.config          = None
-		self.ini_file        = ''
+		self.conf_file        = ''
 		self.output          = ''
 		self.listen_ip       = ''
 		self.listen_port     = 0
@@ -75,12 +75,12 @@ class Config:
 		except:
 			self.pagent_home = "/home/mios/pagent"
 
-		self.ini_file = ini_file
-		if not os.path.exists(self.ini_file):
-			print "Can't open config file %s" % self.ini_file
+		self.conf_file = conf_file
+		if not os.path.exists(self.conf_file):
+			print "Can't open config file %s" % self.conf_file
 
 		self.config = ConfigParser.ConfigParser()
-		self.config.read(self.ini_file)
+		self.config.read(self.conf_file)
 
 	def parse(self):
 
@@ -126,7 +126,7 @@ class Config:
 			self.zabbix_port    = 10051
 
 		print "[common]"
-		print "INI file             : %s" % self.ini_file
+		print "INI file             : %s" % self.conf_file
 		print "Output               :", self.output
 		print "Listen on ip address : %s" % self.listen_ip
 		print "Listen on port       : %d" % self.listen_port
