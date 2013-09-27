@@ -234,7 +234,6 @@ class Oracle(object):
 			self.cx_Oracle = cx_Oracle
 			self.oracle_support = 1
 			self.logger.info("Sucessfully loaded cx_Oracle module")
-			testLogger.info("Test")
 		except ImportError:
 			self.logger.critical("Module cx_Oracle is not installed, please install it!")
 			raise
@@ -1105,7 +1104,6 @@ def main():
 	global disk_stat
 	global postgres
 	global net_stat
-	global testLogger
 	global rootLogger
 	
 	config_file = ''
@@ -1141,7 +1139,6 @@ def main():
 
 	logging.config.fileConfig('../etc/logging.conf')
 	rootLogger = logging.getLogger()
-	testLogger = logging.getLogger("test")
 
 	rootLogger.info('============================= Start pagent ======================================')
 
