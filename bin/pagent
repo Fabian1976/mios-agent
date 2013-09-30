@@ -180,17 +180,18 @@ class Probes:
 
 		rootLogger.info("Caching probes...")
 		for file in os.listdir(config.pagent_home + '/probes'):
-			f = open(config.pagent_home + '/probes/' + file)
-			type = f.readline()
-			try:
-				type = type.split('=')[1].strip()
-			except:
-				rootLogger.error("Found probes with no type definition on the first line: %s" % file)
-				type = 'unknown'
-			action = f.read()
-			rootLogger.debug("Probe cached - type: %s, action: %s" % (type, action))
-			self.probe_list[file] = [type, action]
-			f.close()
+			if file != 'sync_probes':
+				f = open(config.pagent_home + '/probes/' + file)
+				type = f.readline()
+				try:
+					type = type.split('=')[1].strip()
+				except:
+					rootLogger.error("Found probes with no type definition on the first line: %s" % file)
+					type = 'unknown'
+				action = f.read()
+				rootLogger.debug("Probe cached - type: %s, action: %s" % (type, action))
+				self.probe_list[file] = [type, action]
+				f.close()
 
 	def get_action(self, probe):
 
@@ -213,6 +214,23 @@ class Probes:
 			else:
 				rootLogger.error("No probe file: %s" % probe)
 				return -1
+
+	def refresh_probes(self):
+
+		rootLogger.info("Refreshing probes cache...")
+		for file in os.listdir(config.pagent_home + '/probes'):
+			if file != 'sync_probes':
+				f = open(config.pagent_home + '/probes/' + file)
+				type = f.readline()
+				try:
+					type = type.split('=')[1].strip()
+				except:
+					rootLogger.error("Found probes with no type definition on the first line: %s" % file)
+					type = 'unknown'
+				action = f.read()
+				rootLogger.debug("Probe cached - type: %s, action: %s" % (type, action))
+				self.probe_list[file] = [type, action]
+				f.close()
 
 class Oracle(object):
 
