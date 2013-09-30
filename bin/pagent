@@ -1147,21 +1147,7 @@ def main():
 
 	rootLogger = logging.getLogger()
 
-	rootLogger.info('============================= Start pagent ======================================')
-
-#	if len(sys.argv) == 1:
-#		if os.fork(): sys.exit(0)
-#		os.umask(0)
-#		os.setsid()
-#		if os.fork(): sys.exit(0)
-#		sys.stdout.flush()
-#		sys.stderr.flush()
-#		stdin  = file('/dev/null', 'r')
-#		stdout = file(config.logfile, 'a+')
-#		stderr = file(config.logfile, 'a+', 0)
-#		os.dup2(stdin.fileno(), sys.stdin.fileno())
-#		os.dup2(stdout.fileno(), sys.stdout.fileno())
-#		os.dup2(stderr.fileno(), sys.stderr.fileno())
+	rootLogger.info('============================= Initialize pagent =================================')
 
 	disk_stat = DiskStats()
 	probes = Probes()
@@ -1182,6 +1168,7 @@ def main():
 	loggingThread = createThread(monitorLogging, 60)
 	probesCacheThread = createThread(refreshProbesCache, 600)
 	#Starting threads
+	rootLogger.info('============================= Start pagent ======================================')
 	connectionThread.start()
 	loggingThread.start()
 	probesCacheThread.start()
