@@ -62,7 +62,6 @@ class Config:
 		self.listen_ip       = ''
 		self.listen_port     = 0
 		self.logfile         = ''
-		self.loglevel        = ''
 		self.hostname        = ''
 		self.zabbix_agent    = ''
 		self.zabbix_port     = 0
@@ -98,11 +97,6 @@ class Config:
 			self.logfile        = self.config.get('common', 'logfile')
 		except:
 			self.logfile        = self.pagent_home + '/log/pagent.log'
-
-		try:
-			self.loglevel       = self.config.get('common', 'loglevel')
-		except:
-			self.loglevel       = 'INFO'
 
 		try:
 			self.hostname       = self.config.get('common', 'hostname')
@@ -1143,7 +1137,6 @@ def main():
 
 	config  = Config(config_file)
 	config.parse()
-	loglevel = config.loglevel
 
 	logging.config.fileConfig('../etc/logging.conf')
 	rootLogger = logging.getLogger()
