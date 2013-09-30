@@ -1076,39 +1076,33 @@ class ConnectionHandler:
 		f.write(content)
 		f.close()
 
-class ConnectionThread(threading.Thread):
-	def __init__(self, threadID, name, interval):
+class createThread(threading.Thread):
+	def __init__(self, target, *args):
+		self.target = target
+		self.args = args
 		threading.Thread.__init__(self)
-		self.threadID = threadID
-		self.name = name
-		self.interval = interval
 	def run(self):
-		rootLogger.info("Starting thread " + self.name)
-		s = socket(AF_INET,SOCK_STREAM)
-		s.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
-		s.bind((config.listen_ip, config.listen_port))
-		s.listen(5)
-		while True:
-			try:
-				con,addr = s.accept()
-				ch = ConnectionHandler(con)
-				ch.start()
-			except:
-				pass
-		rootLogger.info("Exiting thread " + self.name)
+		rootLogger.info("Creating thread for function %s" % self.target.__name__)
+		self.target(*self.args)
 
-class LoggingThread(threading.Thread):
-	def __init__(self, threadID, name, interval):
-		threading.Thread.__init__(self)
-		self.threadID = threadID
-		self.name = name
-		self.interval = interval
-	def run(self):
-		rootLogger.info("Starting thread " + self.name)
-		while True:
-			logging.config.fileConfig('../etc/logging.conf')
-			time.sleep(self.interval)
-		rootLogger.info("Exiting thread " + self.name)
+def monitorLogging(interval):
+	while True:
+		logging.config.fileConfig('../etc/logging.conf')
+		time.sleep(interval)
+
+def socketListener():
+	s = socket(AF_INET,SOCK_STREAM)
+	s.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
+	s.bind((config.listen_ip, config.listen_port))
+	s.listen(5)
+	while True:
+		try:
+			con,addr = s.accept()
+			ch = ConnectionHandler(con)
+			ch.start()
+		except:
+			pass
+
 def usage():
 	print "usage: %s -c <config file>" % sys.argv[0]
 	print "\n<config file> - Location and name of the config file"
@@ -1188,8 +1182,8 @@ def main():
 	else:
 		postgres = Postgres(config.postgres_dbs)
 
-	connectionThread = ConnectionThread(1, "ConnectionThread", 0)
-	loggingThread = LoggingThread(2, "LoggingThread", 60)
+	connectionThread = createThread(socketListener)
+	loggingThread = createThread(monitorLogging, 60)
 	connectionThread.start()
 	loggingThread.start()
 
