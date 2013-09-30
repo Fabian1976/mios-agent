@@ -1138,7 +1138,13 @@ def main():
 	config  = Config(config_file)
 	config.parse()
 
-	logging.config.fileConfig('../etc/logging.conf')
+	try:
+		logging.config.fileConfig('../etc/logging.conf')
+	except:
+		print "Error while loading file necessary for the log facility (../etc/logging.conf)"
+		print "Unable to continue"
+		exit(1)
+
 	rootLogger = logging.getLogger()
 
 	rootLogger.info('============================= Start pagent ======================================')
