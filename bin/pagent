@@ -59,8 +59,6 @@ class Config:
 	def __init__(self, conf_file):
 
 		self.config          = None
-		self.conf_file        = ''
-		self.output          = ''
 		self.listen_ip       = ''
 		self.listen_port     = 0
 		self.logfile         = ''
@@ -79,17 +77,12 @@ class Config:
 		self.conf_file = conf_file
 		if not os.path.exists(self.conf_file):
 			print "Can't open config file %s" % self.conf_file
+			exit(1)
 
 		self.config = ConfigParser.ConfigParser()
 		self.config.read(self.conf_file)
 
 	def parse(self):
-
-		try:
-			self.output         = self.config.get('common', 'output')
-			self.output         = [strip(x) for x in self.output]
-		except:
-			pass
 
 		try:
 			self.listen_ip      = self.config.get('common', 'listen_ip')
@@ -128,7 +121,6 @@ class Config:
 
 		print "[common]"
 		print "INI file             : %s" % self.conf_file
-		print "Output               :", self.output
 		print "Listen on ip address : %s" % self.listen_ip
 		print "Listen on port       : %d" % self.listen_port
 		print "Log file             : %s" % self.logfile
@@ -1146,9 +1138,8 @@ def main():
 			config_file = v
 
 	if not config_file:
-		print "No config file specified"
-		usage()
-		sys.exit(-1)
+		print "No config file specified, assuming default /etc/mios-agent.conf"
+		config_file = '/etc/mios-agent.conf'
 
 	config  = Config(config_file)
 	config.parse()
@@ -1159,19 +1150,19 @@ def main():
 
 	rootLogger.info('============================= Start pagent ======================================')
 
-	if len(sys.argv) == 1:
-		if os.fork(): sys.exit(0)
-		os.umask(0)
-		os.setsid()
-		if os.fork(): sys.exit(0)
-		sys.stdout.flush()
-		sys.stderr.flush()
-		stdin  = file('/dev/null', 'r')
-		stdout = file(config.logfile, 'a+')
-		stderr = file(config.logfile, 'a+', 0)
-		os.dup2(stdin.fileno(), sys.stdin.fileno())
-		os.dup2(stdout.fileno(), sys.stdout.fileno())
-		os.dup2(stderr.fileno(), sys.stderr.fileno())
+#	if len(sys.argv) == 1:
+#		if os.fork(): sys.exit(0)
+#		os.umask(0)
+#		os.setsid()
+#		if os.fork(): sys.exit(0)
+#		sys.stdout.flush()
+#		sys.stderr.flush()
+#		stdin  = file('/dev/null', 'r')
+#		stdout = file(config.logfile, 'a+')
+#		stderr = file(config.logfile, 'a+', 0)
+#		os.dup2(stdin.fileno(), sys.stdin.fileno())
+#		os.dup2(stdout.fileno(), sys.stdout.fileno())
+#		os.dup2(stderr.fileno(), sys.stderr.fileno())
 
 	disk_stat = DiskStats()
 	probes = Probes()
