@@ -128,7 +128,14 @@ class Config:
 				continue
 			dbtype = section.split('.')[0]
 			if dbtype == 'oracle':
-				sid                     = section.split('.')[1]
+				try:
+					sid                     = section.split('.')[1]
+				except:
+					print "No SID specified. Please review example section in config file"
+					exit(1)
+				if sid == '':
+					print "No SID specified. Please review example section in config file"
+					exit(1)
 				user                    = self.config.get(section, 'user')
 				password                = self.config.get(section, 'password')
 				self.oracle_sids[sid]   = (user, password)
@@ -263,8 +270,8 @@ class Oracle(object):
 					self.logger.error("instance %s has no file %s" % (instance, sql_file))
 				sql.close()
 			elif user == '' or password == '':
-				self.logger.error("File: %s doesn't exist" % sql_file)
-				sys.exit(1)
+				self.logger.error("File: %s doesn't exist and user / password not specified in config file." % sql_file)
+				exit(1)
 
 			self.user.append(user)
 			self.password.append(password)
