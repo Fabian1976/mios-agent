@@ -149,11 +149,31 @@ class Config:
 				print "Oracle password		: %s" % password
 				print "Oracle OA_DIR		: %s" % self.oracle_oa_dir
 			if dbtype == 'postgres':
-				dbname			= section.split('.')[1]
-				host			= self.config.get(section, 'host')
-				port			= self.config.get(section, 'port')
-				user			= self.config.get(section, 'user')
-				password		= self.config.get(section, 'password')
+				try:
+					dbname			= section.split('.')[1]
+				except:
+					print "No DBNAME specified. Please review example section in config file"
+					exit(1)
+				try:
+					host			= self.config.get(section, 'host')
+				except:
+					print "No host specified for db: %s. Please review example section in config file" % dbname
+					exit(1)
+				try:
+					port			= self.config.get(section, 'port')
+				except:
+					print "No port specified for db: %s. Please review example section in config file" % dbname
+					exit(1)
+				try:
+					user			= self.config.get(section, 'user')
+				except:
+					print "No user specified for db: %s. Please review example section in config file" % dbname
+					exit(1)
+				try:
+					password		= self.config.get(section, 'password')
+				except:
+					print "No password specified for db: %s. Please review example section in config file" % dbname
+					exit(1)
 				self.postgres_dbs[dbname] = (host, port, user, password)
 				print ""
 				print section
