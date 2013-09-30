@@ -215,7 +215,7 @@ class Probes:
 				rootLogger.error("No probe file: %s" % probe)
 				return -1
 
-	def refresh_probes(self):
+	def refreshProbes(self):
 
 		rootLogger.info("Refreshing probes cache...")
 		for file in os.listdir(config.pagent_home + '/probes'):
@@ -1090,6 +1090,11 @@ def monitorLogging(interval):
 		logging.config.fileConfig('../etc/logging.conf')
 		time.sleep(interval)
 
+def refreshProbesCache(interval):
+	while True:
+		probes.refreshProbes()
+		time.sleep(interval)
+
 def socketListener():
 	s = socket(AF_INET,SOCK_STREAM)
 	s.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
@@ -1182,10 +1187,14 @@ def main():
 	else:
 		postgres = Postgres(config.postgres_dbs)
 
+	# Creating threads
 	connectionThread = createThread(socketListener)
 	loggingThread = createThread(monitorLogging, 60)
+	probesCacheThread = createThread(refreshProbesCache, 600)
+	#Starting threads
 	connectionThread.start()
 	loggingThread.start()
+	probesCacheThread.start()
 
 if __name__ == "__main__":
 
