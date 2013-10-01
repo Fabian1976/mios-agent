@@ -185,6 +185,27 @@ class Config:
 			if dbtype not in ('oracle', 'postgres'):
 				print "Unsupported database type: %s" % dbtype
 
+	def reparse(self):
+		self.config.read(self.conf_file)
+		sections = self.config.sections()
+		for section in sections:
+			if section == 'common':
+				continue
+			dbtype = section.split('.')[0]
+			if dbtype == 'oracle':
+				try:
+					sid = section.split('.')[1]
+				except:
+					rootLogger.error("SID (%s) not correctly specified in config file. Please review example section in config file" % section)
+				if sid == '':
+					rootLogger.error("SID (%s) not correctly specified in config file. Please review example section in config file" % section)
+				elif sid not in self.oracle_sids:
+					user = self.config.get(section, 'user')
+					password = self.config.get(section, 'password')
+					self.oracle_sids[sid] = (user, password)
+					rootLogger.info("New SID (%s) found in config file" % sid)
+#					oracle = Oracle(config.oracle_sids)
+
 class Probes:
 
 	def __init__(self):
@@ -319,6 +340,11 @@ class Oracle(object):
 		self.version[indx]      = self.connections[indx].version
 		self.last_connect[indx] = time.time()
 		self.logger.info("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
+
+	def disconnect(self, indx):
+
+		self.cursor[indx].close()
+		self.connections[indx].close()
 
 	def reconnect(self, data):
 
@@ -789,6 +815,13 @@ class ConnectionHandler:
 		data = self.conn.recv(2048)
 		data_orig = data
 		rootLogger.info("received: %s" % data.rstrip("\n\r"))
+
+		rootLogger.info("config SIDs(%s): %s" % (len(config.oracle_sids), config.oracle_sids))
+#		rootLogger.info("Oracle SIDS: %s" % oracle.sids)
+#		rootLogger.info("Instances: %s" % oracle.instances)
+		rootLogger.info("Connections(%s): %s" % (len(oracle.connections), oracle.connections))
+		rootLogger.info("INDX: %s" % oracle.sids.index('miostest'))
+
 		if len(data) >= 4 and data[0:4] == 'MIOS':
 			self.process_mios_call(data[4:])
 			self.conn.close()
@@ -1121,6 +1154,11 @@ def socketListener():
 		except:
 			pass
 
+def reparseConfig(interval):
+	while True:
+		config.reparse()
+		time.sleep(interval)
+
 def usage():
 	print "usage: %s -c <config file>" % sys.argv[0]
 	print "\n<config file> - Location and name of the config file"
@@ -1194,11 +1232,13 @@ def main():
 	connectionThread = createThread(socketListener)
 	loggingThread = createThread(monitorLogging, 60)
 	probesCacheThread = createThread(refreshProbesCache, 600)
+	reparseConfigThread = createThread(reparseConfig, 60)
 	#Starting threads
 	rootLogger.info('============================= Start pagent ======================================')
 	connectionThread.start()
 	loggingThread.start()
 	probesCacheThread.start()
+	reparseConfigThread.start()
 
 if __name__ == "__main__":
 
