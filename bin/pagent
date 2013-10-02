@@ -186,27 +186,41 @@ class Config:
 				print "Unsupported database type: %s" % dbtype
 
 	def reparse(self):
-		self.config.read(self.conf_file)
-		sections = self.config.sections()
+		new_conf    = None
+		oracle_sids = {}
+
+		new_conf = ConfigParser.ConfigParser()
+		new_conf.read(self.conf_file)
+		sections = new_conf.sections()
+		aantal_sids = 0
 		for section in sections:
 			if section == 'common':
 				continue
 			dbtype = section.split('.')[0]
 			if dbtype == 'oracle':
+				aantal_sids += 1
 				try:
 					sid = section.split('.')[1]
+					user = new_conf.get(section, 'user')
+					password = new_conf.get(section, 'password')
+					oracle_sids[sid] = (user,password)
 				except:
 					rootLogger.error("SID (%s) not correctly specified in config file. Please review example section in config file" % section)
 				if sid == '':
 					rootLogger.error("SID (%s) not correctly specified in config file. Please review example section in config file" % section)
-				elif sid not in self.oracle_sids:
-					user = self.config.get(section, 'user')
-					password = self.config.get(section, 'password')
-					self.oracle_sids[sid] = (user, password)
-					rootLogger.info("New SID (%s) found in config file" % sid)
-					oracle.add_connection()
-#					oracle = Oracle(config.oracle_sids)
-#					oracle.__init__(config.oracle_sids)
+		for sid in oracle_sids:
+			if sid not in self.oracle_sids:
+				# We have a new connection
+				self.oracle_sids[sid] = oracle_sids[sid]
+				rootLogger.debug("Found new SID in config: %s. Trying to connect" % sid)
+				oracle.add_connection()
+		for sid in self.oracle_sids:
+			if sid not in oracle_sids:
+				# We have a removed connection
+				rootLogger.debug("A SID has been removed frmo the config: %s. Removing connection" % sid)
+				oracle.remove_connection(sid)
+		rootLogger.debug("Aantal sids in conf: %s. SIDS: %s" % (aantal_sids, oracle_sids))
+		rootLogger.debug("Aantal sids in mem: %s. SIDS: %s" % (len(self.oracle_sids), self.oracle_sids))
 
 class Probes:
 
@@ -362,6 +376,22 @@ class Oracle(object):
 
 		self.cursor[indx].close()
 		self.connections[indx].close()
+
+	def remove_connection(self, sid):
+		indx = self.sids.index(sid)
+		self.logger.debug("SID that needs to be removed: %s" % sid)
+		self.logger.debug("INDX of SID: %s" % indx)
+		# Properly close cursor and connection to database
+		self.disconnect(indx)
+		# Properly destroy objects associated to this connection
+		del self.cursor[indx]
+		del self.connections[indx]
+		del self.user[indx]
+		del self.password[indx]
+		del self.sids[indx]
+		del self.version[indx]
+		del self.last_connect[indx]
+		del config.oracle_sids[sid]
 
 	def reconnect(self, data):
 
@@ -832,15 +862,6 @@ class ConnectionHandler:
 		data = self.conn.recv(2048)
 		data_orig = data
 		rootLogger.info("received: %s" % data.rstrip("\n\r"))
-
-		rootLogger.info("config SIDs(%s): %s" % (len(config.oracle_sids), config.oracle_sids))
-		rootLogger.info("Oracle SIDS: %s" % oracle.sids)
-		rootLogger.info("Instances: %s" % oracle.instances)
-		rootLogger.info("Connections(%s): %s" % (len(oracle.connections), oracle.connections))
-		for sid in oracle.sids:
-			rootLogger.info("INDX(%s): %s" % (sid, oracle.sids.index(sid)))
-#		for instance in oracle.instances:
-#			rootLogger.info("Instance INDX(%s): %s" % (instance, oracle.instances.index(instance)))
 
 		if len(data) >= 4 and data[0:4] == 'MIOS':
 			self.process_mios_call(data[4:])
