@@ -217,7 +217,7 @@ class Config:
 		for sid in self.oracle_sids:
 			if sid not in oracle_sids:
 				# We have a removed connection
-				rootLogger.debug("A SID has been removed frmo the config: %s. Removing connection" % sid)
+				rootLogger.debug("A SID has been removed from the config: %s. Removing connection" % sid)
 				oracle.remove_connection(sid)
 		rootLogger.debug("Aantal sids in conf: %s. SIDS: %s" % (aantal_sids, oracle_sids))
 		rootLogger.debug("Aantal sids in mem: %s. SIDS: %s" % (len(self.oracle_sids), self.oracle_sids))
