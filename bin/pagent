@@ -204,7 +204,9 @@ class Config:
 					password = self.config.get(section, 'password')
 					self.oracle_sids[sid] = (user, password)
 					rootLogger.info("New SID (%s) found in config file" % sid)
+					oracle.add_connection()
 #					oracle = Oracle(config.oracle_sids)
+#					oracle.__init__(config.oracle_sids)
 
 class Probes:
 
@@ -336,10 +338,25 @@ class Oracle(object):
 				self.logger.critical("ORA: Additional information: %s" % e)
 				self.logger.info("Trying to reconnect in 10 seconds")
 				time.sleep(10)
-		self.cursor[indx]       = self.connections[indx].cursor()
-		self.version[indx]      = self.connections[indx].version
-		self.last_connect[indx] = time.time()
-		self.logger.info("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
+			self.cursor[indx]       = self.connections[indx].cursor()
+			self.version[indx]      = self.connections[indx].version
+			self.last_connect[indx] = time.time()
+			self.logger.info("Connected to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
+
+	def add_connection(self):
+
+		for instance in self.instances:
+			if instance not in self.sids:
+				user, password = self.instances[instance]
+				self.user.append(user)
+				self.password.append(password)
+				self.sids.append(instance)
+				self.connections.append(None)
+				self.cursor.append(None)
+				self.version.append('')
+				indx = self.sids.index(instance)
+				self.last_connect.append(0)
+				self.connect(indx)
 
 	def disconnect(self, indx):
 
@@ -817,10 +834,13 @@ class ConnectionHandler:
 		rootLogger.info("received: %s" % data.rstrip("\n\r"))
 
 		rootLogger.info("config SIDs(%s): %s" % (len(config.oracle_sids), config.oracle_sids))
-#		rootLogger.info("Oracle SIDS: %s" % oracle.sids)
-#		rootLogger.info("Instances: %s" % oracle.instances)
+		rootLogger.info("Oracle SIDS: %s" % oracle.sids)
+		rootLogger.info("Instances: %s" % oracle.instances)
 		rootLogger.info("Connections(%s): %s" % (len(oracle.connections), oracle.connections))
-		rootLogger.info("INDX: %s" % oracle.sids.index('miostest'))
+		for sid in oracle.sids:
+			rootLogger.info("INDX(%s): %s" % (sid, oracle.sids.index(sid)))
+#		for instance in oracle.instances:
+#			rootLogger.info("Instance INDX(%s): %s" % (instance, oracle.instances.index(instance)))
 
 		if len(data) >= 4 and data[0:4] == 'MIOS':
 			self.process_mios_call(data[4:])
