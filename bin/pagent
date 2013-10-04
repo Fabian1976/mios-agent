@@ -1175,7 +1175,7 @@ class createThread(threading.Thread):
 
 def monitorLogging(interval):
 	while True:
-		logging.config.fileConfig(pagent_home + '/etc/logging.conf')
+		logging.config.fileConfig(config.pagent_home + '/etc/logging.conf')
 		time.sleep(interval)
 
 def refreshProbesCache(interval):
@@ -1217,7 +1217,6 @@ class MyDaemon(Daemon):
 		global postgres
 		global net_stat
 		global rootLogger
-		global pagent_home
 	
 		config_file = ''
 
