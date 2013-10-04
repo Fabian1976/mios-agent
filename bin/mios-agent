@@ -70,9 +70,9 @@ class Config:
 		self.oracle_oa_dir   = ''
 		self.postgres_dbs    = {}
 		try:
-			self.pagent_home = os.environ['PAGENT_HOME']
+			self.magent_home = os.environ['MAGENT_HOME']
 		except:
-			self.pagent_home = "/home/mios/mios-agent"
+			self.magent_home = "/home/mios/mios-agent"
 
 		self.conf_file = conf_file
 		if not os.path.exists(self.conf_file):
@@ -97,7 +97,7 @@ class Config:
 		try:
 			self.logfile        = self.config.get('common', 'logfile')
 		except:
-			self.logfile        = self.pagent_home + '/log/mios-agent.log'
+			self.logfile        = self.magent_home + '/log/mios-agent.log'
 
 		try:
 			self.hostname       = self.config.get('common', 'hostname')
@@ -230,9 +230,9 @@ class Probes:
 		self.probe_list = {}
 
 		rootLogger.info("Caching probes...")
-		for file in os.listdir(config.pagent_home + '/probes'):
+		for file in os.listdir(config.magent_home + '/probes'):
 			if file != 'sync_probes':
-				f = open(config.pagent_home + '/probes/' + file)
+				f = open(config.magent_home + '/probes/' + file)
 				type = f.readline()
 				try:
 					type = type.split('=')[1].strip()
@@ -250,8 +250,8 @@ class Probes:
 			return self.probe_list[probe][1]
 		except KeyError:
 			rootLogger.info("Probe not found in cache. Trying to load new probe: %s" % probe)
-			if os.path.exists(config.pagent_home + '/probes/' + probe):
-				f = open(config.pagent_home + '/probes/' + probe)
+			if os.path.exists(config.magent_home + '/probes/' + probe):
+				f = open(config.magent_home + '/probes/' + probe)
 				type = f.readline()
 				try:
 					type = type.split('=')[1].strip()
@@ -269,9 +269,9 @@ class Probes:
 	def refreshProbes(self):
 
 		rootLogger.info("Refreshing probes cache...")
-		for file in os.listdir(config.pagent_home + '/probes'):
+		for file in os.listdir(config.magent_home + '/probes'):
 			if file != 'sync_probes':
-				f = open(config.pagent_home + '/probes/' + file)
+				f = open(config.magent_home + '/probes/' + file)
 				type = f.readline()
 				try:
 					type = type.split('=')[1].strip()
@@ -1160,7 +1160,7 @@ class ConnectionHandler:
 		pointer     = pointer + 9
 		content     = data[pointer:]
 
-		f = open(config.pagent_home + "/probes/%s" % name, "w")
+		f = open(config.magent_home + "/probes/%s" % name, "w")
 		f.write(content)
 		f.close()
 
@@ -1175,7 +1175,7 @@ class createThread(threading.Thread):
 
 def monitorLogging(interval):
 	while True:
-		logging.config.fileConfig(config.pagent_home + '/etc/logging.conf')
+		logging.config.fileConfig(config.magent_home + '/etc/logging.conf')
 		time.sleep(interval)
 
 def refreshProbesCache(interval):
@@ -1221,9 +1221,9 @@ class MyDaemon(Daemon):
 		config_file = ''
 
 		try:
-			pagent_home = os.environ['PAGENT_HOME']
+			magent_home = os.environ['MAGENT_HOME']
 		except:
-			pagent_home = "/home/mios/mios-agent"
+			magent_home = "/home/mios/mios-agent"
 
 		try:
 			optlist, args = getopt.getopt(sys.argv[1:], 'c:')
@@ -1241,16 +1241,16 @@ class MyDaemon(Daemon):
 				config_file = v
 
 		if not config_file:
-			print "No config file specified, assuming default $PAGENT_HOME/etc/mios-agent.conf"
-			config_file = pagent_home + '/etc/mios-agent.conf'
+			print "No config file specified, assuming default $MAGENT_HOME/etc/mios-agent.conf"
+			config_file = magent_home + '/etc/mios-agent.conf'
 
 		config  = Config(config_file)
 		config.parse()
 
 		try:
-			logging.config.fileConfig(pagent_home + '/etc/logging.conf')
+			logging.config.fileConfig(magent_home + '/etc/logging.conf')
 		except:
-			print "Error while loading file necessary for the log facility ($PAGENT_HOME/etc/logging.conf)"
+			print "Error while loading file necessary for the log facility ($MAGENT_HOME/etc/logging.conf)"
 			print "Unable to continue"
 			exit(1)
 
