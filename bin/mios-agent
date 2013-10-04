@@ -1194,11 +1194,7 @@ def reparseConfig(interval):
 		config.reparse()
 		time.sleep(interval)
 
-def usage():
-	print "usage: %s -c <config file>" % sys.argv[0]
-	print "\n<config file> - Location and name of the config file"
-
-class MyDaemon(Daemon):
+class MagentDaemon(Daemon):
 
 	def run(self):
 
@@ -1262,7 +1258,7 @@ class MyDaemon(Daemon):
 
 if __name__ == "__main__":
 
-	daemon = MyDaemon('/var/run/mios/mios-agent.pid', '/tmp/mios-agent.stdout', '/tmp/mios-agent.stderr')
+	daemon = MagentDaemon('/var/run/mios/mios-agent.pid', '/tmp/mios-agent.stdout', '/tmp/mios-agent.stderr')
 	if len(sys.argv) == 2:
 		if 'start' == sys.argv[1]:
 			daemon.start()
