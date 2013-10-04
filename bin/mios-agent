@@ -1194,6 +1194,27 @@ def reparseConfig(interval):
 		config.reparse()
 		time.sleep(interval)
 
+def checkEnvironment():
+	try:
+		magent_home = os.environ['MAGENT_HOME']
+	except:
+		rootLogger.warning("Environment variabele MAGENT_HOME not set. Assuming default of: /opt/mios/mios-agent")
+	try:
+		oracle_base = os.environ['ORACLE_BASE']
+	except:
+		rootLogger.critical("Environment variabele ORACLE_BASE not set. MIOS-AGENT will not function without it.")
+		exit(1)
+	try:
+		oracle_home = os.environ['ORACLE_HOME']
+	except:
+		rootLogger.critical("Environment variabele ORACLE_HOME not set. MIOS-AGENT will not function without it.")
+		exit(1)
+	try:
+		oracle_lib = os.environ['LD_LIBRARY_PATH']
+	except:
+		rootLogger.critical("Environment variabele LD_LIBRARY_PATH not set. MIOS-AGENT will not function without it.")
+		exit(1)
+
 class MagentDaemon(Daemon):
 
 	def run(self):
@@ -1229,6 +1250,7 @@ class MagentDaemon(Daemon):
 		rootLogger = logging.getLogger()
 
 		rootLogger.info('============================= Initialize MIOS-AGENT =================================')
+		checkEnvironment()
 
 		disk_stat = DiskStats()
 		probes = Probes()
