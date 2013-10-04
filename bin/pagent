@@ -47,6 +47,7 @@ import platform
 import getopt
 import logging, logging.handlers, logging.config
 import threading
+from daemon import Daemon
 
 oracle = None
 probes = None
@@ -1174,7 +1175,7 @@ class createThread(threading.Thread):
 
 def monitorLogging(interval):
 	while True:
-		logging.config.fileConfig('../etc/logging.conf')
+		logging.config.fileConfig(pagent_home + '/etc/logging.conf')
 		time.sleep(interval)
 
 def refreshProbesCache(interval):
@@ -1204,83 +1205,102 @@ def usage():
 	print "usage: %s -c <config file>" % sys.argv[0]
 	print "\n<config file> - Location and name of the config file"
 
-def main():
+class MyDaemon(Daemon):
 
-	global vp
-	global config
-	global probes
-	global oracle
-	global disk_stat
-	global postgres
-	global net_stat
-	global rootLogger
+	def run(self):
+
+		global vp
+		global config
+		global probes
+		global oracle
+		global disk_stat
+		global postgres
+		global net_stat
+		global rootLogger
+		global pagent_home
 	
-	config_file = ''
+		config_file = ''
 
-	try:
-		pagent_home = os.environ['PAGENT_HOME']
-	except:
-		pagent_home = "/home/mios/pagent"
+		try:
+			pagent_home = os.environ['PAGENT_HOME']
+		except:
+			pagent_home = "/home/mios/pagent"
 
-	try:
-		optlist, args = getopt.getopt(sys.argv[1:], 'c:')
-	except:
-		usage()
-		sys.exit(-1)
+		try:
+			optlist, args = getopt.getopt(sys.argv[1:], 'c:')
+		except:
+			usage()
+			sys.exit(-1)
 
-	if not optlist:
-		print "No options specified"
-		usage()
-		sys.exit(-1)
+#		if not optlist:
+#			print "No options specified"
+#			usage()
+#			sys.exit(-1)
 
-	for o, v in optlist:
-		if o == "-c":
-			config_file = v
+		for o, v in optlist:
+			if o == "-c":
+				config_file = v
 
-	if not config_file:
-		print "No config file specified, assuming default /etc/mios-agent.conf"
-		config_file = '/etc/mios-agent.conf'
+		if not config_file:
+			print "No config file specified, assuming default $PAGENT_HOME/etc/pagent.conf"
+			config_file = pagent_home + '/etc/pagent.conf'
 
-	config  = Config(config_file)
-	config.parse()
+		config  = Config(config_file)
+		config.parse()
 
-	try:
-		logging.config.fileConfig('../etc/logging.conf')
-	except:
-		print "Error while loading file necessary for the log facility (../etc/logging.conf)"
-		print "Unable to continue"
-		exit(1)
+		try:
+			logging.config.fileConfig(pagent_home + '/etc/logging.conf')
+		except:
+			print "Error while loading file necessary for the log facility ($PAGENT_HOME/etc/logging.conf)"
+			print "Unable to continue"
+			exit(1)
 
-	rootLogger = logging.getLogger()
+		rootLogger = logging.getLogger()
 
-	rootLogger.info('============================= Initialize pagent =================================')
+		rootLogger.info('============================= Initialize pagent =================================')
 
-	disk_stat = DiskStats()
-	probes = Probes()
-	net_stat = NetStats()
+		disk_stat = DiskStats()
+		probes = Probes()
+		net_stat = NetStats()
 
-	if not config.oracle_sids:
-		rootLogger.info('No Oracle database present in config file')
-	else:
-		oracle = Oracle(config.oracle_sids)
+		if not config.oracle_sids:
+			rootLogger.info('No Oracle database present in config file')
+		else:
+			oracle = Oracle(config.oracle_sids)
 
-	if not config.postgres_dbs:
-		rootLogger.info('No Postgres database present in config file')
-	else:
-		postgres = Postgres(config.postgres_dbs)
+		if not config.postgres_dbs:
+			rootLogger.info('No Postgres database present in config file')
+		else:
+			postgres = Postgres(config.postgres_dbs)
 
-	# Creating threads
-	connectionThread = createThread(socketListener)
-	loggingThread = createThread(monitorLogging, 60)
-	probesCacheThread = createThread(refreshProbesCache, 600)
-	reparseConfigThread = createThread(reparseConfig, 60)
-	#Starting threads
-	rootLogger.info('============================= Start pagent ======================================')
-	connectionThread.start()
-	loggingThread.start()
-	probesCacheThread.start()
-	reparseConfigThread.start()
+		# Creating threads
+		connectionThread = createThread(socketListener)
+		loggingThread = createThread(monitorLogging, 60)
+		probesCacheThread = createThread(refreshProbesCache, 600)
+		reparseConfigThread = createThread(reparseConfig, 60)
+		#Starting threads
+		rootLogger.info('============================= Start pagent ======================================')
+		connectionThread.start()
+		loggingThread.start()
+		probesCacheThread.start()
+		reparseConfigThread.start()
+#		while True:
+#			time.sleep(5)
 
 if __name__ == "__main__":
 
-	main()
+	daemon = MyDaemon('/var/run/mios/mios-agent.pid', '/tmp/mios-agent.stdout', '/tmp/mios-agent.stderr')
+	if len(sys.argv) == 2:
+		if 'start' == sys.argv[1]:
+			daemon.start()
+		elif 'stop' == sys.argv[1]:
+			daemon.stop()
+		elif 'restart' == sys.argv[1]:
+			daemon.restart()
+		else:
+			print "Unknown command"
+			sys.exit(2)
+		sys.exit(0)
+	else:
+		print "usage: %s start|stop|restart" % sys.argv[0]
+		sys.exit(2)
