@@ -14,52 +14,31 @@
 [ "${NETWORKING}" = "no" ] && exit 0
 
 RETVAL=0
-progdir="/home/mios/pagent/bin/"
-prog="pagent"
+MAGENT_HOME="/opt/mios/mios-agent/"
+prog="mios-agent"
 
 start() {
         # Start daemons.
-        if [ -n "`/sbin/pidof -x $prog`" ]; then
-                echo -n "$prog: already running"
-                failure $"$prog start"
-                echo
-                return 1
-        fi
-        echo -n $"Starting $prog: "
-        # we can't seem to use daemon here - emulate its functionality
-        /home/mios/pagent/bin/pagent.sh
-        RETVAL=$?
-        usleep 100000
-        if [ -z "`/sbin/pidof -x $progdir$prog`" ]; then
-                RETVAL=1
-        fi
-        [ $RETVAL -ne 0 ] && failure $"$prog startup"
-        [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$prog && success $"$prog startup"
+	echo -n $"Starting $prog: "
+	${MAGENT_HOME}bin/$prog start
+	RETVAL=$?
+	[ $RETVAL -ne 0 ] && failure $"$prog startup"
+	[ $RETVAL -eq 0 ] && success $"$prog startup"
         echo
         return $RETVAL
 }
 stop() {
-        RETVAL=0
-        pid=
         # Stop daemons.
         echo -n $"Stopping $prog: "
-        pid=`/sbin/pidof -s -x $prog`
-        if [ -n "$pid" ]; then
-         kill -TERM $pid
-        else
-         failure $"$prog stop"
-         echo
-         return 1
-        fi
+	${MAGENT_HOME}bin/$prog stop
         RETVAL=$?
         [ $RETVAL -ne 0 ] && failure $"$prog stop"
-        [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/$prog && success $"$prog stop"
+        [ $RETVAL -eq 0 ] && success $"$prog stop"
         echo
         return $RETVAL
 }
 restart() {
-        stop
-        start
+	${MAGENT_HOME}bin/$prog restart
 }
 
 # See how we were called.
@@ -73,11 +52,8 @@ case "$1" in
         restart)
                 restart
                 ;;
-        condrestart)
-                [ -f /var/lock/subsys/$prog ] && restart
-                ;;
         *)
-                echo $"Usage: $0 {start|stop|restart|condrestart}"
+                echo $"Usage: $0 {start|stop|restart}"
                 exit 1
 esac
 
