@@ -1283,8 +1283,6 @@ class MyDaemon(Daemon):
 		loggingThread.start()
 		probesCacheThread.start()
 		reparseConfigThread.start()
-#		while True:
-#			time.sleep(5)
 
 if __name__ == "__main__":
 
