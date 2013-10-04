@@ -120,6 +120,7 @@ class Daemon:
                 Restart the daemon
                 """
                 self.stop()
+		time.sleep(3)
                 self.start()
  
         def run(self):
