@@ -14,12 +14,24 @@
 [ "${NETWORKING}" = "no" ] && exit 0
 
 RETVAL=0
-
+user=`whoami`
 start() {
         # Start daemons.
 	echo -n $"Starting $0: "
-	runuser -l mios -c '${MAGENT_HOME}/bin/mios-agent start'
-	RETVAL=$?
+	case "$user" in
+		"mios")
+			${MAGENT_HOME}/bin/mios-agent start
+			RETVAL=$?
+			;;
+		"root")
+			runuser -l mios -c '${MAGENT_HOME}/bin/mios-agent start'
+			RETVAL=$?
+			;;
+		*)
+			echo "Cannot run as this user"
+			RETVAL=1
+			;;
+	esac
 	[ $RETVAL -ne 0 ] && failure $"$0 startup"
 	[ $RETVAL -eq 0 ] && success $"$0 startup"
         echo
@@ -28,8 +40,20 @@ start() {
 stop() {
         # Stop daemons.
         echo -n $"Stopping $0: "
-	runuser -l mios -c '${MAGENT_HOME}/bin/mios-agent stop'
-        RETVAL=$?
+	case "$user" in
+		"mios")
+			${MAGENT_HOME}/bin/mios-agent stop
+			RETVAL=$?
+			;;
+		"root")
+			runuser -l mios -c '${MAGENT_HOME}/bin/mios-agent stop'
+			RETVAL=$?
+			;;
+		*)
+			echo "Cannot run as this user"
+			RETVAL=1
+			;;
+	esac
         [ $RETVAL -ne 0 ] && failure $"$0 stop"
         [ $RETVAL -eq 0 ] && success $"$0 stop"
         echo
