@@ -62,7 +62,6 @@ class Config:
 		self.config          = None
 		self.listen_ip       = ''
 		self.listen_port     = 0
-		self.logfile         = ''
 		self.hostname        = ''
 		self.zabbix_agent    = ''
 		self.zabbix_port     = 0
@@ -95,11 +94,6 @@ class Config:
 			self.listen_port    = 10050
 
 		try:
-			self.logfile        = self.config.get('common', 'logfile')
-		except:
-			self.logfile        = self.magent_home + '/log/mios-agent.log'
-
-		try:
 			self.hostname       = self.config.get('common', 'hostname')
 		except:
 			self.hostname       = platform.node()
@@ -118,7 +112,6 @@ class Config:
 		print "INI file             : %s" % self.conf_file
 		print "Listen on ip address : %s" % self.listen_ip
 		print "Listen on port       : %d" % self.listen_port
-		print "Log file             : %s" % self.logfile
 		print "Hostname             : %s" % self.hostname
 		print "Zabbix agent ip      : %s" % self.zabbix_agent
 		print "Zabbix agent port    : %s" % self.zabbix_port
