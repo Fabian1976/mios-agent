@@ -14,31 +14,31 @@
 [ "${NETWORKING}" = "no" ] && exit 0
 
 RETVAL=0
-MAGENT_HOME="/opt/mios/mios-agent/"
-prog="mios-agent"
 
 start() {
         # Start daemons.
-	echo -n $"Starting $prog: "
-	${MAGENT_HOME}bin/$prog start
+	echo -n $"Starting $0: "
+	runuser -l mios -c '${MAGENT_HOME}/bin/mios-agent start'
 	RETVAL=$?
-	[ $RETVAL -ne 0 ] && failure $"$prog startup"
-	[ $RETVAL -eq 0 ] && success $"$prog startup"
+	[ $RETVAL -ne 0 ] && failure $"$0 startup"
+	[ $RETVAL -eq 0 ] && success $"$0 startup"
         echo
         return $RETVAL
 }
 stop() {
         # Stop daemons.
-        echo -n $"Stopping $prog: "
-	${MAGENT_HOME}bin/$prog stop
+        echo -n $"Stopping $0: "
+	runuser -l mios -c '${MAGENT_HOME}/bin/mios-agent stop'
         RETVAL=$?
-        [ $RETVAL -ne 0 ] && failure $"$prog stop"
-        [ $RETVAL -eq 0 ] && success $"$prog stop"
+        [ $RETVAL -ne 0 ] && failure $"$0 stop"
+        [ $RETVAL -eq 0 ] && success $"$0 stop"
         echo
         return $RETVAL
 }
 restart() {
-	${MAGENT_HOME}bin/$prog restart
+	stop
+	sleep 3
+	start
 }
 
 # See how we were called.
