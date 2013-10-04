@@ -72,7 +72,7 @@ class Config:
 		try:
 			self.pagent_home = os.environ['PAGENT_HOME']
 		except:
-			self.pagent_home = "/home/mios/pagent"
+			self.pagent_home = "/home/mios/mios-agent"
 
 		self.conf_file = conf_file
 		if not os.path.exists(self.conf_file):
@@ -97,7 +97,7 @@ class Config:
 		try:
 			self.logfile        = self.config.get('common', 'logfile')
 		except:
-			self.logfile        = self.pagent_home + '/log/pagent.log'
+			self.logfile        = self.pagent_home + '/log/mios-agent.log'
 
 		try:
 			self.hostname       = self.config.get('common', 'hostname')
@@ -1223,7 +1223,7 @@ class MyDaemon(Daemon):
 		try:
 			pagent_home = os.environ['PAGENT_HOME']
 		except:
-			pagent_home = "/home/mios/pagent"
+			pagent_home = "/home/mios/mios-agent"
 
 		try:
 			optlist, args = getopt.getopt(sys.argv[1:], 'c:')
@@ -1241,8 +1241,8 @@ class MyDaemon(Daemon):
 				config_file = v
 
 		if not config_file:
-			print "No config file specified, assuming default $PAGENT_HOME/etc/pagent.conf"
-			config_file = pagent_home + '/etc/pagent.conf'
+			print "No config file specified, assuming default $PAGENT_HOME/etc/mios-agent.conf"
+			config_file = pagent_home + '/etc/mios-agent.conf'
 
 		config  = Config(config_file)
 		config.parse()
