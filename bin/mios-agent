@@ -1171,7 +1171,10 @@ class createThread(threading.Thread):
 
 def monitorLogging(interval):
 	while True:
-		logging.config.fileConfig(config.magent_home + '/etc/logging.conf')
+		if not os.path.exists(config.magent_home + '/etc/logging.conf'):
+			rootLogger.error("Can't open logging file %s. Unable to reload logfacility. Assuming current logfacility." % (config.magent_home + '/etc/logging.conf'))
+		else:
+			logging.config.fileConfig(config.magent_home + '/etc/logging.conf')
 		time.sleep(interval)
 
 def refreshProbesCache(interval):
