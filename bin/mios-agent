@@ -1256,7 +1256,7 @@ class MyDaemon(Daemon):
 
 		rootLogger = logging.getLogger()
 
-		rootLogger.info('============================= Initialize pagent =================================')
+		rootLogger.info('============================= Initialize MIOS-AGENT =================================')
 
 		disk_stat = DiskStats()
 		probes = Probes()
@@ -1278,7 +1278,7 @@ class MyDaemon(Daemon):
 		probesCacheThread = createThread(refreshProbesCache, 600)
 		reparseConfigThread = createThread(reparseConfig, 60)
 		#Starting threads
-		rootLogger.info('============================= Start pagent ======================================')
+		rootLogger.info('============================= Start MIOS-AGENT ======================================')
 		connectionThread.start()
 		loggingThread.start()
 		probesCacheThread.start()
