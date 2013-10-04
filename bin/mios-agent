@@ -180,41 +180,44 @@ class Config:
 				print "Unsupported database type: %s" % dbtype
 
 	def reparse(self):
-		new_conf    = None
-		oracle_sids = {}
+		if not os.path.exists(self.conf_file):
+			rootLogger.error("Can't open config file %s. Unable to reload configuration. Assuming current configuration." % self.conf_file)
+		else:
+			new_conf    = None
+			oracle_sids = {}
 
-		new_conf = ConfigParser.ConfigParser()
-		new_conf.read(self.conf_file)
-		sections = new_conf.sections()
-		aantal_sids = 0
-		for section in sections:
-			if section == 'common':
-				continue
-			dbtype = section.split('.')[0]
-			if dbtype == 'oracle':
-				aantal_sids += 1
-				try:
-					sid = section.split('.')[1]
-					user = new_conf.get(section, 'user')
-					password = new_conf.get(section, 'password')
-					oracle_sids[sid] = (user,password)
-				except:
-					rootLogger.error("SID (%s) not correctly specified in config file. Please review example section in config file" % section)
-				if sid == '':
-					rootLogger.error("SID (%s) not correctly specified in config file. Please review example section in config file" % section)
-		for sid in oracle_sids:
-			if sid not in self.oracle_sids:
-				# We have a new connection
-				self.oracle_sids[sid] = oracle_sids[sid]
-				rootLogger.debug("Found new SID in config: %s. Trying to connect" % sid)
-				oracle.add_connection()
-		for sid in self.oracle_sids:
-			if sid not in oracle_sids:
-				# We have a removed connection
-				rootLogger.debug("A SID has been removed from the config: %s. Removing connection" % sid)
-				oracle.remove_connection(sid)
-		rootLogger.debug("Aantal sids in conf: %s. SIDS: %s" % (aantal_sids, oracle_sids))
-		rootLogger.debug("Aantal sids in mem: %s. SIDS: %s" % (len(self.oracle_sids), self.oracle_sids))
+			new_conf = ConfigParser.ConfigParser()
+			new_conf.read(self.conf_file)
+			sections = new_conf.sections()
+			aantal_sids = 0
+			for section in sections:
+				if section == 'common':
+					continue
+				dbtype = section.split('.')[0]
+				if dbtype == 'oracle':
+					aantal_sids += 1
+					try:
+						sid = section.split('.')[1]
+						user = new_conf.get(section, 'user')
+						password = new_conf.get(section, 'password')
+						oracle_sids[sid] = (user,password)
+					except:
+						rootLogger.error("SID (%s) not correctly specified in config file. Please review example section in config file" % section)
+					if sid == '':
+						rootLogger.error("SID (%s) not correctly specified in config file. Please review example section in config file" % section)
+			for sid in oracle_sids:
+				if sid not in self.oracle_sids:
+					# We have a new connection
+					self.oracle_sids[sid] = oracle_sids[sid]
+					rootLogger.debug("Found new SID in config: %s. Trying to connect" % sid)
+					oracle.add_connection()
+			for sid in self.oracle_sids:
+				if sid not in oracle_sids:
+					# We have a removed connection
+					rootLogger.debug("A SID has been removed from the config: %s. Removing connection" % sid)
+					oracle.remove_connection(sid)
+			rootLogger.debug("Aantal sids in conf: %s. SIDS: %s" % (aantal_sids, oracle_sids))
+			rootLogger.debug("Aantal sids in mem: %s. SIDS: %s" % (len(self.oracle_sids), self.oracle_sids))
 
 class Probes:
 
