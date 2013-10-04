@@ -1,4 +1,4 @@
-#MIOS-AGENT envoronment
+#MIOS-AGENT environment
 export MAGENT_HOME=/opt/mios/mios-agent
 #Oracle environment
 export ORACLE_BASE=/opt/oracle
