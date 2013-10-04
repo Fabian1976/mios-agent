@@ -72,7 +72,7 @@ class Config:
 		try:
 			self.magent_home = os.environ['MAGENT_HOME']
 		except:
-			self.magent_home = "/home/mios/mios-agent"
+			self.magent_home = "/opt/mios/mios-agent"
 
 		self.conf_file = conf_file
 		if not os.path.exists(self.conf_file):
@@ -1223,26 +1223,9 @@ class MyDaemon(Daemon):
 		try:
 			magent_home = os.environ['MAGENT_HOME']
 		except:
-			magent_home = "/home/mios/mios-agent"
+			magent_home = "/opt/mios/mios-agent"
 
-		try:
-			optlist, args = getopt.getopt(sys.argv[1:], 'c:')
-		except:
-			usage()
-			sys.exit(-1)
-
-#		if not optlist:
-#			print "No options specified"
-#			usage()
-#			sys.exit(-1)
-
-		for o, v in optlist:
-			if o == "-c":
-				config_file = v
-
-		if not config_file:
-			print "No config file specified, assuming default $MAGENT_HOME/etc/mios-agent.conf"
-			config_file = magent_home + '/etc/mios-agent.conf'
+		config_file = magent_home + '/etc/mios-agent.conf'
 
 		config  = Config(config_file)
 		config.parse()
