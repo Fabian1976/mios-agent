@@ -1182,10 +1182,10 @@ class createThread(threading.Thread):
 
 def monitorLogging(interval):
 	while True:
-		if not os.path.exists(config.magent_home + '/etc/logging.conf'):
-			rootLogger.error("Can't open logging file %s. Unable to reload logfacility. Assuming current logfacility." % (config.magent_home + '/etc/logging.conf'))
+		if not os.path.exists(config.magent_home + '/conf/logging.conf'):
+			rootLogger.error("Can't open logging file %s. Unable to reload logfacility. Assuming current logfacility." % (config.magent_home + '/conf/logging.conf'))
 		else:
-			logging.config.fileConfig(config.magent_home + '/etc/logging.conf')
+			logging.config.fileConfig(config.magent_home + '/conf/logging.conf')
 		time.sleep(interval)
 
 def refreshProbesCache(interval):
@@ -1252,15 +1252,15 @@ class MagentDaemon(Daemon):
 		except:
 			magent_home = "/opt/mios/mios-agent"
 
-		config_file = magent_home + '/etc/mios-agent.conf'
+		config_file = magent_home + '/conf/mios-agent.conf'
 
 		config  = Config(config_file)
 		config.parse()
 
 		try:
-			logging.config.fileConfig(magent_home + '/etc/logging.conf')
+			logging.config.fileConfig(magent_home + '/conf/logging.conf')
 		except:
-			print "Error while loading file necessary for the log facility ($MAGENT_HOME/etc/logging.conf)"
+			print "Error while loading file necessary for the log facility ($MAGENT_HOME/conf/logging.conf)"
 			print "Unable to continue"
 			exit(1)
 
