@@ -37,6 +37,13 @@ __copyright__ = "Copyright (C) 2013 Vermont 24x7"
 __version__   = "3.2"
 
 import sys, os, time, getopt
+# Add mios-agent LIB to path
+try:
+	magent_home = os.environ['MAGENT_HOME']
+except:
+	magent_home = "/opt/mios/mios-agent"
+sys.path.append(magent_home + '/lib')
+
 from threading import *
 from socket import *
 from struct import *
@@ -47,7 +54,11 @@ import platform
 import getopt
 import logging, logging.handlers, logging.config
 import threading
-from daemon import Daemon
+try:
+	from daemon import Daemon
+except:
+	print "\nCannot import daemon.pyc from lib path ($MAGENT_HOME/lib)\nIs MIOS-AGENT properly installed?"
+	raise
 
 oracle = None
 probes = None
