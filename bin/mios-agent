@@ -546,7 +546,6 @@ class Postgres(object):
 			self.psycopg2 = psycopg2
 			self.postgres_support = 1
 			self.logger.info("Successfully loaded psycopg2 module")
-			self.logger.info(type(self).__name__)
 		except ImportError:
 			self.logger.error("Module psycopg2 is not installed, please install it!")
 			raise
