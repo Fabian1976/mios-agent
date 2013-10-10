@@ -1,2 +1,0 @@
-type=oracle
-select sum(executions) from v$sqlstats

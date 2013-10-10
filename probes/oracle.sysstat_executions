@@ -1,0 +1,2 @@
+type=oracle
+select value from v$sysstat where name = 'execute count'
