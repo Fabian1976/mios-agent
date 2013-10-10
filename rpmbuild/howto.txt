@@ -1,0 +1,13 @@
+Zorg dat in de home van de user waarmee je de package gaat bouwen (in dit geval mios) dit bestand staat:
+.rpmmacros
+
+Met bijvoorbeeld deze inhoud:
+%_topdir        /opt/mios/mios-agent/rpmbuild
+%buildroot      /opt/mios/mios-agent/rpmbuild/BUILD
+%_smp_mflags  -j3
+%__arch_install_post   /usr/lib/rpm/check-rpaths   /usr/lib/rpm/check-buildroot
+
+Voer daarna dit commando uit:
+rpmbuild -bb /opt/mios/mios-agent/rpmbuild/SPECS/mios-agent.spec
+
+Dit bouwt de RPM in de map %_topdir/RPMS/
