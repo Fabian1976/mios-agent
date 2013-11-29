@@ -1,0 +1,2 @@
+type=oracle
+select to_char(start_time, 'dd-mm-yyyy hh24:mi:ss') || ';' || to_char(end_time, 'dd-mm-yyyy hh24:mi:ss') || ';' || time_taken_display || ';' || status || ';' || input_type from V$RMAN_BACKUP_JOB_DETAILS where object_type_weight in (7,9) and start_time between sysdate - 1 and sysdate

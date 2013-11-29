@@ -34,7 +34,7 @@
 
 __author__    = "Jan van de Beek, Fabian van der Hoeven"
 __copyright__ = "Copyright (C) 2013 Vermont 24x7"
-__version__   = "3.3"
+__version__   = "3.4"
 
 import sys, os, time, getopt
 # Add mios-agent LIB to path
@@ -65,6 +65,7 @@ probes = None
 config = None
 disk_stat = None
 postgres = None
+apache_stat = None
 
 class Config:
 
@@ -750,6 +751,83 @@ class NetStats(object):
 		ret = self.stats[net_dev][stat]
 		return ret
 
+class Apache(object):
+
+	def __init__(self):
+
+		import urllib
+		import csv
+		self.urllib       = urllib
+		self.csv          = csv
+		self.stats        = {}
+		self.last_update  = []
+		self.min_interval = 30
+		self.tempFilename = '/tmp/apache-status'
+		self.webserver    = 'localhost'
+		self.port         = '80'
+		self.url          = '/server-status?auto'
+		self.logger       = logging.getLogger(type(self).__name__)
+
+		self.last_update  = 0
+
+	def getMetrics(self):
+
+		try:
+			ConnectionString = ("http://%s:%s%s") % (self.webserver, self.port, self.url)
+			self.logger.debug("Trying to get metrics using host: %s, port: %s" % (self.webserver, self.port))
+			conn = self.urllib.urlopen(ConnectionString)
+			URLresponse = conn.read()
+			conn.close()
+			return URLresponse
+		except:
+			self.logger.error("Failed to connect to %s" % ConnectionString)
+			return -1
+
+	def update_stats(self):
+
+		try:
+			ApacheTempFile = open(self.tempFilename, 'w')
+		except:
+			self.logger.error("Unable to open tempfile %s for writing." % self.tempFilename)
+			raise
+		ApacheTempFile.write(self.getMetrics())
+		Metrics = self.csv.reader(open(self.tempFilename, 'rb'), delimiter = ":", skipinitialspace=True)
+		ApacheTempFile.close()
+		for Metric in Metrics:
+			if Metric[0] == 'Scoreboard':
+				self.stats['MaxClients'] = len(Metric[1])
+				self.stats['ClosingConnection'] = Metric[1].count('C')
+				self.stats['DNSLookup'] = Metric[1].count('D')
+				self.stats['GracefullyFinishing'] = Metric[1].count('G')
+				self.stats['IdleCleanupOfWorker'] = Metric[1].count('I')
+				self.stats['KeepAlive'] = Metric[1].count('K')
+				self.stats['Logging'] = Metric[1].count('L')
+				self.stats['OpenSlotWithNoCurrentProcess'] = Metric[1].count('.')
+				self.stats['ReadingRequest'] = Metric[1].count('R')
+				self.stats['SendingReply'] = Metric[1].count('W')
+				self.stats['StartingUp'] = Metric[1].count('S')
+				self.stats['WaitingForConnection'] = Metric[1].count('_')
+			else:
+				self.stats[Metric[0]] = Metric[1]
+		del Metrics
+		del ApacheTempFile
+		self.last_update = time.time()
+
+	def getMetric(self, requestedMetric, host, port):
+		self.webserver = host
+		self.port = port
+		now = time.time()
+		if now - self.last_update > self.min_interval:
+			rootLogger.debug("Apache stats older then min_interval. Update stats.")
+			try:
+				self.update_stats()
+				ret = self.stats[requestedMetric]
+			except:
+				ret = "ZBX_NOTSUPPORTED"
+		else:
+			ret = self.stats[requestedMetric]
+		return ret
+
 class DiskStats(object):
 
 	def __init__(self):
@@ -908,6 +986,7 @@ class ConnectionHandler:
 					for row in rows:
 						rootLogger.debug('Tablespace found: %s' % row)
 						value += '{ "{#TBSNAME}":"%s" },' % row
+					value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 					value += '] }'
 			elif item.split('.')[1] == 'tempspace_discover':
 				rootLogger.debug("DISCOVER TEMPSPACES")
@@ -920,6 +999,7 @@ class ConnectionHandler:
 					for row in rows:
 						rootLogger.debug('Tempspace found: %s' % row)
 						value += '{ "{#TMPSNAME}":"%s" },' % row
+					value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 					value += '] }'
 			else:
 				value = oracle.get(data)
@@ -984,14 +1064,6 @@ class ConnectionHandler:
 			rootLogger.debug("Received io.wt")
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack('QB', 1, 0x30 + self.counter )[0:9] )
-
-		elif item.split('.')[0] == 'oracle':
-			sub_item = item.split('.')[1]
-			ret = oracle.get(sub_item)
-
-		elif item.split('.')[0] == 'postgres':
-			sub_item = item.split('.')[1]
-			ret = postgres.get(sub_item)
 
 		elif top_item == 'proc':
 
@@ -1065,6 +1137,7 @@ class ConnectionHandler:
 				for net_dev in net_stat.net_devices:
 					rootLogger.debug('Net device found: %s' % net_dev)
 					value += '{ "{#IFNAME}":"%s" },' % net_dev
+				value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 				value += '] }'
 
 			elif item.split('.')[2] == 'in':
@@ -1102,6 +1175,31 @@ class ConnectionHandler:
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
 
+		elif top_item == 'apache':
+			global apache_stat
+			if apache_stat is None:
+				rootLogger.debug("Received Apache request. Creating apache object.")
+				apache_stat = Apache()
+			try:
+				metric = item.split('.')[1]
+				try:
+					host = fields[0]
+				except:
+					host = apache_stat.webserver
+				try:
+					port = fields[1]
+				except:
+					port = apache_stat.port
+			except:
+				value = "ZBX_NOTSUPPORTED"
+			try:
+				value = str(apache_stat.getMetric(metric, host, port))
+			except Exception, e:
+				rootLogger.error("Failed to obtain metric")
+				rootLogger.error("APACHE: Additional information: %s" % e)
+				value = "ZBX_NOTSUPPORTED"
+			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
+			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
 		else:
 
 			s = socket(AF_INET, SOCK_STREAM)
@@ -1305,7 +1403,7 @@ if __name__ == "__main__":
 		elif 'restart' == sys.argv[1]:
 			daemon.restart()
 		else:
-			print "Unknown command"
+			print "Unknown command: %s" % sys.argv[1]
 			sys.exit(2)
 		sys.exit(0)
 	else:
