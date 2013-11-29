@@ -986,6 +986,7 @@ class ConnectionHandler:
 					for row in rows:
 						rootLogger.debug('Tablespace found: %s' % row)
 						value += '{ "{#TBSNAME}":"%s" },' % row
+					value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 					value += '] }'
 			elif item.split('.')[1] == 'tempspace_discover':
 				rootLogger.debug("DISCOVER TEMPSPACES")
@@ -998,6 +999,7 @@ class ConnectionHandler:
 					for row in rows:
 						rootLogger.debug('Tempspace found: %s' % row)
 						value += '{ "{#TMPSNAME}":"%s" },' % row
+					value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 					value += '] }'
 			else:
 				value = oracle.get(data)
@@ -1135,6 +1137,7 @@ class ConnectionHandler:
 				for net_dev in net_stat.net_devices:
 					rootLogger.debug('Net device found: %s' % net_dev)
 					value += '{ "{#IFNAME}":"%s" },' % net_dev
+				value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 				value += '] }'
 
 			elif item.split('.')[2] == 'in':
