@@ -886,11 +886,6 @@ class DiskStats(object):
 				self.last_update = now
 		f.close()
 
-	def list_fs(self):
-
-		for fs in filesystems:
-			print fd + "\n"
-
 	def update_stats(self):
 
 		f = open('/proc/diskstats', 'r')
