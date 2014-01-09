@@ -872,7 +872,7 @@ class DiskStats(object):
 		for line in f:
 			fields = line.split()
 			self.device_name.append(fields[0].replace("/dev/",""))
-			if fields[2] == "ext3":
+			if fields[2] == "ext4":
 				stat  = os.stat(fields[0])
 				inode = stat.st_rdev
 				self.major_minor.append( "%d-%d" % ( os.major(inode), os.minor(inode)))
@@ -927,9 +927,9 @@ class DiskStats(object):
 		if now - self.last_update > self.MIN_INTERVAL:
 			self.update_stats()
 		for line in self.filesystems:
-			 i = self.filesystems.index(line)
-			 _fs = self.filesystems[i]
-			 if _fs == fs:
+			i = self.filesystems.index(line)
+			_fs = self.filesystems[i]
+			if _fs == fs:
 				ret = self.stats[i][nof]
 		self.no_probes+=1
 		return ret
@@ -1050,7 +1050,7 @@ class ConnectionHandler:
 			args = { 'riops': 0, 'rbps': 1, 'rst': 2, 'wiops': 3, 'wbps': 4, 'wst': 5 }
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			value = disk_stat.get_attr(fields[0], args[fields[1]] )
-			rootLogger.debug("Received io arg1: %s arg2: %s send back: %s length: %d" % (arg1, arg2, value, len(str(value))))
+			rootLogger.debug("Received io arg1: %s arg2: %s send back: %s length: %d" % (fields[0], fields[1], value, len(str(value))))
 
 			if fields[1][0:3] == 'rst' or fields[1][0:3] == 'wst':
 				value_s = str(value)
