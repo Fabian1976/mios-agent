@@ -889,23 +889,13 @@ class DiskStats(object):
 	def update_stats(self):
 
 		f = open('/proc/diskstats', 'r')
-		diff = 0
-		if self.last_update > 0:
-			diff = time.time() - self.last_update
 		for line in f:
 			fields = line.split()
 			a="%s-%s" % (fields[0],fields[1])
 			try:
 				i = self.major_minor.index(a)
 				try:
-					self.stats[i] = [ ( int(fields[3]) - int(self.data[i][3]) ) / diff,
-								( int(fields[5]) - int(self.data[i][5]) ) * 512 / diff,
-								float( ( float(fields[6]) - float(self.data[i][6]) ) / ( float(fields[3]) - float(self.data[i][3]) ) ),
-								( int(fields[7]) - int(self.data[i][7]) ) / diff,
-								( int(fields[9]) - int(self.data[i][9]) ) * 512 / diff,
-								float( ( float(fields[10]) - float(self.data[i][10]) ) / ( float(fields[7]) - float(self.data[i][7]) ) )
-							]
-
+					self.stats[i] = [ int(fields[3]), int(fields[5]) * 512, float(fields[6]) / float(fields[3]), int(fields[7]), int(fields[9]) * 512, float(fields[10]) / float(fields[7]) ]
 				except:
 					pass
 				rootLogger.debug("STATS: %d - %d - %d - %d" % ( self.stats[i][0], self.stats[i][1], self.stats[i][3], self.stats[i][4] ))
