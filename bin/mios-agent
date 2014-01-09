@@ -1050,15 +1050,9 @@ class ConnectionHandler:
 			args = { 'riops': 0, 'rbps': 1, 'rst': 2, 'wiops': 3, 'wbps': 4, 'wst': 5 }
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			value = disk_stat.get_attr(fields[0], args[fields[1]] )
-			rootLogger.debug("Received io arg1: %s arg2: %s send back: %s length: %d" % (fields[0], fields[1], value, len(str(value))))
-
-			if fields[1][0:3] == 'rst' or fields[1][0:3] == 'wst':
-				value_s = str(value)
-				self.conn.send( pack("Q%ds" % len(value_s), len(value_s), str(value) ) )
-
-			else:
-				value_s = str(int(value))
-				self.conn.send( pack("Q%ds" % len(value_s), len(value_s), str(value) ) )
+			value = str(value)
+			rootLogger.debug("Received io arg1: %s arg2: %s send back: %s length: %s" % (fields[0], fields[1], value, len(value)))
+			self.conn.send( pack("Q%ds" % len(value), len(value), value ) )
 
 		elif item == 'io.wt':
 			rootLogger.debug("Received io.wt")
