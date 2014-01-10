@@ -848,7 +848,6 @@ class DiskStats(object):
 		self.filesystems  = []
 		self.fs_type      = []
 		self.read_write   = []
-		self.no_probes    = 0
 		self.last_update  = 0
 		self.stats        = []
 		self.MIN_INTERVAL = 30
@@ -872,7 +871,6 @@ class DiskStats(object):
 				pass
 		f.close()
 		self.last_update = time.time()
-		self.no_probes+=1
 
 	def get_fs_mapping(self):
 
@@ -920,7 +918,6 @@ class DiskStats(object):
 			_fs = self.filesystems[i]
 			if _fs == fs:
 				ret = self.stats[i][nof]
-		self.no_probes+=1
 		self.logger.debug("STATS: %s: %s, returns: %s" % (fs, nof, ret))
 		return ret
 
