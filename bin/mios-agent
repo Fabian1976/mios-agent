@@ -1033,17 +1033,32 @@ class ConnectionHandler:
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack('QB', 1, 0x30 + 1 ))
 
-		elif item == 'perf.io':
-			global disk_stat
-			if disk_stat is None:
-				rootLogger.debug("Received DiskStats request. Creating disk_stat object.")
-				disk_stat = DiskStats()
-
-			args = { 'riops': 0, 'rbps': 1, 'rst': 2, 'wiops': 3, 'wbps': 4, 'wst': 5 }
+		elif top_item == 'perf':
+			if item.split('.')[1] == 'io':
+				global disk_stat
+				if disk_stat is None:
+					rootLogger.debug("Received DiskStats request. Creating disk_stat object.")
+					disk_stat = DiskStats()
+				try:
+					if item.split('.')[2] == 'discovery':
+						disk_stat.logger.debug("Filesystem discovery")
+						value = '{ "data":['
+						for fs in disk_stat.filesystems:
+							disk_stat.logger.debug("FS found: %s" % fs)
+							value += '{ "{#FSNAME}":"%s" },' % fs
+						value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
+						value += '] }'
+				except Exception, e:
+#					disk_stat.logger.debug("ERROR: %s" %e)
+					args = { 'riops': 0, 'rbps': 1, 'rst': 2, 'wiops': 3, 'wbps': 4, 'wst': 5 }
+					value = disk_stat.get_attr(fields[0], args[fields[1]] )
+					value = str(value)
+					rootLogger.debug("Received io arg1: %s arg2: %s send back: %s length: %s" % (fields[0], fields[1], value, len(value)))
+			else:
+				# for future custom performance items
+				rootLogger.error("Received unsupported performance item: %s" % item.split('.')[1])
+				value = "ZBX_NOTSUPPORTED"
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
-			value = disk_stat.get_attr(fields[0], args[fields[1]] )
-			value = str(value)
-			rootLogger.debug("Received io arg1: %s arg2: %s send back: %s length: %s" % (fields[0], fields[1], value, len(value)))
 			self.conn.send( pack("Q%ds" % len(value), len(value), value ) )
 
 		elif item == 'io.wt':
