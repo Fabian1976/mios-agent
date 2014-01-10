@@ -1046,7 +1046,7 @@ class ConnectionHandler:
 						disk_stat.logger.debug("Filesystem discovery")
 						value = '{ "data":['
 						for fs in disk_stat.filesystems:
-							disk_stat.logger.debug("FS found: %s" % fs)
+							disk_stat.logger.debug("Filesystem discovery found: %s" % fs)
 							value += '{ "{#FSNAME}":"%s" },' % fs
 						value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 						value += '] }'
