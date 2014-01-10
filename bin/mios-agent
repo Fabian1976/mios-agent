@@ -867,8 +867,6 @@ class DiskStats(object):
 				a="%s-%s" % (fields[0],fields[1])
 				i = self.major_minor.index(a)
 				fs = self.filesystems[i]
-				now = time.time()
-				self.last_update = now
 				self.stats[i] = [0,0,0,0,0,0]
 			except:
 				pass
@@ -891,8 +889,6 @@ class DiskStats(object):
 				self.fs_type.append(fields[2])
 				self.read_write.append(fields[3])
 				self.stats.append([0,0,float(0.0),0,0,float(0.0)])
-				now = time.time()
-				self.last_update = now
 		f.close()
 
 	def update_stats(self):
