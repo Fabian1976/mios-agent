@@ -600,7 +600,7 @@ class Postgres(object):
 		self.last_connect      = time.time()
 		self.logger.info("Connect to Postgres version %s DB: %s" % (self.version[indx], self.dbs[indx]))
 
-	def reconnect(self,data):
+	def reconnect(self, data):
 
 		if data.find('[') > 0:
 			(item, arguments) = data.split('[')
@@ -849,7 +849,6 @@ class DiskStats(object):
 		self.fs_type      = []
 		self.read_write   = []
 		self.no_probes    = 0
-		self.data         = []
 		self.last_update  = 0
 		self.stats        = []
 		self.MIN_INTERVAL = 30
@@ -868,7 +867,6 @@ class DiskStats(object):
 				a="%s-%s" % (fields[0],fields[1])
 				i = self.major_minor.index(a)
 				fs = self.filesystems[i]
-				self.data[i] = fields
 				now = time.time()
 				self.last_update = now
 				self.stats[i] = [0,0,0,0,0,0]
@@ -892,7 +890,6 @@ class DiskStats(object):
 				self.filesystems.append(fields[1])
 				self.fs_type.append(fields[2])
 				self.read_write.append(fields[3])
-				self.data.append([0,0,0,0,0,0,0,0,0,0,0])
 				self.stats.append([0,0,float(0.0),0,0,float(0.0)])
 				now = time.time()
 				self.last_update = now
@@ -910,8 +907,7 @@ class DiskStats(object):
 					self.stats[i] = [ int(fields[3]), int(fields[5]) * 512, float(fields[6]) / float(fields[3]), int(fields[7]), int(fields[9]) * 512, float(fields[10]) / float(fields[7]) ]
 				except:
 					pass
-				rootLogger.debug("STATS: %d - %d - %d - %d" % ( self.stats[i][0], self.stats[i][1], self.stats[i][3], self.stats[i][4] ))
-				self.data[i] = fields
+				self.logger.debug("Updated STATS: %d - %d - %d - %d" % ( self.stats[i][0], self.stats[i][1], self.stats[i][3], self.stats[i][4] ))
 			except:
 				pass
 		f.close()
