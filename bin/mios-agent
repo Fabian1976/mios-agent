@@ -15,7 +15,7 @@
 #      ultimately handed to the disk, and so it will be counted (and queued)
 #      as only one I/O.  This field lets you know how often this was done.
 #  Field  5 -- # of sectors read
-#      This is the total number of sectors read successfully.
+#      This is the total number of sectors read successfully (default sectorsize = 512 bytes).
 #  Field  6 -- # of milliseconds spent reading
 #      This is the total number of milliseconds spent by all reads (as
 #      measured from __make_request() to end_that_request_last()).
@@ -27,7 +27,7 @@
 #      ultimately handed to the disk, and so it will be counted (and queued)
 #      as only one I/O.  This field lets you know how often this was done.
 #  Field  9 -- # of sectors written
-#      This is the total number of sectors written successfully.
+#      This is the total number of sectors written successfully (default sectorsize = 512 bytes).
 #  Field 10 -- # of milliseconds spent writing
 #      This is the total number of milliseconds spent by all writes (as
 #      measured from __make_request() to end_that_request_last()).
@@ -866,7 +866,7 @@ class DiskStats(object):
 				a="%s-%s" % (fields[0],fields[1])
 				i = self.major_minor.index(a)
 				fs = self.filesystems[i]
-				self.stats[i] = [0,0,0,0,0,0]
+				self.stats[i] = [0,0,0,0,0,0,0,0,0,0,0]
 			except:
 				pass
 		f.close()
@@ -886,7 +886,7 @@ class DiskStats(object):
 				self.filesystems.append(fields[1])
 				self.fs_type.append(fields[2])
 				self.read_write.append(fields[3])
-				self.stats.append([0,0,float(0.0),0,0,float(0.0)])
+				self.stats.append([0,0,0,0,0,0,0,0,0,0,0])
 		f.close()
 
 	def update_stats(self):
@@ -898,11 +898,13 @@ class DiskStats(object):
 			try:
 				i = self.major_minor.index(a)
 				try:
-					self.stats[i] = [ int(fields[3]), int(fields[5]) * 512, float(fields[6]) / float(fields[3]), int(fields[7]), int(fields[9]) * 512, float(fields[10]) / float(fields[7]) ]
-				except:
+					self.stats[i] = [ int(fields[3]), int(fields[4]), int(fields[5]), int(fields[6]), int(fields[7]), int(fields[8]), int(fields[9]), int(fields[10]), int(fields[11]), int(fields[12]), int(fields[13]) ]
+				except Exception, e:
+#					self.logger.error("ERROR: %s" % e)
 					pass
-				self.logger.debug("Updated STATS: %d - %d - %d - %d" % ( self.stats[i][0], self.stats[i][1], self.stats[i][3], self.stats[i][4] ))
-			except:
+				self.logger.debug("Updated STATS: %s: %d - %d - %d - %d - %d - %d - %d - %d - %d - %d - %d" % ( self.filesystems[i], self.stats[i][0], self.stats[i][1], self.stats[i][2], self.stats[i][3], self.stats[i][4], self.stats[i][5], self.stats[i][6], self.stats[i][7], self.stats[i][8], self.stats[i][9], self.stats[i][10] ))
+			except Exception, e:
+#				self.logger.error("ERROR: %s" %e)
 				pass
 		f.close()
 		self.last_update = time.time()
@@ -1050,7 +1052,7 @@ class ConnectionHandler:
 						value += '] }'
 				except Exception, e:
 #					disk_stat.logger.debug("ERROR: %s" %e)
-					args = { 'riops': 0, 'rbps': 1, 'rst': 2, 'wiops': 3, 'wbps': 4, 'wst': 5 }
+					args = { 'READS_COMPLETED': 0, 'READS_MERGED': 1, 'READS_SECTORS': 2, 'READS_TIME': 3, 'WRITES_COMPLETED': 4, 'WRITES_MERGED': 5, 'WRITES_SECTORS': 6, 'WRITES_TIME': 7, 'IO_QUEUE': 8, 'IO_TIME': 9, 'WIO_TIME': 10 }
 					value = disk_stat.get_attr(fields[0], args[fields[1]] )
 					value = str(value)
 					rootLogger.debug("Received io arg1: %s arg2: %s send back: %s length: %s" % (fields[0], fields[1], value, len(value)))
