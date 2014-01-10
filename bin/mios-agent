@@ -853,6 +853,7 @@ class DiskStats(object):
 		self.last_update  = 0
 		self.stats        = []
 		self.MIN_INTERVAL = 30
+		self.logger       = logging.getLogger(type(self).__name__)
 
 		self.get_fs_mapping()
 		self.init_stats()
@@ -883,11 +884,11 @@ class DiskStats(object):
 		for line in f:
 			fields = line.split()
 			self.device_name.append(fields[0].replace("/dev/",""))
-			if fields[2] == "ext4":
+			if fields[2] == "ext4" or fields[2] == "ext3":
 				stat  = os.stat(fields[0])
 				inode = stat.st_rdev
 				self.major_minor.append( "%d-%d" % ( os.major(inode), os.minor(inode)))
-				rootLogger.debug("%s-%s %s" % ( os.major(inode), os.minor(inode), fields[1] ))
+				self.logger.debug("Discovered FS: %s (%s-%s)" % ( fields[1], os.major(inode), os.minor(inode) ))
 				self.filesystems.append(fields[1])
 				self.fs_type.append(fields[2])
 				self.read_write.append(fields[3])
@@ -928,6 +929,7 @@ class DiskStats(object):
 			if _fs == fs:
 				ret = self.stats[i][nof]
 		self.no_probes+=1
+		self.logger.debug("STATS: %s: %s, returns: %s" % (fs, nof, ret))
 		return ret
 
 class ConnectionHandler:
@@ -1043,6 +1045,11 @@ class ConnectionHandler:
 			self.conn.send( pack('QB', 1, 0x30 + 1 ))
 
 		elif item == 'perf.io':
+			global disk_stat
+			if disk_stat is None:
+				rootLogger.debug("Received DiskStats request. Creating disk_stat object.")
+				disk_stat = DiskStats()
+
 			args = { 'riops': 0, 'rbps': 1, 'rst': 2, 'wiops': 3, 'wbps': 4, 'wst': 5 }
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			value = disk_stat.get_attr(fields[0], args[fields[1]] )
@@ -1327,7 +1334,6 @@ class MagentDaemon(Daemon):
 		global config
 		global probes
 		global oracle
-		global disk_stat
 		global postgres
 		global net_stat
 		global rootLogger
@@ -1356,7 +1362,6 @@ class MagentDaemon(Daemon):
 		rootLogger.info('============================= Initialize MIOS-AGENT =================================')
 		checkEnvironment()
 
-		disk_stat = DiskStats()
 		probes = Probes()
 		net_stat = NetStats()
 
