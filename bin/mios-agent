@@ -898,11 +898,25 @@ class DiskStats(object):
 			try:
 				i = self.major_minor.index(a)
 				try:
-					self.stats[i] = [ int(fields[3]), int(fields[4]), int(fields[5]), int(fields[6]), int(fields[7]), int(fields[8]), int(fields[9]), int(fields[10]), int(fields[11]), int(fields[12]), int(fields[13]) ]
+					# Standard fields from /proc/diskstats
+					self.stats[i] = [ int(fields[3]), int(fields[4]), int(fields[5]), int(fields[6]), int(fields[7]), int(fields[8]), int(fields[9]), int(fields[10]), int(fields[11]), int(fields[12]), int(fields[13])
+					# Calculated custom fields
+					, float(fields[12]) / (float(fields[3]) + float(fields[7]))					# Average IO time
+					, float(fields[6]) / float(fields[3])								# Average IO read wait time
+					, float(fields[10]) / float(fields[7])								# Average IO write wait time
+					, (float(fields[6]) + float(fields[10])) / (float(fields[3]) + float(fields[7]))		# Average IO wait time
+					, ((float(fields[5]) * 512) / float(fields[3])) / 1024						# Average request size read in Kb
+					, ((float(fields[9]) * 512) / float(fields[7])) / 1024						# Average request size write in Kb
+					, ((float(fields[5]) + float(fields[9]) * 512) / (float(fields[3]) + float(fields[7]))) / 1024	# Average request size in Kb
+					]
 				except Exception, e:
 #					self.logger.error("ERROR: %s" % e)
 					pass
-				self.logger.debug("Updated STATS: %s: %d - %d - %d - %d - %d - %d - %d - %d - %d - %d - %d" % ( self.filesystems[i], self.stats[i][0], self.stats[i][1], self.stats[i][2], self.stats[i][3], self.stats[i][4], self.stats[i][5], self.stats[i][6], self.stats[i][7], self.stats[i][8], self.stats[i][9], self.stats[i][10] ))
+				self.logger.debug("Updated STATS: %s:  READS_COMPLETED: %d,  READS_MERGED: %d,  SECTORS_READ: %d,  IOTIME_READ: %d" % (self.filesystems[i], self.stats[i][0], self.stats[i][1], self.stats[i][2], self.stats[i][3]))
+				self.logger.debug("Updated STATS: %s: WRITES_COMPLETED: %d, WRITES_MERGED: %d, SECTORS_WRITE: %d, IOTIME_WRITE: %d" % (self.filesystems[i], self.stats[i][4], self.stats[i][5], self.stats[i][6], self.stats[i][7]))
+				self.logger.debug("Updated STATS: %s: CURRENT_IO: %d, IO_TIME: %d, WEIGHT_IO_TIME: %d, AVG_IO_TIME: %.2f" % (self.filesystems[i], self.stats[i][8], self.stats[i][9], self.stats[i][10], self.stats[i][11] ))
+				self.logger.debug("Updated STATS: %s: AVG_READ_IOWAIT: %.2f, AVG_WRITE_IOWAIT: %.2f, AVG_IOWAIT: %.2f" % (self.filesystems[i], self.stats[i][12], self.stats[i][13], self.stats[i][14]))
+				self.logger.debug("Updated STATS: %s: AVG_REQ_SIZE_READ: %.2f, AVG_REQ_SIZE_WRITE: %.2f, AVG_REQ_SIZE: %.2f" % (self.filesystems[i], self.stats[i][15], self.stats[i][16], self.stats[i][17]))
 			except Exception, e:
 #				self.logger.error("ERROR: %s" %e)
 				pass
@@ -1052,7 +1066,7 @@ class ConnectionHandler:
 						value += '] }'
 				except Exception, e:
 #					disk_stat.logger.debug("ERROR: %s" %e)
-					args = { 'READS_COMPLETED': 0, 'READS_MERGED': 1, 'READS_SECTORS': 2, 'READS_TIME': 3, 'WRITES_COMPLETED': 4, 'WRITES_MERGED': 5, 'WRITES_SECTORS': 6, 'WRITES_TIME': 7, 'IO_QUEUE': 8, 'IO_TIME': 9, 'WIO_TIME': 10 }
+					args = { 'READS_COMPLETED': 0, 'READS_MERGED': 1, 'READS_SECTORS': 2, 'READS_TIME': 3, 'WRITES_COMPLETED': 4, 'WRITES_MERGED': 5, 'WRITES_SECTORS': 6, 'WRITES_TIME': 7, 'IO_QUEUE': 8, 'IO_TIME': 9, 'WIO_TIME': 10, 'AVG_IO_TIME': 11, 'AVG_IO_READ_WAIT': 12, 'AVG_IO_WRITE_WAIT': 13, 'AVG_IO_WAIT': 14, 'AVG_REQ_SIZE_READ': 15, 'AVG_REQ_SIZE_WRITE': 16, 'AVG_REQ_SIZE': 17 }
 					value = disk_stat.get_attr(fields[0], args[fields[1].upper()] )
 					value = str(value)
 					rootLogger.debug("Received io arg1: %s arg2: %s send back: %s length: %s" % (fields[0], fields[1], value, len(value)))
