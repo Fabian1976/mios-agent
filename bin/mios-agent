@@ -1053,7 +1053,7 @@ class ConnectionHandler:
 				except Exception, e:
 #					disk_stat.logger.debug("ERROR: %s" %e)
 					args = { 'READS_COMPLETED': 0, 'READS_MERGED': 1, 'READS_SECTORS': 2, 'READS_TIME': 3, 'WRITES_COMPLETED': 4, 'WRITES_MERGED': 5, 'WRITES_SECTORS': 6, 'WRITES_TIME': 7, 'IO_QUEUE': 8, 'IO_TIME': 9, 'WIO_TIME': 10 }
-					value = disk_stat.get_attr(fields[0], args[fields[1]] )
+					value = disk_stat.get_attr(fields[0], args[fields[1].upper()] )
 					value = str(value)
 					rootLogger.debug("Received io arg1: %s arg2: %s send back: %s length: %s" % (fields[0], fields[1], value, len(value)))
 			else:
