@@ -1,31 +1,42 @@
 #!/usr/bin/python
 #
 # Explenation fields /proc/diskstats
-#  Field  1 -- # of reads completed
+#  The first 3 fields are to identify the device (we'll start counting at 0 as almost all programming languages do)
+#  Field  0 -- The MAJOR number
+#  Field  1 -- The MINOR number
+#  Field  2 -- The devicename
+#
+# For IO measurements we'll use the remaining field
+#  Field  3 -- # of reads completed
 #      This is the total number of reads completed successfully.
-#  Field  2 -- # of reads merged, field 6 -- # of writes merged
+#  Field  4 -- # of reads merged
 #      Reads and writes which are adjacent to each other may be merged for
 #      efficiency.  Thus two 4K reads may become one 8K read before it is
 #      ultimately handed to the disk, and so it will be counted (and queued)
 #      as only one I/O.  This field lets you know how often this was done.
-#  Field  3 -- # of sectors read
-#      This is the total number of sectors read successfully.
-#  Field  4 -- # of milliseconds spent reading
+#  Field  5 -- # of sectors read
+#      This is the total number of sectors read successfully (default sectorsize = 512 bytes).
+#  Field  6 -- # of milliseconds spent reading
 #      This is the total number of milliseconds spent by all reads (as
 #      measured from __make_request() to end_that_request_last()).
-#  Field  5 -- # of writes completed
+#  Field  7 -- # of writes completed
 #      This is the total number of writes completed successfully.
-#  Field  7 -- # of sectors written
-#      This is the total number of sectors written successfully.
-#  Field  8 -- # of milliseconds spent writing
+#  Field  8 -- # of writes merged
+#      Reads and writes which are adjacent to each other may be merged for
+#      efficiency.  Thus two 4K reads may become one 8K read before it is
+#      ultimately handed to the disk, and so it will be counted (and queued)
+#      as only one I/O.  This field lets you know how often this was done.
+#  Field  9 -- # of sectors written
+#      This is the total number of sectors written successfully (default sectorsize = 512 bytes).
+#  Field 10 -- # of milliseconds spent writing
 #      This is the total number of milliseconds spent by all writes (as
 #      measured from __make_request() to end_that_request_last()).
-#  Field  9 -- # of I/Os currently in progress
+#  Field 11 -- # of I/Os currently in progress
 #      The only field that should go to zero. Incremented as requests are
 #      given to appropriate struct request_queue and decremented as they finish.
-#  Field 10 -- # of milliseconds spent doing I/Os
-#      This field is increases so long as field 9 is nonzero.
-#  Field 11 -- weighted # of milliseconds spent doing I/Os
+#  Field 12 -- # of milliseconds spent doing I/Os
+#      This field is increases so long as field 11 is nonzero.
+#  Field 13 -- weighted # of milliseconds spent doing I/Os
 #      This field is incremented at each I/O start, I/O completion, I/O
 #      merge, or read of these stats by the number of I/Os in progress
 #      (field 9) times the number of milliseconds spent doing I/O since the
@@ -34,7 +45,7 @@
 
 __author__    = "Jan van de Beek, Fabian van der Hoeven"
 __copyright__ = "Copyright (C) 2013 Vermont 24x7"
-__version__   = "3.4"
+__version__   = "3.5"
 
 import sys, os, time, getopt
 # Add mios-agent LIB to path
@@ -589,7 +600,7 @@ class Postgres(object):
 		self.last_connect      = time.time()
 		self.logger.info("Connect to Postgres version %s DB: %s" % (self.version[indx], self.dbs[indx]))
 
-	def reconnect(self,data):
+	def reconnect(self, data):
 
 		if data.find('[') > 0:
 			(item, arguments) = data.split('[')
@@ -837,11 +848,10 @@ class DiskStats(object):
 		self.filesystems  = []
 		self.fs_type      = []
 		self.read_write   = []
-		self.no_probes    = 0
-		self.data         = []
 		self.last_update  = 0
 		self.stats        = []
 		self.MIN_INTERVAL = 30
+		self.logger       = logging.getLogger(type(self).__name__)
 
 		self.get_fs_mapping()
 		self.init_stats()
@@ -856,15 +866,11 @@ class DiskStats(object):
 				a="%s-%s" % (fields[0],fields[1])
 				i = self.major_minor.index(a)
 				fs = self.filesystems[i]
-				self.data[i] = fields
-				now = time.time()
-				self.last_update = now
-				self.stats[i] = [0,0,0,0,0,0]
+				self.stats[i] = [0,0,0,0,0,0,0,0,0,0,0]
 			except:
 				pass
 		f.close()
 		self.last_update = time.time()
-		self.no_probes+=1
 
 	def get_fs_mapping(self):
 
@@ -872,50 +878,47 @@ class DiskStats(object):
 		for line in f:
 			fields = line.split()
 			self.device_name.append(fields[0].replace("/dev/",""))
-			if fields[2] == "ext3":
+			if fields[2] == "ext4" or fields[2] == "ext3":
 				stat  = os.stat(fields[0])
 				inode = stat.st_rdev
 				self.major_minor.append( "%d-%d" % ( os.major(inode), os.minor(inode)))
-				rootLogger.debug("%s-%s %s" % ( os.major(inode), os.minor(inode), fields[1] ))
+				self.logger.debug("Discovered FS: %s (%s-%s)" % ( fields[1], os.major(inode), os.minor(inode) ))
 				self.filesystems.append(fields[1])
 				self.fs_type.append(fields[2])
 				self.read_write.append(fields[3])
-				self.data.append([0,0,0,0,0,0,0,0,0,0,0])
-				self.stats.append([0,0,float(0.0),0,0,float(0.0)])
-				now = time.time()
-				self.last_update = now
+				self.stats.append([0,0,0,0,0,0,0,0,0,0,0])
 		f.close()
-
-	def list_fs(self):
-
-		for fs in filesystems:
-			print fd + "\n"
 
 	def update_stats(self):
 
 		f = open('/proc/diskstats', 'r')
-		diff = 0
-		if self.last_update > 0:
-			diff = time.time() - self.last_update
 		for line in f:
 			fields = line.split()
 			a="%s-%s" % (fields[0],fields[1])
 			try:
 				i = self.major_minor.index(a)
 				try:
-					self.stats[i] = [ ( int(fields[3]) - int(self.data[i][3]) ) / diff,
-								( int(fields[5]) - int(self.data[i][5]) ) * 512 / diff,
-								float( ( float(fields[6]) - float(self.data[i][6]) ) / ( float(fields[3]) - float(self.data[i][3]) ) ),
-								( int(fields[7]) - int(self.data[i][7]) ) / diff,
-								( int(fields[9]) - int(self.data[i][9]) ) * 512 / diff,
-								float( ( float(fields[10]) - float(self.data[i][10]) ) / ( float(fields[7]) - float(self.data[i][7]) ) )
-							]
-
-				except:
+					# Standard fields from /proc/diskstats
+					self.stats[i] = [ int(fields[3]), int(fields[4]), int(fields[5]), int(fields[6]), int(fields[7]), int(fields[8]), int(fields[9]), int(fields[10]), int(fields[11]), int(fields[12]), int(fields[13])
+					# Calculated custom fields
+					, float(fields[12]) / (float(fields[3]) + float(fields[7]))					# Average IO time
+					, float(fields[6]) / float(fields[3])								# Average IO read wait time
+					, float(fields[10]) / float(fields[7])								# Average IO write wait time
+					, (float(fields[6]) + float(fields[10])) / (float(fields[3]) + float(fields[7]))		# Average IO wait time
+					, ((float(fields[5]) * 512) / float(fields[3])) / 1024						# Average request size read in Kb
+					, ((float(fields[9]) * 512) / float(fields[7])) / 1024						# Average request size write in Kb
+					, ((float(fields[5]) + float(fields[9]) * 512) / (float(fields[3]) + float(fields[7]))) / 1024	# Average request size in Kb
+					]
+				except Exception, e:
+#					self.logger.error("ERROR: %s" % e)
 					pass
-				rootLogger.debug("STATS: %d - %d - %d - %d" % ( self.stats[i][0], self.stats[i][1], self.stats[i][3], self.stats[i][4] ))
-				self.data[i] = fields
-			except:
+				self.logger.debug("Updated STATS: %s:  READS_COMPLETED: %d,  READS_MERGED: %d,  SECTORS_READ: %d,  IOTIME_READ: %d" % (self.filesystems[i], self.stats[i][0], self.stats[i][1], self.stats[i][2], self.stats[i][3]))
+				self.logger.debug("Updated STATS: %s: WRITES_COMPLETED: %d, WRITES_MERGED: %d, SECTORS_WRITE: %d, IOTIME_WRITE: %d" % (self.filesystems[i], self.stats[i][4], self.stats[i][5], self.stats[i][6], self.stats[i][7]))
+				self.logger.debug("Updated STATS: %s: CURRENT_IO: %d, IO_TIME: %d, WEIGHT_IO_TIME: %d, AVG_IO_TIME: %.2f" % (self.filesystems[i], self.stats[i][8], self.stats[i][9], self.stats[i][10], self.stats[i][11] ))
+				self.logger.debug("Updated STATS: %s: AVG_READ_IOWAIT: %.2f, AVG_WRITE_IOWAIT: %.2f, AVG_IOWAIT: %.2f" % (self.filesystems[i], self.stats[i][12], self.stats[i][13], self.stats[i][14]))
+				self.logger.debug("Updated STATS: %s: AVG_REQ_SIZE_READ: %.2f, AVG_REQ_SIZE_WRITE: %.2f, AVG_REQ_SIZE: %.2f" % (self.filesystems[i], self.stats[i][15], self.stats[i][16], self.stats[i][17]))
+			except Exception, e:
+#				self.logger.error("ERROR: %s" %e)
 				pass
 		f.close()
 		self.last_update = time.time()
@@ -927,11 +930,11 @@ class DiskStats(object):
 		if now - self.last_update > self.MIN_INTERVAL:
 			self.update_stats()
 		for line in self.filesystems:
-			 i = self.filesystems.index(line)
-			 _fs = self.filesystems[i]
-			 if _fs == fs:
+			i = self.filesystems.index(line)
+			_fs = self.filesystems[i]
+			if _fs == fs:
 				ret = self.stats[i][nof]
-		self.no_probes+=1
+		self.logger.debug("STATS: %s: %s, returns: %s" % (fs, nof, ret))
 		return ret
 
 class ConnectionHandler:
@@ -1046,19 +1049,33 @@ class ConnectionHandler:
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack('QB', 1, 0x30 + 1 ))
 
-		elif item == 'perf.io':
-			args = { 'riops': 0, 'rbps': 1, 'rst': 2, 'wiops': 3, 'wbps': 4, 'wst': 5 }
-			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
-			value = disk_stat.get_attr(fields[0], args[fields[1]] )
-			rootLogger.debug("Received io arg1: %s arg2: %s send back: %s length: %d" % (arg1, arg2, value, len(str(value))))
-
-			if fields[1][0:3] == 'rst' or fields[1][0:3] == 'wst':
-				value_s = str(value)
-				self.conn.send( pack("Q%ds" % len(value_s), len(value_s), str(value) ) )
-
+		elif top_item == 'perf':
+			if item.split('.')[1] == 'io':
+				global disk_stat
+				if disk_stat is None:
+					rootLogger.debug("Received DiskStats request. Creating disk_stat object.")
+					disk_stat = DiskStats()
+				try:
+					if item.split('.')[2] == 'discovery':
+						disk_stat.logger.debug("Filesystem discovery")
+						value = '{ "data":['
+						for fs in disk_stat.filesystems:
+							disk_stat.logger.debug("Filesystem discovery found: %s" % fs)
+							value += '{ "{#FSNAME}":"%s" },' % fs
+						value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
+						value += '] }'
+				except Exception, e:
+#					disk_stat.logger.debug("ERROR: %s" %e)
+					args = { 'READS_COMPLETED': 0, 'READS_MERGED': 1, 'READS_SECTORS': 2, 'READS_TIME': 3, 'WRITES_COMPLETED': 4, 'WRITES_MERGED': 5, 'WRITES_SECTORS': 6, 'WRITES_TIME': 7, 'IO_QUEUE': 8, 'IO_TIME': 9, 'WIO_TIME': 10, 'AVG_IO_TIME': 11, 'AVG_IO_READ_WAIT': 12, 'AVG_IO_WRITE_WAIT': 13, 'AVG_IO_WAIT': 14, 'AVG_REQ_SIZE_READ': 15, 'AVG_REQ_SIZE_WRITE': 16, 'AVG_REQ_SIZE': 17 }
+					value = disk_stat.get_attr(fields[0], args[fields[1].upper()] )
+					value = str(value)
+					rootLogger.debug("Received io arg1: %s arg2: %s send back: %s length: %s" % (fields[0], fields[1], value, len(value)))
 			else:
-				value_s = str(int(value))
-				self.conn.send( pack("Q%ds" % len(value_s), len(value_s), str(value) ) )
+				# for future custom performance items
+				rootLogger.error("Received unsupported performance item: %s" % item.split('.')[1])
+				value = "ZBX_NOTSUPPORTED"
+			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
+			self.conn.send( pack("Q%ds" % len(value), len(value), value ) )
 
 		elif item == 'io.wt':
 			rootLogger.debug("Received io.wt")
@@ -1337,7 +1354,6 @@ class MagentDaemon(Daemon):
 		global config
 		global probes
 		global oracle
-		global disk_stat
 		global postgres
 		global net_stat
 		global rootLogger
@@ -1366,7 +1382,6 @@ class MagentDaemon(Daemon):
 		rootLogger.info('============================= Initialize MIOS-AGENT =================================')
 		checkEnvironment()
 
-		disk_stat = DiskStats()
 		probes = Probes()
 		net_stat = NetStats()
 
