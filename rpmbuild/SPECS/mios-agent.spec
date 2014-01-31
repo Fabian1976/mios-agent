@@ -15,7 +15,7 @@ This python program is a proxy between the Zabbix server and Zabbix agent. It pr
 Oracle databases and Postgres databases.
 
 %pre
-/usr/bin/getent group mios > /dev/null || /usr/sbin/groupadd mios
+/usr/bin/getent group vermont > /dev/null || /usr/sbin/groupadd -g 400 vermont
 /usr/bin/getent passwd mios > /dev/null || /usr/sbin/useradd -g mios -d /home/mios -s /bin/bash -m mios
 
 %build
