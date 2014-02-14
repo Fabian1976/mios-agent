@@ -1004,6 +1004,15 @@ class ConnectionHandler:
 						value += '{ "{#TMPSNAME}":"%s" },' % row
 					value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 					value += '] }'
+			elif item.split('.')[1] == 'discover_sid':
+				value = '{ "data":['
+				for sid in oracle.sids:
+					value += '{ "{#SIDNAME}":"%s" },' % sid
+				value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
+				value += '] }'
+				oracle.logger.info(len(oracle.sids))
+				oracle.logger.info(value)
+#				value = '1'
 			else:
 				value = oracle.get(data)
 				if value == -1:
