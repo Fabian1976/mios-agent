@@ -1317,7 +1317,13 @@ def refreshProbesCache(interval):
 def socketListener():
 	s = socket(AF_INET,SOCK_STREAM)
 	s.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
-	s.bind((config.listen_ip, config.listen_port))
+	try:
+		s.bind((config.listen_ip, config.listen_port))
+	except Exception, e:
+		rootLogger.critical("Unable to bind to specified IP adres. Possibly wrong IP or port allready in use?")
+		rootLogger.critical("BIND: Additional information: %s" % e)
+		rootLogger.critical("Shutting down")
+		daemon.stop()
 	s.listen(5)
 	while True:
 		try:
