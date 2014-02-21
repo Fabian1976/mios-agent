@@ -365,14 +365,14 @@ class Oracle(object):
 		while self.connections[indx] == None:
 			try:
 				self.connections[indx]  = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
-				self.logger.info("Connection succesful")
+				self.logger.info("Connection succesful (%s)" % self.sids[indx])
 				time.sleep(2)
 				self.cursor[indx]       = self.connections[indx].cursor()
 				self.version[indx]      = self.connections[indx].version
 				self.last_connect[indx] = time.time()
 				self.logger.info("Connected to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
 			except Exception, e:
-				self.logger.critical("Unable to connect to Oracle")
+				self.logger.critical("Unable to connect to Oracle (%s)" % self.sids[indx])
 				self.logger.critical("ORA: Additional information: %s" % e)
 				self.logger.info("Trying to reconnect in 10 seconds")
 				time.sleep(10)
