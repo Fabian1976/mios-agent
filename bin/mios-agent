@@ -51,7 +51,8 @@ import sys, os, time, getopt
 # Add mios-agent LIB to path
 try:
 	magent_home = os.environ['MAGENT_HOME']
-except:
+except: #Send message to stdout as logger is not initialized yet
+	print "Environment variabele MAGENT_HOME not set. Assuming default of: /opt/mios/mios-agent"
 	magent_home = "/opt/mios/mios-agent"
 sys.path.append(magent_home + '/lib')
 
@@ -91,10 +92,7 @@ class Config:
 		self.oracle_sids     = {}
 		self.oracle_oa_dir   = ''
 		self.postgres_dbs    = {}
-		try:
-			self.magent_home = os.environ['MAGENT_HOME']
-		except:
-			self.magent_home = "/opt/mios/mios-agent"
+		self.magent_home = magent_home
 
 		self.conf_file = conf_file
 		if not os.path.exists(self.conf_file):
@@ -1334,25 +1332,33 @@ def reparseConfig(interval):
 		config.reparse()
 		time.sleep(interval)
 
-def checkEnvironment():
-	try:
+def checkMAgentEnvironment():
+	try:# Check again so message can also be writed to proper logfile
 		magent_home = os.environ['MAGENT_HOME']
 	except:
 		rootLogger.warning("Environment variabele MAGENT_HOME not set. Assuming default of: /opt/mios/mios-agent")
+
+def checkOracleEnvironment():
 	try:
 		oracle_base = os.environ['ORACLE_BASE']
 	except:
 		rootLogger.critical("Environment variabele ORACLE_BASE not set. MIOS-AGENT will not function without it.")
+		rootLogger.critical("Set this parameter or remove Oracle monitoring from config file")
+		rootLogger.critical("Shutting down")
 		exit(1)
 	try:
 		oracle_home = os.environ['ORACLE_HOME']
 	except:
 		rootLogger.critical("Environment variabele ORACLE_HOME not set. MIOS-AGENT will not function without it.")
+		rootLogger.critical("Set this parameter or remove Oracle monitoring from config file")
+		rootLogger.critical("Shutting down")
 		exit(1)
 	try:
 		oracle_lib = os.environ['LD_LIBRARY_PATH']
 	except:
 		rootLogger.critical("Environment variabele LD_LIBRARY_PATH not set. MIOS-AGENT will not function without it.")
+		rootLogger.critical("Set this parameter or remove Oracle monitoring from config file")
+		rootLogger.critical("Shutting down")
 		exit(1)
 
 class MagentDaemon(Daemon):
@@ -1369,11 +1375,6 @@ class MagentDaemon(Daemon):
 	
 		config_file = ''
 
-		try:
-			magent_home = os.environ['MAGENT_HOME']
-		except:
-			magent_home = "/opt/mios/mios-agent"
-
 		config_file = magent_home + '/conf/mios-agent.conf'
 
 		config  = Config(config_file)
@@ -1389,20 +1390,24 @@ class MagentDaemon(Daemon):
 		rootLogger = logging.getLogger()
 
 		rootLogger.info('============================= Initialize MIOS-AGENT =================================')
-		checkEnvironment()
+		checkMAgentEnvironment()
 
-		probes = Probes()
-		net_stat = NetStats()
+#		probes = Probes()
+#		net_stat = NetStats()
 
 		if not config.oracle_sids:
-			rootLogger.info('No Oracle database present in config file')
+			rootLogger.info('No Oracle database present in config file. Skipping creation of connectionpool.')
 		else:
+			checkOracleEnvironment()
 			oracle = Oracle(config.oracle_sids)
 
 		if not config.postgres_dbs:
-			rootLogger.info('No Postgres database present in config file')
+			rootLogger.info('No Postgres database present in config file. Skipping creation of connectionpool')
 		else:
 			postgres = Postgres(config.postgres_dbs)
+
+		probes = Probes()
+		net_stat = NetStats()
 
 		# Creating threads
 		connectionThread = createThread(socketListener)
