@@ -1,0 +1,2 @@
+type=postgres
+select count(*) from pg_locks inner join pg_database on pg_locks.database = pg_database.oid where mode='RowExclusiveLock' and pg_database.datname = 'MIOS_ARG_2'

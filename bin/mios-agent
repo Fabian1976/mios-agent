@@ -1041,22 +1041,34 @@ class ConnectionHandler:
 			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
 
 		elif top_item == 'postgres':
-			value = postgres.get(data)
-
-			if value == -1:
-				value = "ZBX_NOTSUPPORTED"
-			elif value == -2:
-				rootLogger.error("PG: Lost connection. Trying to reconnect" % value)
-				while value == -2:
-					rootLogger.info("PG reconnect: sleep 5 seconds...")
-					time.sleep(5)
-					postgres.reconnect(data)
-					value = postgres.get(data)
-					if value != -2:
-						value = str(value)
-				pass
+			if item.split('.')[1] == 'dbs_discover':
+				postgres.logger.info("DISCOVER DBS")
+				value = '{ "data":['
+				for db in postgres.dbs:
+					postgres.logger.debug('DB found: %s' % db)
+					value += '{'
+					value += '"{#DOMAIN}":"%s",' % config.domain
+					value += '"{#DBNAME}":"%s" },' % db
+				value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
+				value += '] }'
+				postgres.logger.info('DBS discover value: %s' % value)
+				value = "1"
 			else:
-				value = str(value)
+				value = postgres.get(data)
+				if value == -1:
+					value = "ZBX_NOTSUPPORTED"
+				elif value == -2:
+					postgres.logger.error("PG: Lost connection. Trying to reconnect" % value)
+					while value == -2:
+						postgres.logger.info("PG reconnect: sleep 5 seconds...")
+						time.sleep(5)
+						postgres.reconnect(data)
+						value = postgres.get(data)
+						if value != -2:
+							value = str(value)
+					pass
+				else:
+					value = str(value)
 
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack("Q%ds" % len(value), len(value), value) )

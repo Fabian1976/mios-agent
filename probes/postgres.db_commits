@@ -1,0 +1,2 @@
+type=postgres
+select xact_commit from pg_stat_database where datname = 'MIOS_ARG_2'
