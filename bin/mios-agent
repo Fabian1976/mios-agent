@@ -983,7 +983,7 @@ class ConnectionHandler:
 
 		if top_item == 'oracle':
 			if item.split('.')[1] == 'tablespace_discover':
-				rootLogger.debug("DISCOVER TABLESPACES")
+				oracle.logger.debug("DISCOVER TABLESPACES")
 				sid = arguments
 				rows = oracle.execute(sid, "select tablespace_name from dba_tablespaces where contents = 'PERMANENT'")
 				if rows == -1:
@@ -991,12 +991,13 @@ class ConnectionHandler:
 				else:
 					value = '{ "data":['
 					for row in rows:
-						rootLogger.debug('Tablespace found: %s' % row)
+						oracle.logger.debug('Tablespace found: %s' % row)
 						value += '{ "{#TBSNAME}":"%s" },' % row
 					value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 					value += '] }'
+				oracle.logger.debug('value: %s' % value)
 			elif item.split('.')[1] == 'tempspace_discover':
-				rootLogger.debug("DISCOVER TEMPSPACES")
+				oracle.logger.debug("DISCOVER TEMPSPACES")
 				sid = arguments
 				rows = oracle.execute(sid, "select tablespace_name from dba_tablespaces where contents = 'TEMPORARY'")
 				if rows == -1:
@@ -1004,30 +1005,30 @@ class ConnectionHandler:
 				else:
 					value = '{ "data":['
 					for row in rows:
-						rootLogger.debug('Tempspace found: %s' % row)
+						oracle.logger.debug('Tempspace found: %s' % row)
 						value += '{ "{#TMPSNAME}":"%s" },' % row
 					value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 					value += '] }'
+				oracle.logger.debug('value: %s' % value)
 			elif item.split('.')[1] == 'sid_discover':
+				oracle.logger.debug("DISCOVER SID's")
 				value = '{ "data":['
-#				value += '{ "{#DOMAIN}":"%s" },' % config.domain
 				for sid in oracle.sids:
+					oracle.logger.debug('SID found: %s' % sid)
 					value += '{'
 					value += '"{#DOMAIN}":"%s",' % config.domain
 					value += '"{#SIDNAME}":"%s" },' % sid
 				value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 				value += '] }'
-				oracle.logger.info(len(oracle.sids))
-				oracle.logger.info(value)
-#				value = '1'
+				oracle.logger.debug('value: %s' % value)
 			else:
 				value = oracle.get(data)
 				if value == -1:
 					value = "ZBX_NOTSUPPORTED"
 				elif value == -2:
-					rootLogger.info("ORA: Lost connection. Trying to reconnect" % value)
+					oracle.logger.error("ORA: Lost connection. Trying to reconnect" % value)
 					while value == -2:
-						rootLogger.info("sleep 5 seconds...")
+						oracle.logger.info("ORA reconnect: sleep 5 seconds...")
 						time.sleep(5)
 						oracle.reconnect(data)
 						value = oracle.get(data)
@@ -1045,9 +1046,9 @@ class ConnectionHandler:
 			if value == -1:
 				value = "ZBX_NOTSUPPORTED"
 			elif value == -2:
-				rootLogger.info("PG: Lost connection. Trying to reconnect" % value)
+				rootLogger.error("PG: Lost connection. Trying to reconnect" % value)
 				while value == -2:
-					rootLogger.info("sleep 5 seconds...")
+					rootLogger.info("PG reconnect: sleep 5 seconds...")
 					time.sleep(5)
 					postgres.reconnect(data)
 					value = postgres.get(data)
