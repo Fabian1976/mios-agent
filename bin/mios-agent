@@ -87,6 +87,7 @@ class Config:
 		self.listen_ip       = ''
 		self.listen_port     = 0
 		self.hostname        = ''
+		self.domain          = ''
 		self.zabbix_agent    = ''
 		self.zabbix_port     = 0
 		self.oracle_sids     = {}
@@ -118,6 +119,11 @@ class Config:
 			self.hostname       = self.config.get('common', 'hostname')
 		except:
 			self.hostname       = platform.node()
+
+		try:
+			self.domain         = self.config.get('common', 'domain')
+		except:
+			self.domain         = '.'.join(getfqdn().split('.')[1:])
 
 		try:
 			self.zabbix_agent   = self.config.get('common', 'zabbix_agent')
@@ -1002,10 +1008,13 @@ class ConnectionHandler:
 						value += '{ "{#TMPSNAME}":"%s" },' % row
 					value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 					value += '] }'
-			elif item.split('.')[1] == 'discover_sid':
+			elif item.split('.')[1] == 'sid_discover':
 				value = '{ "data":['
+#				value += '{ "{#DOMAIN}":"%s" },' % config.domain
 				for sid in oracle.sids:
-					value += '{ "{#SIDNAME}":"%s" },' % sid
+					value += '{'
+					value += '"{#DOMAIN}":"%s",' % config.domain
+					value += '"{#SIDNAME}":"%s" },' % sid
 				value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 				value += '] }'
 				oracle.logger.info(len(oracle.sids))
