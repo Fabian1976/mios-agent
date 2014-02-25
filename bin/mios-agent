@@ -207,16 +207,19 @@ class Config:
 				print "Unsupported database type: %s" % dbtype
 
 	def reparse(self):
+		rootLogger.info("Rereading config file...")
 		if not os.path.exists(self.conf_file):
 			rootLogger.error("Can't open config file %s. Unable to reload configuration. Assuming current configuration." % self.conf_file)
 		else:
-			new_conf    = None
-			oracle_sids = {}
+			new_conf     = None
+			oracle_sids  = {}
+			postgres_dbs = {}
 
 			new_conf = ConfigParser.ConfigParser()
 			new_conf.read(self.conf_file)
 			sections = new_conf.sections()
-			aantal_sids = 0
+			aantal_sids = 0 # Oracle
+			aantal_dbs  = 0 # Postgres
 			for section in sections:
 				if section == 'common':
 					continue
@@ -232,6 +235,19 @@ class Config:
 						rootLogger.error("SID (%s) not correctly specified in config file. Please review example section in config file" % section)
 					if sid == '':
 						rootLogger.error("SID (%s) not correctly specified in config file. Please review example section in config file" % section)
+				if dbtype == 'postgres':
+					aantal_dbs += 1
+					try:
+						db = section.split('.')[1]
+						host = new_conf.get(section, 'host')
+						port = new_conf.get(section, 'port')
+						user = new_conf.get(section, 'user')
+						password = new_conf.get(section, 'password')
+						postgres_dbs[db] = (host, port, user, password)
+					except:
+						rootLogger.error("DB (%s) not correctly specified in config file. Please review example section in config file" % section)
+					if db == '':
+						rootLogger.error("DB (%s) not correctly specified in config file. Please review example section in config file" % section)
 			for sid in oracle_sids:
 				if sid not in self.oracle_sids:
 					# We have a new connection
@@ -245,6 +261,20 @@ class Config:
 					oracle.remove_connection(sid)
 			rootLogger.debug("Aantal sids in conf: %s. SIDS: %s" % (aantal_sids, oracle_sids))
 			rootLogger.debug("Aantal sids in mem: %s. SIDS: %s" % (len(self.oracle_sids), self.oracle_sids))
+
+			for db in postgres_dbs:
+				if db not in self.postgres_dbs:
+					# We have a new connection
+					self.postgres_dbs[db] = postgres_dbs[db]
+					rootLogger.debug("Found new DB in config: %s. Trying to connect" % db)
+					postgres.add_connection()
+			for db in self.postgres_dbs:
+				if db not in postgres_dbs:
+					# We have a removed connection
+					rootLogger.debug("A DB has been removed from the config: %s. Removing connection" % db)
+					postgres.remove_connection(db)
+			rootLogger.debug("Aantal dbs in conf: %s. DBS: %s" % (aantal_dbs, postgres_dbs))
+			rootLogger.debug("Aantal dbs in mem: %s. DBS: %s" % (len(self.postgres_dbs), self.postgres_dbs))
 
 class Probes:
 
