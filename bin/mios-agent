@@ -1485,9 +1485,6 @@ class MagentDaemon(Daemon):
 		rootLogger.info('============================= Initialize MIOS-AGENT =================================')
 		checkMAgentEnvironment()
 
-#		probes = Probes()
-#		net_stat = NetStats()
-
 		if not config.oracle_sids:
 			rootLogger.info('No Oracle database present in config file. Skipping creation of connectionpool.')
 		else:
