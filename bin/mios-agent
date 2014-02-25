@@ -554,7 +554,6 @@ class Postgres(object):
 		self.password         = []
 		self.dbs              = []
 		self.instances        = instances
-		self.last_connect     = []
 		self.logger           = logging.getLogger(type(self).__name__)
 
 		try:
@@ -583,7 +582,6 @@ class Postgres(object):
 			self.cursor.append(None)
 			self.version.append('')
 			indx = self.dbs.index(instance)
-			self.last_connect.append(0)
 			self.connect(indx)
 
 	def connect(self, indx):
@@ -601,7 +599,6 @@ class Postgres(object):
 		self.cursor[indx]      = self.connections[indx].cursor()
 		self.cursor[indx].execute('select version()')
 		self.version[indx]     = self.cursor[indx].fetchone()
-		self.last_connect      = time.time()
 		self.logger.info("Connect to Postgres version %s DB: %s" % (self.version[indx], self.dbs[indx]))
 
 	def reconnect(self, data):
@@ -631,7 +628,6 @@ class Postgres(object):
 		self.cursor[indx]      = self.connections[indx].cursor()
 		self.cursor[indx].execute('select version()')
 		self.version[indx]     = self.cursor[indx].fetchone()
-		self.last_connect      = time.time()
 		self.logger.info("Connect to Postgres version %s DB: %s" % (self.version[indx], self.dbs[indx]))
 
 	def get(self, data):
@@ -658,6 +654,11 @@ class Postgres(object):
 			db = arguments
 		top_item = item.split('.')
 		action=probes.get_action(item)
+		# Replace MIOS_ARG_1 in probe with 1st argument from Zabbix key
+		m = re.search('MIOS_ARG_1', action)
+		if m:
+			action = re.sub('MIOS_ARG_1', fields[0], action)
+		# Replace MIOS_ARG_2 in probe with 1st argument from Zabbix key
 		m = re.search('MIOS_ARG_2', action)
 		if m:
 			action = re.sub('MIOS_ARG_2', fields[1], action)
@@ -1052,7 +1053,6 @@ class ConnectionHandler:
 				value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 				value += '] }'
 				postgres.logger.info('DBS discover value: %s' % value)
-				value = "1"
 			else:
 				value = postgres.get(data)
 				if value == -1:
