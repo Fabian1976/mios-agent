@@ -595,6 +595,44 @@ class Postgres(object):
 		self.version[indx]     = self.cursor[indx].fetchone()
 		self.logger.info("Connect to Postgres version %s DB: %s" % (self.version[indx], self.dbs[indx]))
 
+	def add_connection(self):
+
+		for instance in self.instances:
+			if instance not in self.dbs:
+				host, port, user, password = self.instances[instance]
+				self.host.append(host)
+				self.port.append(port)
+				self.user.append(user)
+				self.password.append(password)
+				self.dbs.append(instance)
+				self.connections.append(None)
+				self.cursor.append(None)
+				self.version.append('')
+				indx = self.dbs.index(instance)
+				self.connect(indx)
+
+	def disconnect(self, indx):
+
+		self.cursor[indx].close()
+		self.connections[indx].close()
+
+	def remove_connection(self, db):
+		indx = self.dbs.index(db)
+		self.logger.debug("DB that needs to be removed: %s" % db)
+		self.logger.debug("INDX of DB: %s" % indx)
+		# Properly close cursor and connection to database
+		self.disconnect(indx)
+		# Properly destroy objects associated to this connection
+		del self.cursor[indx]
+		del self.connections[indx]
+		del self.host[indx]
+		del self.port[indx]
+		del self.user[indx]
+		del self.password[indx]
+		del self.dbs[indx]
+		del self.version[indx]
+		del config.postgres_dbs[db]
+
 	def reconnect(self, data):
 
 		if data.find('[') > 0:
@@ -685,6 +723,9 @@ class Postgres(object):
 		except:
 			self.logger.error("Error in Postgres connection DB: %s" % db)
 			return -2
+	def execute(self, db, query):
+		#TODO
+		pass
 
 class NetStats(object):
 
