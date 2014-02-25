@@ -1,2 +1,2 @@
 type=postgres
-select tup_deleted from pg_stat_database where datname = 'MIOS_ARG_2'
+select tup_deleted from pg_stat_database where datname = 'MIOS_ARG_1'

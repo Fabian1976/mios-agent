@@ -1,2 +1,2 @@
 type=postgres
-select pg_database_size('MIOS_ARG_2')
+select pg_database_size('MIOS_ARG_1')
