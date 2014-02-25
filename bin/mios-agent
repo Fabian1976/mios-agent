@@ -318,7 +318,6 @@ class Oracle(object):
 		self.password        = []
 		self.sids            = []
 		self.instances       = instances
-		self.last_connect    = []
 		self.logger          = logging.getLogger(type(self).__name__)
 
 		try:
@@ -361,7 +360,6 @@ class Oracle(object):
 			self.cursor.append(None)
 			self.version.append('')
 			indx = self.sids.index(instance)
-			self.last_connect.append(0)
 			self.connect(indx)
 
 	def connect(self, indx):
@@ -373,7 +371,6 @@ class Oracle(object):
 				time.sleep(2)
 				self.cursor[indx]       = self.connections[indx].cursor()
 				self.version[indx]      = self.connections[indx].version
-				self.last_connect[indx] = time.time()
 				self.logger.info("Connected to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
 			except Exception, e:
 				self.logger.critical("Unable to connect to Oracle (%s)" % self.sids[indx])
@@ -393,7 +390,6 @@ class Oracle(object):
 				self.cursor.append(None)
 				self.version.append('')
 				indx = self.sids.index(instance)
-				self.last_connect.append(0)
 				self.connect(indx)
 
 	def disconnect(self, indx):
@@ -414,7 +410,6 @@ class Oracle(object):
 		del self.password[indx]
 		del self.sids[indx]
 		del self.version[indx]
-		del self.last_connect[indx]
 		del config.oracle_sids[sid]
 
 	def reconnect(self, data):
@@ -450,7 +445,6 @@ class Oracle(object):
 		self.cursor[indx]      = self.connections[indx].cursor()
 		self.version[indx]    = self.connections[indx].version
 		self.logger.info("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
-		self.last_connect[indx] = time.time()
 
 	def get(self, data):
 
