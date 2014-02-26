@@ -1,2 +1,2 @@
 type=postgres
-select (sum(idx_blks_hit) - sum(idx_blks_read)) / sum(idx_blks_hit) from pg_statio_all_indexes
+select (sum(idx_blks_hit) - sum(idx_blks_read)) / sum(idx_blks_hit) from pg_statio_all_tables

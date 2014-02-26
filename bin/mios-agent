@@ -45,13 +45,14 @@
 
 __author__    = "Jan van de Beek, Fabian van der Hoeven"
 __copyright__ = "Copyright (C) 2013 Vermont 24x7"
-__version__   = "3.5"
+__version__   = "3.6"
 
 import sys, os, time, getopt
 # Add mios-agent LIB to path
 try:
 	magent_home = os.environ['MAGENT_HOME']
-except:
+except: #Send message to stdout as logger is not initialized yet
+	print "Environment variabele MAGENT_HOME not set. Assuming default of: /opt/mios/mios-agent"
 	magent_home = "/opt/mios/mios-agent"
 sys.path.append(magent_home + '/lib')
 
@@ -86,15 +87,13 @@ class Config:
 		self.listen_ip       = ''
 		self.listen_port     = 0
 		self.hostname        = ''
+		self.domain          = ''
 		self.zabbix_agent    = ''
 		self.zabbix_port     = 0
 		self.oracle_sids     = {}
 		self.oracle_oa_dir   = ''
 		self.postgres_dbs    = {}
-		try:
-			self.magent_home = os.environ['MAGENT_HOME']
-		except:
-			self.magent_home = "/opt/mios/mios-agent"
+		self.magent_home = magent_home
 
 		self.conf_file = conf_file
 		if not os.path.exists(self.conf_file):
@@ -120,6 +119,11 @@ class Config:
 			self.hostname       = self.config.get('common', 'hostname')
 		except:
 			self.hostname       = platform.node()
+
+		try:
+			self.domain         = self.config.get('common', 'domain')
+		except:
+			self.domain         = '.'.join(getfqdn().split('.')[1:])
 
 		try:
 			self.zabbix_agent   = self.config.get('common', 'zabbix_agent')
@@ -203,16 +207,19 @@ class Config:
 				print "Unsupported database type: %s" % dbtype
 
 	def reparse(self):
+		rootLogger.info("Rereading config file...")
 		if not os.path.exists(self.conf_file):
 			rootLogger.error("Can't open config file %s. Unable to reload configuration. Assuming current configuration." % self.conf_file)
 		else:
-			new_conf    = None
-			oracle_sids = {}
+			new_conf     = None
+			oracle_sids  = {}
+			postgres_dbs = {}
 
 			new_conf = ConfigParser.ConfigParser()
 			new_conf.read(self.conf_file)
 			sections = new_conf.sections()
-			aantal_sids = 0
+			aantal_sids = 0 # Oracle
+			aantal_dbs  = 0 # Postgres
 			for section in sections:
 				if section == 'common':
 					continue
@@ -228,6 +235,19 @@ class Config:
 						rootLogger.error("SID (%s) not correctly specified in config file. Please review example section in config file" % section)
 					if sid == '':
 						rootLogger.error("SID (%s) not correctly specified in config file. Please review example section in config file" % section)
+				if dbtype == 'postgres':
+					aantal_dbs += 1
+					try:
+						db = section.split('.')[1]
+						host = new_conf.get(section, 'host')
+						port = new_conf.get(section, 'port')
+						user = new_conf.get(section, 'user')
+						password = new_conf.get(section, 'password')
+						postgres_dbs[db] = (host, port, user, password)
+					except:
+						rootLogger.error("DB (%s) not correctly specified in config file. Please review example section in config file" % section)
+					if db == '':
+						rootLogger.error("DB (%s) not correctly specified in config file. Please review example section in config file" % section)
 			for sid in oracle_sids:
 				if sid not in self.oracle_sids:
 					# We have a new connection
@@ -241,6 +261,20 @@ class Config:
 					oracle.remove_connection(sid)
 			rootLogger.debug("Aantal sids in conf: %s. SIDS: %s" % (aantal_sids, oracle_sids))
 			rootLogger.debug("Aantal sids in mem: %s. SIDS: %s" % (len(self.oracle_sids), self.oracle_sids))
+
+			for db in postgres_dbs:
+				if db not in self.postgres_dbs:
+					# We have a new connection
+					self.postgres_dbs[db] = postgres_dbs[db]
+					rootLogger.debug("Found new DB in config: %s. Trying to connect" % db)
+					postgres.add_connection()
+			for db in self.postgres_dbs:
+				if db not in postgres_dbs:
+					# We have a removed connection
+					rootLogger.debug("A DB has been removed from the config: %s. Removing connection" % db)
+					postgres.remove_connection(db)
+			rootLogger.debug("Aantal dbs in conf: %s. DBS: %s" % (aantal_dbs, postgres_dbs))
+			rootLogger.debug("Aantal dbs in mem: %s. DBS: %s" % (len(self.postgres_dbs), self.postgres_dbs))
 
 class Probes:
 
@@ -314,7 +348,6 @@ class Oracle(object):
 		self.password        = []
 		self.sids            = []
 		self.instances       = instances
-		self.last_connect    = []
 		self.logger          = logging.getLogger(type(self).__name__)
 
 		try:
@@ -357,7 +390,6 @@ class Oracle(object):
 			self.cursor.append(None)
 			self.version.append('')
 			indx = self.sids.index(instance)
-			self.last_connect.append(0)
 			self.connect(indx)
 
 	def connect(self, indx):
@@ -365,17 +397,16 @@ class Oracle(object):
 		while self.connections[indx] == None:
 			try:
 				self.connections[indx]  = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
-				self.logger.info("Connection succesful")
-				time.sleep(2)
+				self.logger.info("Connection succesful (%s)" % self.sids[indx])
+				time.sleep(1)
+				self.cursor[indx]       = self.connections[indx].cursor()
+				self.version[indx]      = self.connections[indx].version
+				self.logger.info("Connected to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
 			except Exception, e:
-				self.logger.critical("Unable to connect to Oracle")
+				self.logger.critical("Unable to connect to Oracle (%s)" % self.sids[indx])
 				self.logger.critical("ORA: Additional information: %s" % e)
 				self.logger.info("Trying to reconnect in 10 seconds")
 				time.sleep(10)
-			self.cursor[indx]       = self.connections[indx].cursor()
-			self.version[indx]      = self.connections[indx].version
-			self.last_connect[indx] = time.time()
-			self.logger.info("Connected to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
 
 	def add_connection(self):
 
@@ -389,7 +420,6 @@ class Oracle(object):
 				self.cursor.append(None)
 				self.version.append('')
 				indx = self.sids.index(instance)
-				self.last_connect.append(0)
 				self.connect(indx)
 
 	def disconnect(self, indx):
@@ -410,7 +440,6 @@ class Oracle(object):
 		del self.password[indx]
 		del self.sids[indx]
 		del self.version[indx]
-		del self.last_connect[indx]
 		del config.oracle_sids[sid]
 
 	def reconnect(self, data):
@@ -446,7 +475,6 @@ class Oracle(object):
 		self.cursor[indx]      = self.connections[indx].cursor()
 		self.version[indx]    = self.connections[indx].version
 		self.logger.info("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
-		self.last_connect[indx] = time.time()
 
 	def get(self, data):
 
@@ -550,7 +578,6 @@ class Postgres(object):
 		self.password         = []
 		self.dbs              = []
 		self.instances        = instances
-		self.last_connect     = []
 		self.logger           = logging.getLogger(type(self).__name__)
 
 		try:
@@ -579,7 +606,6 @@ class Postgres(object):
 			self.cursor.append(None)
 			self.version.append('')
 			indx = self.dbs.index(instance)
-			self.last_connect.append(0)
 			self.connect(indx)
 
 	def connect(self, indx):
@@ -587,8 +613,8 @@ class Postgres(object):
 		while self.connections[indx] == None:
 			try:
 				self.connections[indx] = self.psycopg2.connect("host='%s' port='%s' dbname='%s' user='%s' password='%s'" % (self.host[indx], self.port[indx], self.dbs[indx], self.user[indx], self.password[indx]))
-				self.logger.info("Connection succesful")
-				time.sleep(2)
+				self.logger.info("Connection succesful (%s)" % self.dbs[indx])
+				time.sleep(1)
 			except Exception, e:
 				self.logger.critical("Unable to connect to Postgres")
 				self.logger.critical("PG: Additional information: %s" % e)
@@ -597,8 +623,45 @@ class Postgres(object):
 		self.cursor[indx]      = self.connections[indx].cursor()
 		self.cursor[indx].execute('select version()')
 		self.version[indx]     = self.cursor[indx].fetchone()
-		self.last_connect      = time.time()
 		self.logger.info("Connect to Postgres version %s DB: %s" % (self.version[indx], self.dbs[indx]))
+
+	def add_connection(self):
+
+		for instance in self.instances:
+			if instance not in self.dbs:
+				host, port, user, password = self.instances[instance]
+				self.host.append(host)
+				self.port.append(port)
+				self.user.append(user)
+				self.password.append(password)
+				self.dbs.append(instance)
+				self.connections.append(None)
+				self.cursor.append(None)
+				self.version.append('')
+				indx = self.dbs.index(instance)
+				self.connect(indx)
+
+	def disconnect(self, indx):
+
+		self.cursor[indx].close()
+		self.connections[indx].close()
+
+	def remove_connection(self, db):
+		indx = self.dbs.index(db)
+		self.logger.debug("DB that needs to be removed: %s" % db)
+		self.logger.debug("INDX of DB: %s" % indx)
+		# Properly close cursor and connection to database
+		self.disconnect(indx)
+		# Properly destroy objects associated to this connection
+		del self.cursor[indx]
+		del self.connections[indx]
+		del self.host[indx]
+		del self.port[indx]
+		del self.user[indx]
+		del self.password[indx]
+		del self.dbs[indx]
+		del self.version[indx]
+		del config.postgres_dbs[db]
 
 	def reconnect(self, data):
 
@@ -627,7 +690,6 @@ class Postgres(object):
 		self.cursor[indx]      = self.connections[indx].cursor()
 		self.cursor[indx].execute('select version()')
 		self.version[indx]     = self.cursor[indx].fetchone()
-		self.last_connect      = time.time()
 		self.logger.info("Connect to Postgres version %s DB: %s" % (self.version[indx], self.dbs[indx]))
 
 	def get(self, data):
@@ -654,6 +716,11 @@ class Postgres(object):
 			db = arguments
 		top_item = item.split('.')
 		action=probes.get_action(item)
+		# Replace MIOS_ARG_1 in probe with 1st argument from Zabbix key
+		m = re.search('MIOS_ARG_1', action)
+		if m:
+			action = re.sub('MIOS_ARG_1', fields[0], action)
+		# Replace MIOS_ARG_2 in probe with 1st argument from Zabbix key
 		m = re.search('MIOS_ARG_2', action)
 		if m:
 			action = re.sub('MIOS_ARG_2', fields[1], action)
@@ -686,6 +753,9 @@ class Postgres(object):
 		except:
 			self.logger.error("Error in Postgres connection DB: %s" % db)
 			return -2
+	def execute(self, db, query):
+		#TODO
+		pass
 
 class NetStats(object):
 
@@ -979,7 +1049,7 @@ class ConnectionHandler:
 
 		if top_item == 'oracle':
 			if item.split('.')[1] == 'tablespace_discover':
-				rootLogger.debug("DISCOVER TABLESPACES")
+				oracle.logger.debug("DISCOVER TABLESPACES")
 				sid = arguments
 				rows = oracle.execute(sid, "select tablespace_name from dba_tablespaces where contents = 'PERMANENT'")
 				if rows == -1:
@@ -987,12 +1057,13 @@ class ConnectionHandler:
 				else:
 					value = '{ "data":['
 					for row in rows:
-						rootLogger.debug('Tablespace found: %s' % row)
+						oracle.logger.debug('Tablespace found: %s' % row)
 						value += '{ "{#TBSNAME}":"%s" },' % row
 					value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 					value += '] }'
+				oracle.logger.debug('value: %s' % value)
 			elif item.split('.')[1] == 'tempspace_discover':
-				rootLogger.debug("DISCOVER TEMPSPACES")
+				oracle.logger.debug("DISCOVER TEMPSPACES")
 				sid = arguments
 				rows = oracle.execute(sid, "select tablespace_name from dba_tablespaces where contents = 'TEMPORARY'")
 				if rows == -1:
@@ -1000,18 +1071,30 @@ class ConnectionHandler:
 				else:
 					value = '{ "data":['
 					for row in rows:
-						rootLogger.debug('Tempspace found: %s' % row)
+						oracle.logger.debug('Tempspace found: %s' % row)
 						value += '{ "{#TMPSNAME}":"%s" },' % row
 					value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 					value += '] }'
+				oracle.logger.debug('value: %s' % value)
+			elif item.split('.')[1] == 'sid_discover':
+				oracle.logger.debug("DISCOVER SID's")
+				value = '{ "data":['
+				for sid in oracle.sids:
+					oracle.logger.debug('SID found: %s' % sid)
+					value += '{'
+					value += '"{#DOMAIN}":"%s",' % config.domain
+					value += '"{#SIDNAME}":"%s" },' % sid
+				value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
+				value += '] }'
+				oracle.logger.debug('value: %s' % value)
 			else:
 				value = oracle.get(data)
 				if value == -1:
 					value = "ZBX_NOTSUPPORTED"
 				elif value == -2:
-					rootLogger.info("ORA: Lost connection. Trying to reconnect" % value)
+					oracle.logger.error("ORA: Lost connection. Trying to reconnect" % value)
 					while value == -2:
-						rootLogger.info("sleep 5 seconds...")
+						oracle.logger.info("ORA reconnect: sleep 5 seconds...")
 						time.sleep(5)
 						oracle.reconnect(data)
 						value = oracle.get(data)
@@ -1024,22 +1107,33 @@ class ConnectionHandler:
 			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
 
 		elif top_item == 'postgres':
-			value = postgres.get(data)
-
-			if value == -1:
-				value = "ZBX_NOTSUPPORTED"
-			elif value == -2:
-				rootLogger.info("PG: Lost connection. Trying to reconnect" % value)
-				while value == -2:
-					rootLogger.info("sleep 5 seconds...")
-					time.sleep(5)
-					postgres.reconnect(data)
-					value = postgres.get(data)
-					if value != -2:
-						value = str(value)
-				pass
+			if item.split('.')[1] == 'dbs_discover':
+				postgres.logger.debug("DISCOVER DBS")
+				value = '{ "data":['
+				for db in postgres.dbs:
+					postgres.logger.debug('DB found: %s' % db)
+					value += '{'
+					value += '"{#DOMAIN}":"%s",' % config.domain
+					value += '"{#DBNAME}":"%s" },' % db
+				value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
+				value += '] }'
+				postgres.logger.debug('DBS discover value: %s' % value)
 			else:
-				value = str(value)
+				value = postgres.get(data)
+				if value == -1:
+					value = "ZBX_NOTSUPPORTED"
+				elif value == -2:
+					postgres.logger.error("PG: Lost connection. Trying to reconnect" % value)
+					while value == -2:
+						postgres.logger.info("PG reconnect: sleep 5 seconds...")
+						time.sleep(5)
+						postgres.reconnect(data)
+						value = postgres.get(data)
+						if value != -2:
+							value = str(value)
+					pass
+				else:
+					value = str(value)
 
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
@@ -1299,6 +1393,7 @@ def monitorLogging(interval):
 		if not os.path.exists(config.magent_home + '/conf/logging.conf'):
 			rootLogger.error("Can't open logging file %s. Unable to reload logfacility. Assuming current logfacility." % (config.magent_home + '/conf/logging.conf'))
 		else:
+			rootLogger.info("Reloading logfacility configuration")
 			logging.config.fileConfig(config.magent_home + '/conf/logging.conf')
 		time.sleep(interval)
 
@@ -1310,7 +1405,14 @@ def refreshProbesCache(interval):
 def socketListener():
 	s = socket(AF_INET,SOCK_STREAM)
 	s.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
-	s.bind((config.listen_ip, config.listen_port))
+	try:
+		s.bind((config.listen_ip, config.listen_port))
+		rootLogger.info("Binding to %s:%s" % (config.listen_ip, config.listen_port))
+	except Exception, e:
+		rootLogger.critical("Unable to bind to specified IP adres. Possibly wrong IP or port allready in use?")
+		rootLogger.critical("BIND: Additional information: %s" % e)
+		rootLogger.critical("Shutting down")
+		daemon.stop()
 	s.listen(5)
 	while True:
 		try:
@@ -1325,25 +1427,33 @@ def reparseConfig(interval):
 		config.reparse()
 		time.sleep(interval)
 
-def checkEnvironment():
-	try:
+def checkMAgentEnvironment():
+	try:# Check again so message can also be writed to proper logfile
 		magent_home = os.environ['MAGENT_HOME']
 	except:
 		rootLogger.warning("Environment variabele MAGENT_HOME not set. Assuming default of: /opt/mios/mios-agent")
+
+def checkOracleEnvironment():
 	try:
 		oracle_base = os.environ['ORACLE_BASE']
 	except:
 		rootLogger.critical("Environment variabele ORACLE_BASE not set. MIOS-AGENT will not function without it.")
+		rootLogger.critical("Set this parameter or remove Oracle monitoring from config file")
+		rootLogger.critical("Shutting down")
 		exit(1)
 	try:
 		oracle_home = os.environ['ORACLE_HOME']
 	except:
 		rootLogger.critical("Environment variabele ORACLE_HOME not set. MIOS-AGENT will not function without it.")
+		rootLogger.critical("Set this parameter or remove Oracle monitoring from config file")
+		rootLogger.critical("Shutting down")
 		exit(1)
 	try:
 		oracle_lib = os.environ['LD_LIBRARY_PATH']
 	except:
 		rootLogger.critical("Environment variabele LD_LIBRARY_PATH not set. MIOS-AGENT will not function without it.")
+		rootLogger.critical("Set this parameter or remove Oracle monitoring from config file")
+		rootLogger.critical("Shutting down")
 		exit(1)
 
 class MagentDaemon(Daemon):
@@ -1360,11 +1470,6 @@ class MagentDaemon(Daemon):
 	
 		config_file = ''
 
-		try:
-			magent_home = os.environ['MAGENT_HOME']
-		except:
-			magent_home = "/opt/mios/mios-agent"
-
 		config_file = magent_home + '/conf/mios-agent.conf'
 
 		config  = Config(config_file)
@@ -1380,20 +1485,21 @@ class MagentDaemon(Daemon):
 		rootLogger = logging.getLogger()
 
 		rootLogger.info('============================= Initialize MIOS-AGENT =================================')
-		checkEnvironment()
-
-		probes = Probes()
-		net_stat = NetStats()
+		checkMAgentEnvironment()
 
 		if not config.oracle_sids:
-			rootLogger.info('No Oracle database present in config file')
+			rootLogger.info('No Oracle database present in config file. Skipping creation of connectionpool.')
 		else:
+			checkOracleEnvironment()
 			oracle = Oracle(config.oracle_sids)
 
 		if not config.postgres_dbs:
-			rootLogger.info('No Postgres database present in config file')
+			rootLogger.info('No Postgres database present in config file. Skipping creation of connectionpool')
 		else:
 			postgres = Postgres(config.postgres_dbs)
+
+		probes = Probes()
+		net_stat = NetStats()
 
 		# Creating threads
 		connectionThread = createThread(socketListener)
