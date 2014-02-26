@@ -398,7 +398,7 @@ class Oracle(object):
 			try:
 				self.connections[indx]  = self.cx_Oracle.connect("%s/%s@%s" % (self.user[indx], self.password[indx], self.sids[indx]))
 				self.logger.info("Connection succesful (%s)" % self.sids[indx])
-				time.sleep(2)
+				time.sleep(1)
 				self.cursor[indx]       = self.connections[indx].cursor()
 				self.version[indx]      = self.connections[indx].version
 				self.logger.info("Connected to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
@@ -613,8 +613,8 @@ class Postgres(object):
 		while self.connections[indx] == None:
 			try:
 				self.connections[indx] = self.psycopg2.connect("host='%s' port='%s' dbname='%s' user='%s' password='%s'" % (self.host[indx], self.port[indx], self.dbs[indx], self.user[indx], self.password[indx]))
-				self.logger.info("Connection succesful")
-				time.sleep(2)
+				self.logger.info("Connection succesful (%s)" % self.dbs[indx])
+				time.sleep(1)
 			except Exception, e:
 				self.logger.critical("Unable to connect to Postgres")
 				self.logger.critical("PG: Additional information: %s" % e)
