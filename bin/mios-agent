@@ -65,6 +65,7 @@ import ConfigParser
 import platform
 import getopt
 import logging, logging.handlers, logging.config
+import json
 import threading
 try:
 	from daemon import Daemon
@@ -78,6 +79,7 @@ config = None
 disk_stat = None
 postgres = None
 apache_stat = None
+mongodb = None
 
 class Config:
 
@@ -93,7 +95,8 @@ class Config:
 		self.oracle_sids     = {}
 		self.oracle_oa_dir   = ''
 		self.postgres_dbs    = {}
-		self.magent_home = magent_home
+		self.mongo_db        = {}
+		self.magent_home     = magent_home
 
 		self.conf_file = conf_file
 		if not os.path.exists(self.conf_file):
@@ -203,7 +206,52 @@ class Config:
 				print "Postgres port		: %s" % port
 				print "Postgres user		: %s" % user
 				print "Postgres password	: %s" % password
-			if dbtype not in ('oracle', 'postgres'):
+			if dbtype == 'mongo':
+				try:
+					host			= self.config.get(section, 'host')
+				except:
+					print "No host specified for mongodb. Please review example section in config file. Assuming default of localhost"
+					host			= 'localhost'
+				try:
+					port			= self.config.get(section, 'port')
+				except:
+					print "No port specified for mongodb. Please review example section in config file. Assuming default of 27017"
+					port			= 27017
+				try:
+					user			= self.config.get(section, 'user')
+				except:
+					print "No user specified for mongodb. Please review example section in config file. Assuming no user is needed"
+					user			= ''
+					password		= ''
+				if user <> '':
+					try:
+						password	= self.config.get(section, 'password')
+					except:
+						print "No password specified for mongodb (user: %s). Please review example section in config file"
+						exit(1)
+				try:
+					binary			= self.config.get(section, 'bin')
+				except:
+					print "No binary specified for mongodb. Please review example section in config file. Trying to find executable in default location"
+					binary			= '/usr/bin/mongo'
+					if not os.path.exists(binary):
+						print "Binary not found in default location (/usr/bin). Please add it to the config"
+						exit(1)
+				if user <> '':
+					server_status = '%s --host %s --port %s --username %s --password %s --quiet --eval "printjson(db.serverStatus())"' % (binary, host, port, user, password)
+					replicaSet_status = '%s --host %s --port %s --username %s --password %s --quiet --eval "printjson(rs.status())"' % (binary, host, port, user, password)
+				else:
+					server_status = '%s --host %s --port %s --quiet --eval "printjson(db.serverStatus())"' % (binary, host, port)
+					replicaSet_status = '%s --host %s --port %s --quiet --eval "printjson(rs.status())"' % (binary, host, port)
+				self.mongo_db[section] = (host, port, user, password, binary, server_status, replicaSet_status)
+				print ""
+				print section
+				print "MongoDB host		: %s" % host
+				print "MongoDB port		: %s" % port
+				print "MongoDB user		: %s" % user
+				print "MongoDB password		: %s" % password
+				print "MongoDB binary		: %s" % binary
+			if dbtype not in ('oracle', 'postgres', 'mongo'):
 				print "Unsupported database type: %s" % dbtype
 
 	def reparse(self):
@@ -1007,6 +1055,61 @@ class DiskStats(object):
 		self.logger.debug("STATS: %s: %s, returns: %s" % (fs, nof, ret))
 		return ret
 
+def flattenDict(d, pre = '', sep = '_'):
+	"""Flatten a dict (i.e. dict['a']['b']['c'] => dict['a_b_c'])"""
+
+	new_d = {}
+	for k,v in d.items():
+		if type(v) == dict:
+			new_d.update(flattenDict(d[k], '%s%s%s' % (pre, k, sep)))
+		else:
+			new_d['%s%s' % (pre, k)] = v
+	return new_d
+
+class MongoDB(object):
+
+	def __init__(self):
+		self.metrics = {}
+		self.last_update  = []
+		self.min_interval = 30
+		self.last_update  = 0
+		self.logger       = logging.getLogger(type(self).__name__)
+		self.logger.info("Initializing MongoDB connection")
+		self.updateMetrics()
+
+	def updateMetrics(self):
+
+		(host, port, user, password, binary, server_status, replicaSet_status) = config.mongo_db['mongo']
+		# get raw metric data
+		io = os.popen(server_status)
+		# clean up
+		metrics_str = ''.join(io.readlines()).strip() # convert to string
+		metrics_str = re.sub('\w+\((.*)\)', r"\1", metrics_str) # remove functions
+
+		# convert to flattened dict
+		try:
+			self.metrics.update(flattenDict(json.loads(metrics_str)))
+		except ValueError, e:
+			self.logger.error("Failed to update Metrics")
+			self.logger.error("Additional information: %s" % e)
+			self.metrics = {}
+		self.logger.debug("MONGO raw metrics: %s" % self.metrics)
+
+	def getMetric(self, requestedMetric):
+		now = time.time()
+		if now - self.last_update > self.min_interval:
+			self.logger.debug("MongoDB metrics older then min_interval. Updating metrics.")
+			try:
+				self.updateMetrics()
+				ret = self.metrics[requestedMetric]
+			except Exception, e:
+				self.logger.error("Failed to update metrics")
+				self.logger.error("Additional information: %s" % e)
+				ret = "ZBX_NOTSUPPORTED"
+		else:
+			ret = self.stats[requestedMetric]
+		return ret
+
 class ConnectionHandler:
 
 	def __init__(self, _conn):
@@ -1135,6 +1238,20 @@ class ConnectionHandler:
 				else:
 					value = str(value)
 
+			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
+			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
+
+		elif top_item == 'mongodb':
+			if item.split('.')[1] == 'server_status':
+				mongodb.logger.debug("MONGO: Getting server_status.%s" % fields[0])
+				try:
+					value = mongodb.getMetric(fields[0])
+					mongodb.logger.debug("MONGO value(%s): %s" % (fields[0], value))
+				except e:
+					rootLogger.error("MONGO: Failed to get metric")
+					rootLogger.error("MONGO: Additional information: %s" % e)
+					value = '1'
+			value = str(value)
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
 
@@ -1467,6 +1584,7 @@ class MagentDaemon(Daemon):
 		global postgres
 		global net_stat
 		global rootLogger
+		global mongodb
 	
 		config_file = ''
 
@@ -1500,6 +1618,7 @@ class MagentDaemon(Daemon):
 
 		probes = Probes()
 		net_stat = NetStats()
+		mongodb = MongoDB()
 
 		# Creating threads
 		connectionThread = createThread(socketListener)
