@@ -72,6 +72,7 @@ try:
 except:
 	print "\nCannot import daemon.pyc from lib path ($MAGENT_HOME/lib)\nIs MIOS-AGENT properly installed?"
 	raise
+import ast #ast.literal_eval
 
 oracle = None
 probes = None
@@ -1093,6 +1094,12 @@ class MongoDB(object):
 			self.logger.error("Additional information: %s" % e)
 			self.metrics = {}
 		self.logger.debug("MONGO raw metrics: %s" % self.metrics)
+		# Get metric db_count. Not part of db.serverStatus()
+		io = os.popen(connection_string + '"printjson(db.getMongo().getDBNames())"')
+		dbs = ''.join(io.readlines()).strip()
+		db_count = len(ast.literal_eval(dbs))
+		self.metrics['db_count'] = db_count
+		self.last_update = time.time()
 
 	def getMetric(self, requestedMetric):
 		now = time.time()
@@ -1100,13 +1107,10 @@ class MongoDB(object):
 			self.logger.debug("MongoDB metrics older then min_interval. Updating metrics.")
 			try:
 				self.updateMetrics()
-				ret = self.metrics[requestedMetric]
 			except Exception, e:
 				self.logger.error("Failed to update metrics")
 				self.logger.error("Additional information: %s" % e)
-				ret = "ZBX_NOTSUPPORTED"
-		else:
-			ret = self.stats[requestedMetric]
+		ret = self.metrics[requestedMetric]
 		return ret
 
 class ConnectionHandler:
