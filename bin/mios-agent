@@ -238,12 +238,11 @@ class Config:
 						print "Binary not found in default location (/usr/bin). Please add it to the config"
 						exit(1)
 				if user <> '':
-					server_status = '%s --host %s --port %s --username %s --password %s --quiet --eval "printjson(db.serverStatus())"' % (binary, host, port, user, password)
-					replicaSet_status = '%s --host %s --port %s --username %s --password %s --quiet --eval "printjson(rs.status())"' % (binary, host, port, user, password)
+#					replicaSet_status = '%s --host %s --port %s --username %s --password %s --quiet --eval "printjson(rs.status())"' % (binary, host, port, user, password)
+					connection_string = '%s --host %s --port %s --username %s --password %s --quiet --eval ' % (binary, host, port, user, password)
 				else:
-					server_status = '%s --host %s --port %s --quiet --eval "printjson(db.serverStatus())"' % (binary, host, port)
-					replicaSet_status = '%s --host %s --port %s --quiet --eval "printjson(rs.status())"' % (binary, host, port)
-				self.mongo_db[section] = (host, port, user, password, binary, server_status, replicaSet_status)
+					connection_string = '%s --host %s --port %s --quiet --eval ' % (binary, host, port)
+				self.mongo_db[section] = (connection_string)
 				print ""
 				print section
 				print "MongoDB host		: %s" % host
@@ -1079,9 +1078,9 @@ class MongoDB(object):
 
 	def updateMetrics(self):
 
-		(host, port, user, password, binary, server_status, replicaSet_status) = config.mongo_db['mongo']
+		(connection_string) = config.mongo_db['mongo']
 		# get raw metric data
-		io = os.popen(server_status)
+		io = os.popen(connection_string + '"printjson(db.serverStatus())"')
 		# clean up
 		metrics_str = ''.join(io.readlines()).strip() # convert to string
 		metrics_str = re.sub('\w+\((.*)\)', r"\1", metrics_str) # remove functions
