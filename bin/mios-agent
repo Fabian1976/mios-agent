@@ -1619,9 +1619,13 @@ class MagentDaemon(Daemon):
 		else:
 			postgres = Postgres(config.postgres_dbs)
 
+		if not config.mongo_db:
+			rootLogger.info('No MongoDB present in config file. Skipping creation of connectionpool')
+		else:
+			mongodb = MongoDB()
+
 		probes = Probes()
 		net_stat = NetStats()
-		mongodb = MongoDB()
 
 		# Creating threads
 		connectionThread = createThread(socketListener)
