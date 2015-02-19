@@ -563,8 +563,8 @@ class Oracle(object):
 			except Exception, e:
 				self.logger.error("ORA: Failed to execute query: %s" % action)
 				self.logger.error("ORA: Additional info: %s" % e)
-				ORA_error = e.split(':')[0]
-				if ORA_error == 'ORA-03113': #Not connected to Oracle
+				ORA_error = str(e).split(':')[0]
+				if ORA_error == 'ORA-03113' or ORA_error == 'ORA-03114': #Not connected to Oracle
 					return -2 #Forces parent to reconnect
 				else:
 					return -1
@@ -597,7 +597,11 @@ class Oracle(object):
 			except Exception, e:
 				self.logger.error("ORA: Failed to execute query: %s" % action)
 				self.logger.error("ORA: Additional info: %s" % e)
-				return -1
+				ORA_error = e.split(':')[0]
+				if ORA_error == 'ORA-03113' or ORA_error == 'ORA-03114': #Not connected to Oracle
+					return -2 #Forces parent to reconnect
+				else:
+					return -1
 
 			try:
 				value = self.cursor[indx].fetchall()
@@ -1198,7 +1202,7 @@ class ConnectionHandler:
 				if value == -1:
 					value = "ZBX_NOTSUPPORTED"
 				elif value == -2:
-					oracle.logger.error("ORA: Lost connection. Trying to reconnect" % value)
+					oracle.logger.error("ORA: Lost connection. Trying to reconnect")
 					while value == -2:
 						oracle.logger.info("ORA reconnect: sleep 5 seconds...")
 						time.sleep(5)
