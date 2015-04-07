@@ -72,7 +72,43 @@ try:
 except:
 	print "\nCannot import daemon.pyc from lib path ($MAGENT_HOME/lib)\nIs MIOS-AGENT properly installed?"
 	raise
-import ast #ast.literal_eval
+#import ast #ast.literal_eval
+#literal_eval
+from compiler import parse
+from compiler.ast import *
+
+def literal_eval(node_or_string):
+     """
+     Safely evaluate an expression node or a string containing a Python
+     expression.  The string or node provided may only consist of the  
+following
+     Python literal structures: strings, numbers, tuples, lists, dicts,  
+booleans,
+     and None.
+     """
+     _safe_names = {'None': None, 'True': True, 'False': False}
+     if isinstance(node_or_string, basestring):
+         node_or_string = parse(node_or_string, mode='eval')
+     if isinstance(node_or_string, Expression):
+         node_or_string = node_or_string.node
+     def _convert(node):
+         if isinstance(node, Const) and isinstance(node.value,
+                 (basestring, int, float, long, complex)):
+              return node.value
+         elif isinstance(node, Tuple):
+             return tuple(map(_convert, node.nodes))
+         elif isinstance(node, List):
+             return list(map(_convert, node.nodes))
+         elif isinstance(node, Dict):
+             return dict((_convert(k), _convert(v)) for k, v
+                         in node.items)
+         elif isinstance(node, Name):
+             if node.name in _safe_names:
+                 return _safe_names[node.name]
+         elif isinstance(node, UnarySub):
+             return -_convert(node.expr)
+         raise ValueError('malformed string')
+     return _convert(node_or_string)
 
 oracle = None
 probes = None
@@ -563,8 +599,8 @@ class Oracle(object):
 			except Exception, e:
 				self.logger.error("ORA: Failed to execute query: %s" % action)
 				self.logger.error("ORA: Additional info: %s" % e)
-				ORA_error = str(e).split(':')[0]
-				if ORA_error == 'ORA-03113' or ORA_error == 'ORA-03114': #Not connected to Oracle
+				ORA_error = e.split(':')[0]
+				if ORA_error == 'ORA-03113': #Not connected to Oracle
 					return -2 #Forces parent to reconnect
 				else:
 					return -1
@@ -597,11 +633,7 @@ class Oracle(object):
 			except Exception, e:
 				self.logger.error("ORA: Failed to execute query: %s" % action)
 				self.logger.error("ORA: Additional info: %s" % e)
-				ORA_error = e.split(':')[0]
-				if ORA_error == 'ORA-03113' or ORA_error == 'ORA-03114': #Not connected to Oracle
-					return -2 #Forces parent to reconnect
-				else:
-					return -1
+				return -1
 
 			try:
 				value = self.cursor[indx].fetchall()
@@ -788,7 +820,7 @@ class Postgres(object):
 			except Exception, e:
 				self.logger.error("PG: Failed to execute query: %s" % action)
 				self.logger.error("PG: Additional info: %s" % e)
-				return -2
+				return -1
 
 			try:
 				value = self.cursor[indx].fetchone()[0]
@@ -839,8 +871,8 @@ class NetStats(object):
 		# Discover ehternet devices
 		f = open('/proc/net/dev', 'r')
 		# Skip first 2 lines of file (header)
-		next(f)
-		next(f)
+		dummy = f.readline()
+		dummy = f.readline()
 		for line in f:
 				net_dev = line.split(':')[0].strip()
 				self.net_devices.append(net_dev)
@@ -849,8 +881,8 @@ class NetStats(object):
 	def update_stats(self):
 		f = open('/proc/net/dev', 'r')
 		# Skip first 2 lines of file (header)
-		next(f)
-		next(f)
+		dummy = f.readline()
+		dummy = f.readline()
 		# We will only read bytes, packets, errors and dropped per interface
 		for line in f:
 			dev_stats = []
@@ -1101,7 +1133,8 @@ class MongoDB(object):
 		# Get metric db_count. Not part of db.serverStatus()
 		io = os.popen(connection_string + '"printjson(db.getMongo().getDBNames())"')
 		dbs = ''.join(io.readlines()).strip()
-		db_count = len(ast.literal_eval(dbs))
+#		db_count = len(ast.literal_eval(dbs))
+		db_count = len(literal_eval(dbs))
 		self.metrics['db_count'] = db_count
 		self.last_update = time.time()
 
@@ -1202,7 +1235,7 @@ class ConnectionHandler:
 				if value == -1:
 					value = "ZBX_NOTSUPPORTED"
 				elif value == -2:
-					oracle.logger.error("ORA: Lost connection. Trying to reconnect")
+					oracle.logger.error("ORA: Lost connection. Trying to reconnect" % value)
 					while value == -2:
 						oracle.logger.info("ORA reconnect: sleep 5 seconds...")
 						time.sleep(5)
@@ -1233,7 +1266,7 @@ class ConnectionHandler:
 				if value == -1:
 					value = "ZBX_NOTSUPPORTED"
 				elif value == -2:
-					postgres.logger.error("PG: Lost connection. Trying to reconnect")
+					postgres.logger.error("PG: Lost connection. Trying to reconnect" % value)
 					while value == -2:
 						postgres.logger.info("PG reconnect: sleep 5 seconds...")
 						time.sleep(5)
