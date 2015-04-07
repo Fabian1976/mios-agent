@@ -788,7 +788,7 @@ class Postgres(object):
 			except Exception, e:
 				self.logger.error("PG: Failed to execute query: %s" % action)
 				self.logger.error("PG: Additional info: %s" % e)
-				return -1
+				return -2
 
 			try:
 				value = self.cursor[indx].fetchone()[0]
@@ -1233,7 +1233,7 @@ class ConnectionHandler:
 				if value == -1:
 					value = "ZBX_NOTSUPPORTED"
 				elif value == -2:
-					postgres.logger.error("PG: Lost connection. Trying to reconnect" % value)
+					postgres.logger.error("PG: Lost connection. Trying to reconnect")
 					while value == -2:
 						postgres.logger.info("PG reconnect: sleep 5 seconds...")
 						time.sleep(5)
