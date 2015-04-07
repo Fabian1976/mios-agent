@@ -1,2 +1,2 @@
 type=postgres
-select count(*) from pg_stat_replication
+select case when pg_is_in_recovery() = 'f' then 'master' else 'slave' end

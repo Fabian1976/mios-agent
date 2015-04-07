@@ -1,5 +1,5 @@
 Name:		mios-agent
-Version:        3.6
+Version:        3.7
 Release:	1%{?dist}
 Summary:	A python program which is used for Zabbix monitoring software with improved capability in stead of zabbix-agent
 
@@ -16,7 +16,7 @@ Oracle databases and Postgres databases.
 
 %pre
 /usr/bin/getent group vermont > /dev/null || /usr/sbin/groupadd -g 400 vermont
-/usr/bin/getent passwd mios > /dev/null || /usr/sbin/useradd -g mios -d /home/mios -s /bin/bash -m mios
+/usr/bin/getent passwd mios > /dev/null || /usr/sbin/useradd -g vermont -d /home/mios -s /bin/bash -m mios
 
 %build
 
@@ -55,11 +55,11 @@ rm -rf %{buildroot}
 ln -s /opt/mios/mios-agent/init.d/mios-agent /etc/init.d/mios-agent
 mkdir -p -m 775 /var/log/mios
 mkdir -p -m 770 /var/run/mios
-chown -R mios:mios /opt/mios
-chown mios:mios /var/log/mios
-chown mios:mios /var/run/mios
+chown -R mios:vermont /opt/mios
+chown mios:vermont /var/log/mios
+chown mios:vermont /var/run/mios
 chmod -R 770 /opt/mios
-chown mios:mios /usr/local/bin/magentlog
+chown mios:vermont /usr/local/bin/magentlog
 chmod 775 /usr/local/bin/magentlog
 
 /sbin/chkconfig --add mios-agent
@@ -74,7 +74,8 @@ echo -e "\nPlease set the ORACLE environment if you wish to monitor an Oracle da
 echo -e "Make the appropiate changes in /opt/mios/mios-agent/conf/mios-agent.conf and then start the agent as follows:"
 echo -e "    /etc/init.d/mios-agent start\n"
 echo -e "The mios-agent service had been added to chkconfig so it will autostart at future reboots.\n"
-echo -e "The log can be views with the command \"magentlog\""
+echo -e "The log can be viewed with the command \"magentlog\""
+echo ""
 
 %preun
 [ -f /var/run/mios/mios-agent.pid ] && /etc/init.d/mios-agent stop

@@ -45,7 +45,7 @@
 
 __author__    = "Jan van de Beek, Fabian van der Hoeven"
 __copyright__ = "Copyright (C) 2013 Vermont 24x7"
-__version__   = "3.6"
+__version__   = "3.7"
 
 import sys, os, time, getopt
 # Add mios-agent LIB to path
@@ -65,12 +65,14 @@ import ConfigParser
 import platform
 import getopt
 import logging, logging.handlers, logging.config
+import json
 import threading
 try:
 	from daemon import Daemon
 except:
 	print "\nCannot import daemon.pyc from lib path ($MAGENT_HOME/lib)\nIs MIOS-AGENT properly installed?"
 	raise
+import ast #ast.literal_eval
 
 oracle = None
 probes = None
@@ -78,6 +80,7 @@ config = None
 disk_stat = None
 postgres = None
 apache_stat = None
+mongodb = None
 
 class Config:
 
@@ -93,7 +96,8 @@ class Config:
 		self.oracle_sids     = {}
 		self.oracle_oa_dir   = ''
 		self.postgres_dbs    = {}
-		self.magent_home = magent_home
+		self.mongo_db        = {}
+		self.magent_home     = magent_home
 
 		self.conf_file = conf_file
 		if not os.path.exists(self.conf_file):
@@ -203,7 +207,51 @@ class Config:
 				print "Postgres port		: %s" % port
 				print "Postgres user		: %s" % user
 				print "Postgres password	: %s" % password
-			if dbtype not in ('oracle', 'postgres'):
+			if dbtype == 'mongo':
+				try:
+					host			= self.config.get(section, 'host')
+				except:
+					print "No host specified for mongodb. Please review example section in config file. Assuming default of localhost"
+					host			= 'localhost'
+				try:
+					port			= self.config.get(section, 'port')
+				except:
+					print "No port specified for mongodb. Please review example section in config file. Assuming default of 27017"
+					port			= 27017
+				try:
+					user			= self.config.get(section, 'user')
+				except:
+					print "No user specified for mongodb. Please review example section in config file. Assuming no user is needed"
+					user			= ''
+					password		= ''
+				if user <> '':
+					try:
+						password	= self.config.get(section, 'password')
+					except:
+						print "No password specified for mongodb (user: %s). Please review example section in config file"
+						exit(1)
+				try:
+					binary			= self.config.get(section, 'bin')
+				except:
+					print "No binary specified for mongodb. Please review example section in config file. Trying to find executable in default location"
+					binary			= '/usr/bin/mongo'
+					if not os.path.exists(binary):
+						print "Binary not found in default location (/usr/bin). Please add it to the config"
+						exit(1)
+				if user <> '':
+#					replicaSet_status = '%s --host %s --port %s --username %s --password %s --quiet --eval "printjson(rs.status())"' % (binary, host, port, user, password)
+					connection_string = '%s --host %s --port %s --username %s --password %s --quiet --eval ' % (binary, host, port, user, password)
+				else:
+					connection_string = '%s --host %s --port %s --quiet --eval ' % (binary, host, port)
+				self.mongo_db[section] = (connection_string)
+				print ""
+				print section
+				print "MongoDB host		: %s" % host
+				print "MongoDB port		: %s" % port
+				print "MongoDB user		: %s" % user
+				print "MongoDB password		: %s" % password
+				print "MongoDB binary		: %s" % binary
+			if dbtype not in ('oracle', 'postgres', 'mongo'):
 				print "Unsupported database type: %s" % dbtype
 
 	def reparse(self):
@@ -515,8 +563,8 @@ class Oracle(object):
 			except Exception, e:
 				self.logger.error("ORA: Failed to execute query: %s" % action)
 				self.logger.error("ORA: Additional info: %s" % e)
-				ORA_error = e.split(':')[0]
-				if ORA_error == 'ORA-03113': #Not connected to Oracle
+				ORA_error = str(e).split(':')[0]
+				if ORA_error == 'ORA-03113' or ORA_error == 'ORA-03114': #Not connected to Oracle
 					return -2 #Forces parent to reconnect
 				else:
 					return -1
@@ -549,7 +597,11 @@ class Oracle(object):
 			except Exception, e:
 				self.logger.error("ORA: Failed to execute query: %s" % action)
 				self.logger.error("ORA: Additional info: %s" % e)
-				return -1
+				ORA_error = e.split(':')[0]
+				if ORA_error == 'ORA-03113' or ORA_error == 'ORA-03114': #Not connected to Oracle
+					return -2 #Forces parent to reconnect
+				else:
+					return -1
 
 			try:
 				value = self.cursor[indx].fetchall()
@@ -736,7 +788,7 @@ class Postgres(object):
 			except Exception, e:
 				self.logger.error("PG: Failed to execute query: %s" % action)
 				self.logger.error("PG: Additional info: %s" % e)
-				return -1
+				return -2
 
 			try:
 				value = self.cursor[indx].fetchone()[0]
@@ -1007,6 +1059,64 @@ class DiskStats(object):
 		self.logger.debug("STATS: %s: %s, returns: %s" % (fs, nof, ret))
 		return ret
 
+def flattenDict(d, pre = '', sep = '_'):
+	"""Flatten a dict (i.e. dict['a']['b']['c'] => dict['a_b_c'])"""
+
+	new_d = {}
+	for k,v in d.items():
+		if type(v) == dict:
+			new_d.update(flattenDict(d[k], '%s%s%s' % (pre, k, sep)))
+		else:
+			new_d['%s%s' % (pre, k)] = v
+	return new_d
+
+class MongoDB(object):
+
+	def __init__(self):
+		self.metrics = {}
+		self.last_update  = []
+		self.min_interval = 30
+		self.last_update  = 0
+		self.logger       = logging.getLogger(type(self).__name__)
+		self.logger.info("Initializing MongoDB connection")
+		self.updateMetrics()
+
+	def updateMetrics(self):
+
+		(connection_string) = config.mongo_db['mongo']
+		# get raw metric data
+		io = os.popen(connection_string + '"printjson(db.serverStatus())"')
+		# clean up
+		metrics_str = ''.join(io.readlines()).strip() # convert to string
+		metrics_str = re.sub('\w+\((.*)\)', r"\1", metrics_str) # remove functions
+
+		# convert to flattened dict
+		try:
+			self.metrics.update(flattenDict(json.loads(metrics_str)))
+		except ValueError, e:
+			self.logger.error("Failed to update Metrics")
+			self.logger.error("Additional information: %s" % e)
+			self.metrics = {}
+		self.logger.debug("MONGO raw metrics: %s" % self.metrics)
+		# Get metric db_count. Not part of db.serverStatus()
+		io = os.popen(connection_string + '"printjson(db.getMongo().getDBNames())"')
+		dbs = ''.join(io.readlines()).strip()
+		db_count = len(ast.literal_eval(dbs))
+		self.metrics['db_count'] = db_count
+		self.last_update = time.time()
+
+	def getMetric(self, requestedMetric):
+		now = time.time()
+		if now - self.last_update > self.min_interval:
+			self.logger.debug("MongoDB metrics older then min_interval. Updating metrics.")
+			try:
+				self.updateMetrics()
+			except Exception, e:
+				self.logger.error("Failed to update metrics")
+				self.logger.error("Additional information: %s" % e)
+		ret = self.metrics[requestedMetric]
+		return ret
+
 class ConnectionHandler:
 
 	def __init__(self, _conn):
@@ -1092,7 +1202,7 @@ class ConnectionHandler:
 				if value == -1:
 					value = "ZBX_NOTSUPPORTED"
 				elif value == -2:
-					oracle.logger.error("ORA: Lost connection. Trying to reconnect" % value)
+					oracle.logger.error("ORA: Lost connection. Trying to reconnect")
 					while value == -2:
 						oracle.logger.info("ORA reconnect: sleep 5 seconds...")
 						time.sleep(5)
@@ -1123,7 +1233,7 @@ class ConnectionHandler:
 				if value == -1:
 					value = "ZBX_NOTSUPPORTED"
 				elif value == -2:
-					postgres.logger.error("PG: Lost connection. Trying to reconnect" % value)
+					postgres.logger.error("PG: Lost connection. Trying to reconnect")
 					while value == -2:
 						postgres.logger.info("PG reconnect: sleep 5 seconds...")
 						time.sleep(5)
@@ -1135,6 +1245,20 @@ class ConnectionHandler:
 				else:
 					value = str(value)
 
+			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
+			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
+
+		elif top_item == 'mongodb':
+			if item.split('.')[1] == 'server_status':
+				mongodb.logger.debug("MONGO: Getting server_status.%s" % fields[0])
+				try:
+					value = mongodb.getMetric(fields[0])
+					mongodb.logger.debug("MONGO value(%s): %s" % (fields[0], value))
+				except e:
+					rootLogger.error("MONGO: Failed to get metric")
+					rootLogger.error("MONGO: Additional information: %s" % e)
+					value = '1'
+			value = str(value)
 			self.conn.send( pack('4s B', 'ZBXD', 1 )[0:5] )
 			self.conn.send( pack("Q%ds" % len(value), len(value), value) )
 
@@ -1467,6 +1591,7 @@ class MagentDaemon(Daemon):
 		global postgres
 		global net_stat
 		global rootLogger
+		global mongodb
 	
 		config_file = ''
 
@@ -1497,6 +1622,11 @@ class MagentDaemon(Daemon):
 			rootLogger.info('No Postgres database present in config file. Skipping creation of connectionpool')
 		else:
 			postgres = Postgres(config.postgres_dbs)
+
+		if not config.mongo_db:
+			rootLogger.info('No MongoDB present in config file. Skipping creation of connectionpool')
+		else:
+			mongodb = MongoDB()
 
 		probes = Probes()
 		net_stat = NetStats()
