@@ -43,8 +43,8 @@ rm -rf %{buildroot}
 
 %files
 /opt/mios/mios-agent/bin/mios-agent
-/opt/mios/mios-agent/conf/logging.conf
-/opt/mios/mios-agent/conf/mios-agent.conf
+%config(noreplace) /opt/mios/mios-agent/conf/logging.conf
+%config(noreplace) /opt/mios/mios-agent/conf/mios-agent.conf
 /opt/mios/mios-agent/init.d/mios-agent
 /opt/mios/mios-agent/lib/daemon.pyc
 /opt/mios/mios-agent/lib/cx_Oracle.so
