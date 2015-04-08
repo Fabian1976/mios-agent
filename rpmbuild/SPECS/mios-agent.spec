@@ -2,7 +2,7 @@ Name:		mios-agent
 Version:        3.8
 Release:	1%{?dist}
 Summary:	A python program which is used for Zabbix monitoring software with improved capability in stead of zabbix-agent
-
+Group:		MIOS-utils
 License:	GPLv2+
 URL:		http://www.vermont24-7.com
 
