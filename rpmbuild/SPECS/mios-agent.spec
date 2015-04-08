@@ -1,5 +1,5 @@
 Name:		mios-agent
-Version:        3.7
+Version:        3.8
 Release:	1%{?dist}
 Summary:	A python program which is used for Zabbix monitoring software with improved capability in stead of zabbix-agent
 
@@ -43,8 +43,8 @@ rm -rf %{buildroot}
 
 %files
 /opt/mios/mios-agent/bin/mios-agent
-/opt/mios/mios-agent/conf/logging.conf
-/opt/mios/mios-agent/conf/mios-agent.conf
+%config(noreplace) /opt/mios/mios-agent/conf/logging.conf
+%config(noreplace) /opt/mios/mios-agent/conf/mios-agent.conf
 /opt/mios/mios-agent/init.d/mios-agent
 /opt/mios/mios-agent/lib/daemon.pyc
 /opt/mios/mios-agent/lib/cx_Oracle.so
