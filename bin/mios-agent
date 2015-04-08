@@ -45,7 +45,7 @@
 
 __author__    = "Jan van de Beek, Fabian van der Hoeven"
 __copyright__ = "Copyright (C) 2013 Vermont 24x7"
-__version__   = "3.7"
+__version__   = "3.8"
 
 import sys, os, time, getopt
 # Add mios-agent LIB to path
