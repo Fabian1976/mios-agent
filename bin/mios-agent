@@ -91,6 +91,7 @@ class Config:
 		self.listen_port     = 0
 		self.hostname        = ''
 		self.domain          = ''
+		self.fqdn            = getfqdn()
 		self.zabbix_agent    = ''
 		self.zabbix_port     = 0
 		self.oracle_sids     = {}
@@ -1192,6 +1193,7 @@ class ConnectionHandler:
 				for sid in oracle.sids:
 					oracle.logger.debug('SID found: %s' % sid)
 					value += '{'
+					value += '"{#FQDN}":"%s",' % config.fqdn
 					value += '"{#DOMAIN}":"%s",' % config.domain
 					value += '"{#SIDNAME}":"%s" },' % sid
 				value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
@@ -1223,6 +1225,7 @@ class ConnectionHandler:
 				for db in postgres.dbs:
 					postgres.logger.debug('DB found: %s' % db)
 					value += '{'
+					value += '"{#FQDN}":"%s",' % config.fqdn
 					value += '"{#DOMAIN}":"%s",' % config.domain
 					value += '"{#DBNAME}":"%s" },' % db
 				value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
