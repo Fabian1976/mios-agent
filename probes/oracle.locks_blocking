@@ -1,2 +1,12 @@
 type=oracle
-select count(*) from v$lock where block = 1
+select nvl((select sum(num_blocked)
+from
+(
+  select id1, id2, max(DECODE(block, 1, sid, 0)) blocking_sid,
+  sum(DECODE(request, 0, 0, 1)) num_blocked
+  from v$lock
+  where block = 1 or request>0
+  group by id1, id2
+)
+group by blocking_sid
+),0) from dual
