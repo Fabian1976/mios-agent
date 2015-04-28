@@ -65,7 +65,10 @@ import ConfigParser
 import platform
 import getopt
 import logging, logging.handlers, logging.config
-import json
+try:
+	import json
+except ImportError:
+	import simplejson as json
 import threading
 try:
 	from daemon import Daemon
@@ -1678,6 +1681,7 @@ class MagentDaemon(Daemon):
 		loggingThread.start()
 		probesCacheThread.start()
 		reparseConfigThread.start()
+		connectionThread.join()
 
 if __name__ == "__main__":
 
