@@ -64,7 +64,8 @@ import re
 import ConfigParser
 import platform
 import getopt
-import logging, logging.handlers, logging.config
+import logging, logging.config
+import cloghandler
 try:
 	import json
 except ImportError:
