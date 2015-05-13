@@ -50,8 +50,8 @@ rm -rf %{buildroot}
 /opt/mios/mios-agent/init.d/mios-agent
 /opt/mios/mios-agent/lib/daemon.pyc
 /opt/mios/mios-agent/lib/cx_Oracle.so
-/opt/mios/mios-agent/lib/cloghandler.py
-/opt/mios/mios-agent/lib/portalocker.py
+/opt/mios/mios-agent/lib/cloghandler.pyc
+/opt/mios/mios-agent/lib/portalocker.pyc
 /opt/mios/mios-agent/probes/*
 /usr/local/bin/magentlog
 
