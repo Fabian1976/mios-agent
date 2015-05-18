@@ -1,12 +1,12 @@
 Name:		mios-agent
-Version:        3.8
+Version:        3.9
 Release:	1%{?dist}
 Summary:	A python program which is used for Zabbix monitoring software with improved capability in stead of zabbix-agent
 Group:		MIOS-utils
 License:	GPLv2+
 URL:		http://www.vermont24-7.com
 
-Requires:	python2-devel
+Requires:	python-json
 Requires(pre):	shadow-utils
 BuildRoot:	%{_topdir}/BUILD/%{name}-%{version}-%{release}-root
 
@@ -34,6 +34,8 @@ cp /opt/mios/mios-agent/conf/mios-agent.conf %{buildroot}/opt/mios/mios-agent/co
 cp /opt/mios/mios-agent/init.d/mios-agent %{buildroot}/opt/mios/mios-agent/init.d/
 cp /opt/mios/mios-agent/lib/daemon.pyc %{buildroot}/opt/mios/mios-agent/lib/
 cp /opt/mios/mios-agent/lib/cx_Oracle.so %{buildroot}/opt/mios/mios-agent/lib/
+cp /opt/mios/mios-agent/lib/cloghandler.py %{buildroot}/opt/mios/mios-agent/lib/
+cp /opt/mios/mios-agent/lib/portalocker.py %{buildroot}/opt/mios/mios-agent/lib/
 cp /opt/mios/mios-agent/probes/* %{buildroot}/opt/mios/mios-agent/probes/
 cp /usr/local/bin/magentlog %{buildroot}/usr/local/bin/
 
@@ -48,6 +50,8 @@ rm -rf %{buildroot}
 /opt/mios/mios-agent/init.d/mios-agent
 /opt/mios/mios-agent/lib/daemon.pyc
 /opt/mios/mios-agent/lib/cx_Oracle.so
+/opt/mios/mios-agent/lib/cloghandler.pyc
+/opt/mios/mios-agent/lib/portalocker.pyc
 /opt/mios/mios-agent/probes/*
 /usr/local/bin/magentlog
 
