@@ -455,9 +455,11 @@ class Oracle(object):
 			self.logger.info("Sucessfully loaded cx_Oracle module")
 		except ImportError:
 			self.logger.critical("Module cx_Oracle is not installed, please install it!")
+			daemon.stop()
 			raise
 		except:
 			self.logger.critical("Error while loading Module cx_Oracle!")
+			daemon.stop()
 			raise
 
 		if self.oracle_support == 0:
