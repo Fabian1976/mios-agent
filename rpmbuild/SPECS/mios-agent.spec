@@ -7,7 +7,7 @@ Summary:	A python program which is used for Zabbix monitoring software with impr
 License:	GPLv2+
 URL:		http://www.vermont24-7.com
 
-Requires:	python-json
+#Requires:	python-json
 Requires(pre):	shadow-utils
 BuildRoot:	%{_topdir}/BUILD/%{name}-%{version}-%{release}-root
 
