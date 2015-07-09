@@ -1,0 +1,2 @@
+type=oracle
+select space_used - space_reclaimable from v$recovery_file_dest

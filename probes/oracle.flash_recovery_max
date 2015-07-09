@@ -1,0 +1,2 @@
+type=oracle
+select space_limit from v$recovery_file_dest
