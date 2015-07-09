@@ -1,0 +1,2 @@
+type=oracle
+select mode_status from v$asm_disk where label = 'MIOS_ARG_2'

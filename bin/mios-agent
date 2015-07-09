@@ -1230,6 +1230,34 @@ class ConnectionHandler:
 					value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 					value += '] }'
 				oracle.logger.debug('value: %s' % value)
+                        elif item.split('.')[1] == 'asmdiskgroup_discover':
+                                oracle.logger.debug("DISCOVER ASM DISKGROUPS")
+                                sid = arguments
+                                rows = oracle.execute(sid, "select name from v$asm_diskgroup")
+                                if rows == -1:
+                                        value = "ZBX_NOTSUPPORTED"
+                                else:
+                                        value = '{ "data":['
+                                        for row in rows:
+                                                oracle.logger.debug('ASM diskgroup found: %s' % row)
+                                                value += '{ "{#ASMDGNAME}":"%s" },' % row
+                                        value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
+                                        value += '] }'
+                                oracle.logger.debug('value: %s' % value)
+                        elif item.split('.')[1] == 'asmdisk_discover':
+                                oracle.logger.debug("DISCOVER ASM DISKS")
+                                sid = arguments
+                                rows = oracle.execute(sid, "select label from v$asm_disk")
+                                if rows == -1:
+                                        value = "ZBX_NOTSUPPORTED"
+                                else:
+                                        value = '{ "data":['
+                                        for row in rows:
+                                                oracle.logger.debug('ASM disk found: %s' % row)
+                                                value += '{ "{#ASMDNAME}":"%s" },' % row
+                                        value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
+                                        value += '] }'
+                                oracle.logger.debug('value: %s' % value)
 			elif item.split('.')[1] == 'tempspace_discover':
 				oracle.logger.debug("DISCOVER TEMPSPACES")
 				sid = arguments

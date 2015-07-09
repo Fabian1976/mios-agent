@@ -1,0 +1,2 @@
+type=oracle
+select state from v$asm_diskgroup where name = 'MIOS_ARG_2'
