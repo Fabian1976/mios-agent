@@ -12,6 +12,8 @@
 
 # Check that networking is up. If you are running without a network, comment this out.
 [ "${NETWORKING}" = "no" ] && exit 0
+pidfile='/var/run/mios/mios-agent.pid'
+MAGENT_HOME=/opt/mios/mios-agent
 
 RETVAL=0
 user=`whoami`
@@ -73,13 +75,13 @@ case "$1" in
         stop)
                 stop
                 ;;
+	status)
+		status -p ${pidfile} mios-agent
+		;;
         restart)
                 restart
                 ;;
         *)
-                echo $"Usage: $0 {start|stop|restart}"
+                echo $"Usage: $0 {start|stop|status|restart}"
                 exit 1
 esac
-
-exit $?
-
