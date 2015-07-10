@@ -56,7 +56,6 @@ except: #Send message to stdout as logger is not initialized yet
 	magent_home = "/opt/mios/mios-agent"
 sys.path.append(magent_home + '/lib')
 
-from threading import *
 from socket import *
 from struct import *
 import struct
@@ -619,17 +618,20 @@ class Oracle(object):
 
 		try:
 			indx = self.sids.index(sid)
+			t = threading.Timer(1, self.connections[indx].cancel)
+			t.start()
 			try:
 				self.cursor[indx].execute(action)
 			except Exception, e:
+				t.cancel()
 				self.logger.error("ORA: Failed to execute query: %s" % action)
 				self.logger.error("ORA: Additional info: %s" % e)
 				ORA_error = e.split(':')[0]
 				if ORA_error == 'ORA-03113': #Not connected to Oracle
 					return -2 #Forces parent to reconnect
 				else:
-					return -1
-
+					return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
+			t.cancel()
 			try:
 				value = self.cursor[indx].fetchone()[0]
 			except Exception, e:
@@ -653,13 +655,20 @@ class Oracle(object):
 			return -1
 		try:
 			indx = self.sids.index(sid)
+			t = threading.Timer(1, self.connections[indx].cancel)
+			t.start()
 			try:
 				self.cursor[indx].execute(query)
 			except Exception, e:
+				t.cancel()
 				self.logger.error("ORA: Failed to execute query: %s" % action)
 				self.logger.error("ORA: Additional info: %s" % e)
-				return -1
-
+				ORA_error = e.split(':')[0]
+				if ORA_error == 'ORA-03113' or ORA_error == 'ORA-03114': #Not connected to Oracle
+					return -2 #Forces parent to reconnect
+				else:
+					return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
+			t.cancel()
 			try:
 				value = self.cursor[indx].fetchall()
 			except Exception, e:
