@@ -1,0 +1,4 @@
+type=oracle
+select v$aq.expired from dba_queues
+inner join v$aq on v$aq.qid = dba_queues.qid
+where dba_queues.owner || '_' || dba_queues.name = 'MIOS_ARG_2'

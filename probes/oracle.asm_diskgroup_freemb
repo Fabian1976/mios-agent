@@ -1,0 +1,2 @@
+type=oracle
+select free_mb from v$asm_diskgroup where name = 'MIOS_ARG_2'
