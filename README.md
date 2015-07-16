@@ -1,5 +1,4 @@
-# mios-agent (UNDER CONSTRUCTION)
-I'm still migrating from a different repository. So it is still incomplete.
+#MIOS-agent
 
 The MIOS-agent is mainly an addition to the Zabbix-agent and functions as a proxy between the Zabbix-server and agent. It's primary goal is to provide connection pooling to several database backends.
 
@@ -13,9 +12,22 @@ Oracle:
 - Auto discovery of ASM diskgroups
 - Auto discovery of ASM disks
 - Auto discovery of Advanced Queuing
+- Monitoring if cache hitratio's
+- PGA/SGA monitoring
+- Flash recovery monitoring
+- Process and session monitoring
+- sysstat monitoring (physical and logical reads/writes)
+- Lock monitoring
+- Redolog switch monitoring
+- dbconsole look-a-like screen
 
 PostgreSQL:
 - Auto discovery of databases
+- Sessions monitoring
+- DML monitoring
+- Lock monitoring
+- Replication status monitoring
+- Cache hitratio monitoring
 
 MongoDB:
 - Still very limited and still in progess. Not usable yet and no template available yet
