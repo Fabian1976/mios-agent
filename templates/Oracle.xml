@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>2.0</version>
-    <date>2015-07-16T06:50:16Z</date>
+    <date>2015-07-16T08:46:33Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -3358,7 +3358,7 @@
                         <formula/>
                         <conditions>
                             <condition>
-                                <macro>{#TBSNAME}</macro>
+                                <macro>{#ASMDNAME}</macro>
                                 <value/>
                                 <operator>8</operator>
                                 <formulaid>A</formulaid>
@@ -3868,7 +3868,7 @@ DROPPED - Disk has been fully expelled from the disk group</description>
                         <formula/>
                         <conditions>
                             <condition>
-                                <macro>{#TBSNAME}</macro>
+                                <macro>{#ASMDGNAME}</macro>
                                 <value/>
                                 <operator>8</operator>
                                 <formulaid>A</formulaid>
