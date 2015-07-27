@@ -1670,13 +1670,6 @@ def checkMAgentEnvironment():
 
 def checkOracleEnvironment():
 	try:
-		oracle_base = os.environ['ORACLE_BASE']
-	except:
-		rootLogger.critical("Environment variabele ORACLE_BASE not set. MIOS-AGENT will not function without it.")
-		rootLogger.critical("Set this parameter or remove Oracle monitoring from config file")
-		rootLogger.critical("Shutting down")
-		exit(1)
-	try:
 		oracle_home = os.environ['ORACLE_HOME']
 	except:
 		rootLogger.critical("Environment variabele ORACLE_HOME not set. MIOS-AGENT will not function without it.")
