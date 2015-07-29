@@ -435,6 +435,7 @@ class Oracle(object):
 	def __init__(self, instances):
 
 		self.oracle_support = 0
+		self.min_interval = 30
 		self.connections = []
 		self.cursor = []
 		self.version = []
@@ -445,6 +446,7 @@ class Oracle(object):
 		self.service = []
 		self.sids = []
 		self.instances = instances
+		self.systemevents = []
 		self.logger = logging.getLogger(type(self).__name__)
 
 		try:
@@ -491,6 +493,7 @@ class Oracle(object):
 			self.connections.append(None)
 			self.cursor.append(None)
 			self.version.append('')
+			self.systemevents.append(None)
 			indx = self.sids.index(instance)
 			self.connect(indx)
 
@@ -503,6 +506,7 @@ class Oracle(object):
 				time.sleep(1)
 				self.cursor[indx] = self.connections[indx].cursor()
 				self.version[indx] = self.connections[indx].version
+				self.systemevents[indx] = {'last_update': 0}
 				self.logger.info("Connected to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
 			except Exception, e:
 				self.logger.critical("Unable to connect to Oracle (%s)" % self.sids[indx])
@@ -524,6 +528,7 @@ class Oracle(object):
 				self.connections.append(None)
 				self.cursor.append(None)
 				self.version.append('')
+				self.systemevents.append(None)
 				indx = self.sids.index(instance)
 				self.connect(indx)
 
@@ -548,6 +553,7 @@ class Oracle(object):
 		del self.service[indx]
 		del self.sids[indx]
 		del self.version[indx]
+		del self.systemevents[indx]
 		del config.oracle_sids[sid]
 
 	def reconnect(self, data):
@@ -680,6 +686,70 @@ class Oracle(object):
 			return value
 		except:
 			self.logger.error("Error in Oracle connection SID: %s" % sid)
+			return -2
+
+	def systemevent(self, data):
+		action = "select wait_class, sum(time_waited_micro) from v$system_event group by wait_class \
+			union \
+			select 'CPU', sum(value) from v$sys_time_model where stat_name in ('background cpu time', 'DB CPU')"
+		fields=[]
+
+		if  data.find('[') > 0:
+			(item, arguments) = data.split('[')
+			arguments = arguments.replace(']','')
+		else:
+			self.logger.error("no oracle sid specified")
+			return None
+		arguments = arguments.rstrip()
+		sid = ''
+		if  data.find(',') > 0:
+			fields = arguments.split(',')
+			sid = fields[0]
+			wait_class = fields[1]
+		else:
+			#Only 1 field? Then send back NOTSUPPORTED
+			return -1
+
+		if not sid in self.sids:
+			self.logger.error("SID not found in list of SIDS from config file")
+			return -1
+
+		try:
+			indx = self.sids.index(sid)
+			now = int(time.time())
+			if now - self.systemevents[indx]['last_update'] > self.min_interval:
+				self.logger.debug("Last update is longer then %s seconds ago so fetching new results" % self.min_interval)
+				t = threading.Timer(1, self.connections[indx].cancel)
+				t.start()
+				try:
+					self.cursor[indx].execute(action)
+				except Exception, e:
+					t.cancel()
+					self.logger.error("ORA: Failed to execute query: %s" % action)
+					self.logger.error("ORA: Additional info: %s" % e)
+					ORA_error = e.split(':')[0]
+					if ORA_error == 'ORA-03113': #Not connected to Oracle
+						return -2 #Forces parent to reconnect
+					else:
+						return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
+				t.cancel()
+				try:
+					rows = dict(self.cursor[indx].fetchall())
+					self.systemevents[indx] = rows
+					self.systemevents[indx]['last_update'] = int(time.time())
+				except Exception, e:
+					self.logger.error("ORA: Failed to fetch result from resultset")
+					self.logger.error("ORA: Additional info: %s" % e)
+					return -1
+			else:
+				self.logger.debug("Last updates is less then %s seconds ago, so NOT fetching new results but using cache" % self.min_interval)
+				self.logger.debug("Systemevents cache: %s" % self.systemevents[indx])
+			value = self.systemevents[indx][fields[1]]
+			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, sys._getframe().f_code.co_name + '.' + fields[1], str(value)))
+			return value
+		except Exception, e:
+			self.logger.error("ORA: Error in Oracle connection SID: %s" % sid)
+			self.logger.error("ORA: Additional info: %s" % e)
 			return -2
 
 class Postgres(object):
@@ -1306,6 +1376,21 @@ class ConnectionHandler:
 				value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 				value += '] }'
 				oracle.logger.debug('value: %s' % value)
+			elif item.split('.')[1] == 'systemevent':
+				value = oracle.systemevent(data)
+				if value == -1:
+					value = "ZBX_NOTSUPPORTED"
+				elif value == -2:
+					oracle.logger.error("ORA: Lost connection. Trying to reconnect" % value)
+					while value == -2:
+						oracle.logger.info("ORA reconnect: sleep 5 seconds...")
+						time.sleep(5)
+						oracle.reconnect(data)
+						value = oracle.systemevent(data)
+						if value != -2:
+							value = str(value)
+				else:
+					value = str(value)
 			else:
 				value = oracle.get(data)
 				if value == -1:
