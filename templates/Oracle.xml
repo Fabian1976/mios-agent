@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>2.0</version>
-    <date>2015-07-16T08:46:33Z</date>
+    <date>2015-07-29T09:09:43Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -2869,7 +2869,7 @@
                     <snmpv3_privpassphrase/>
                     <formula>100</formula>
                     <delay_flex/>
-                    <params>last(&quot;oracle.undospace_blocks_required[{$HOSTNAME},]&quot;) / last(&quot;oracle.undospace_blocks_total[{$HOSTNAME},]&quot;)</params>
+                    <params>last(&quot;oracle.undospace_blocks_required[{HOSTNAME},]&quot;) / last(&quot;oracle.undospace_blocks_total[{HOSTNAME},]&quot;)</params>
                     <ipmi_sensor/>
                     <data_type>0</data_type>
                     <authtype>0</authtype>
