@@ -1,2 +1,0 @@
-type=oracle
-select sum(time_waited_micro) from v$system_event where wait_class = 'Network'
