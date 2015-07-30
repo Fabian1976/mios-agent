@@ -446,7 +446,9 @@ class Oracle(object):
 		self.service = []
 		self.sids = []
 		self.instances = instances
-		self.systemevents = []
+		self.system_events = []
+		self.memory_dynamic_components = []
+		self.sgastats = []
 		self.logger = logging.getLogger(type(self).__name__)
 
 		try:
@@ -493,7 +495,9 @@ class Oracle(object):
 			self.connections.append(None)
 			self.cursor.append(None)
 			self.version.append('')
-			self.systemevents.append(None)
+			self.system_events.append(None)
+			self.memory_dynamic_components.append(None)
+			self.sgastats.append(None)
 			indx = self.sids.index(instance)
 			self.connect(indx)
 
@@ -506,7 +510,9 @@ class Oracle(object):
 				time.sleep(1)
 				self.cursor[indx] = self.connections[indx].cursor()
 				self.version[indx] = self.connections[indx].version
-				self.systemevents[indx] = {'last_update': 0}
+				self.system_events[indx] = {'last_update': 0}
+				self.memory_dynamic_components[indx] = {'last_update': 0}
+				self.sgastats[indx] = {'last_update': 0}
 				self.logger.info("Connected to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
 			except Exception, e:
 				self.logger.critical("Unable to connect to Oracle (%s)" % self.sids[indx])
@@ -528,7 +534,9 @@ class Oracle(object):
 				self.connections.append(None)
 				self.cursor.append(None)
 				self.version.append('')
-				self.systemevents.append(None)
+				self.system_events.append(None)
+				self.memory_dynamic_components.append(None)
+				self.sgastats.append(None)
 				indx = self.sids.index(instance)
 				self.connect(indx)
 
@@ -553,7 +561,9 @@ class Oracle(object):
 		del self.service[indx]
 		del self.sids[indx]
 		del self.version[indx]
-		del self.systemevents[indx]
+		del self.system_events[indx]
+		del self.memory_dynamic_components[indx]
+		del self.sgastats[indx]
 		del config.oracle_sids[sid]
 
 	def reconnect(self, data):
@@ -688,7 +698,7 @@ class Oracle(object):
 			self.logger.error("Error in Oracle connection SID: %s" % sid)
 			return -2
 
-	def systemevent(self, data):
+	def system_event(self, data):
 		action = "select wait_class, sum(time_waited_micro) from v$system_event group by wait_class \
 			union \
 			select 'CPU', sum(value) from v$sys_time_model where stat_name in ('background cpu time', 'DB CPU')"
@@ -717,7 +727,7 @@ class Oracle(object):
 		try:
 			indx = self.sids.index(sid)
 			now = int(time.time())
-			if now - self.systemevents[indx]['last_update'] > self.min_interval:
+			if now - self.system_events[indx]['last_update'] > self.min_interval:
 				self.logger.debug("Last update is longer then %s seconds ago so fetching new results" % self.min_interval)
 				t = threading.Timer(1, self.connections[indx].cancel)
 				t.start()
@@ -735,17 +745,142 @@ class Oracle(object):
 				t.cancel()
 				try:
 					rows = dict(self.cursor[indx].fetchall())
-					self.systemevents[indx] = rows
-					self.systemevents[indx]['last_update'] = int(time.time())
+					self.system_events[indx] = rows
+					self.system_events[indx]['last_update'] = int(time.time())
 				except Exception, e:
 					self.logger.error("ORA: Failed to fetch result from resultset")
 					self.logger.error("ORA: Additional info: %s" % e)
 					return -1
 			else:
 				self.logger.debug("Last updates is less then %s seconds ago, so NOT fetching new results but using cache" % self.min_interval)
-				self.logger.debug("Systemevents cache: %s" % self.systemevents[indx])
-			value = self.systemevents[indx][fields[1]]
+				self.logger.debug("System events cache: %s" % self.system_events[indx])
+			value = self.system_events[indx][fields[1]]
 			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, sys._getframe().f_code.co_name + '.' + fields[1], str(value)))
+			return value
+		except Exception, e:
+			self.logger.error("ORA: Error in Oracle connection SID: %s" % sid)
+			self.logger.error("ORA: Additional info: %s" % e)
+			return -2
+
+	def memory_dynamic_component(self, data):
+		action = "select component, current_size from v$memory_dynamic_components"
+		fields=[]
+
+		if  data.find('[') > 0:
+			(item, arguments) = data.split('[')
+			arguments = arguments.replace(']','')
+		else:
+			self.logger.error("no oracle sid specified")
+			return None
+		arguments = arguments.rstrip()
+		sid = ''
+		if  data.find(',') > 0:
+			fields = arguments.split(',')
+			sid = fields[0]
+			wait_class = fields[1]
+		else:
+			#Only 1 field? Then send back NOTSUPPORTED
+			return -1
+
+		if not sid in self.sids:
+			self.logger.error("SID not found in list of SIDS from config file")
+			return -1
+
+		try:
+			indx = self.sids.index(sid)
+			now = int(time.time())
+			if now - self.memory_dynamic_components[indx]['last_update'] > self.min_interval:
+				self.logger.debug("Last update is longer then %s seconds ago so fetching new results" % self.min_interval)
+				t = threading.Timer(1, self.connections[indx].cancel)
+				t.start()
+				try:
+					self.cursor[indx].execute(action)
+				except Exception, e:
+					t.cancel()
+					self.logger.error("ORA: Failed to execute query: %s" % action)
+					self.logger.error("ORA: Additional info: %s" % e)
+					ORA_error = e.split(':')[0]
+					if ORA_error == 'ORA-03113': #Not connected to Oracle
+						return -2 #Forces parent to reconnect
+					else:
+						return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
+				t.cancel()
+				try:
+					rows = dict(self.cursor[indx].fetchall())
+					self.memory_dynamic_components[indx] = rows
+					self.memory_dynamic_components[indx]['last_update'] = int(time.time())
+				except Exception, e:
+					self.logger.error("ORA: Failed to fetch result from resultset")
+					self.logger.error("ORA: Additional info: %s" % e)
+					return -1
+			else:
+				self.logger.debug("Last updates is less then %s seconds ago, so NOT fetching new results but using cache" % self.min_interval)
+				self.logger.debug("Memory dynamic components cache: %s" % self.memory_dynamic_components[indx])
+			value = self.memory_dynamic_components[indx][fields[1]]
+			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, sys._getframe().f_code.co_name + '.' + fields[1], str(value)))
+			return value
+		except Exception, e:
+			self.logger.error("ORA: Error in Oracle connection SID: %s" % sid)
+			self.logger.error("ORA: Additional info: %s" % e)
+			return -2
+
+	def sgastat(self, data):
+		action = "select pool || '_' || name, bytes from v$sgastat"
+		fields=[]
+
+		if  data.find('[') > 0:
+			(item, arguments) = data.split('[')
+			arguments = arguments.replace(']','')
+		else:
+			self.logger.error("no oracle sid specified")
+			return None
+		arguments = arguments.rstrip()
+		sid = ''
+		if  data.find(',') != 2:
+			fields = arguments.split(',')
+			sid = fields[0]
+			wait_class = fields[1]
+		else:
+			#Not 2 fields? Then send back NOTSUPPORTED
+			return -1
+
+		if not sid in self.sids:
+			self.logger.error("SID not found in list of SIDS from config file")
+			return -1
+
+		try:
+			indx = self.sids.index(sid)
+			now = int(time.time())
+			if now - self.sgastats[indx]['last_update'] > self.min_interval:
+				self.logger.debug("Last update is longer then %s seconds ago so fetching new results" % self.min_interval)
+				t = threading.Timer(1, self.connections[indx].cancel)
+				t.start()
+				try:
+					self.cursor[indx].execute(action)
+				except Exception, e:
+					t.cancel()
+					self.logger.error("ORA: Failed to execute query: %s" % action)
+					self.logger.error("ORA: Additional info: %s" % e)
+					ORA_error = e.split(':')[0]
+					if ORA_error == 'ORA-03113': #Not connected to Oracle
+						return -2 #Forces parent to reconnect
+					else:
+						return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
+				t.cancel()
+				try:
+					rows = dict(self.cursor[indx].fetchall())
+					self.sgastats[indx] = rows
+					self.sgastats[indx]['last_update'] = int(time.time())
+				except Exception, e:
+					self.logger.error("ORA: Failed to fetch result from resultset")
+					self.logger.error("ORA: Additional info: %s" % e)
+					return -1
+			else:
+				self.logger.debug("Last updates is less then %s seconds ago, so NOT fetching new results but using cache" % self.min_interval)
+				self.logger.debug("SGA stats cache: %s" % self.sgastats[indx])
+			value = self.sgastats[indx][fields[1]+'_'+fields[2]]
+			#value = 1
+			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, sys._getframe().f_code.co_name + '.' + fields[1]+'_'+fields[2], str(value)))
 			return value
 		except Exception, e:
 			self.logger.error("ORA: Error in Oracle connection SID: %s" % sid)
@@ -1376,8 +1511,8 @@ class ConnectionHandler:
 				value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 				value += '] }'
 				oracle.logger.debug('value: %s' % value)
-			elif item.split('.')[1] == 'systemevent':
-				value = oracle.systemevent(data)
+			elif item.split('.')[1] == 'system_event':
+				value = oracle.system_event(data)
 				if value == -1:
 					value = "ZBX_NOTSUPPORTED"
 				elif value == -2:
@@ -1386,7 +1521,37 @@ class ConnectionHandler:
 						oracle.logger.info("ORA reconnect: sleep 5 seconds...")
 						time.sleep(5)
 						oracle.reconnect(data)
-						value = oracle.systemevent(data)
+						value = oracle.system_event(data)
+						if value != -2:
+							value = str(value)
+				else:
+					value = str(value)
+			elif item.split('.')[1] == 'memory_dynamic_component':
+				value = oracle.memory_dynamic_component(data)
+				if value == -1:
+					value = "ZBX_NOTSUPPORTED"
+				elif value == -2:
+					oracle.logger.error("ORA: Lost connection. Trying to reconnect" % value)
+					while value == -2:
+						oracle.logger.info("ORA reconnect: sleep 5 seconds...")
+						time.sleep(5)
+						oracle.reconnect(data)
+						value = oracle.memory_dynamic_component(data)
+						if value != -2:
+							value = str(value)
+				else:
+					value = str(value)
+			elif item.split('.')[1] == 'sgastat':
+				value = oracle.sgastat(data)
+				if value == -1:
+					value = "ZBX_NOTSUPPORTED"
+				elif value == -2:
+					oracle.logger.error("ORA: Lost connection. Trying to reconnect" % value)
+					while value == -2:
+						oracle.logger.info("ORA reconnect: sleep 5 seconds...")
+						time.sleep(5)
+						oracle.reconnect(data)
+						value = oracle.sgastat(data)
 						if value != -2:
 							value = str(value)
 				else:

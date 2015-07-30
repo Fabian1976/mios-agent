@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>2.0</version>
-    <date>2015-07-29T13:23:55Z</date>
+    <date>2015-07-30T12:58:40Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -228,7 +228,7 @@
                     <snmp_community/>
                     <multiplier>1</multiplier>
                     <snmp_oid/>
-                    <key>oracle.systemevent[{HOSTNAME},Administrative]</key>
+                    <key>oracle.system_event[{HOSTNAME},Administrative]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -271,7 +271,7 @@
                     <snmp_community/>
                     <multiplier>1</multiplier>
                     <snmp_oid/>
-                    <key>oracle.systemevent[{HOSTNAME},Application]</key>
+                    <key>oracle.system_event[{HOSTNAME},Application]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -314,7 +314,7 @@
                     <snmp_community/>
                     <multiplier>1</multiplier>
                     <snmp_oid/>
-                    <key>oracle.systemevent[{HOSTNAME},Commit]</key>
+                    <key>oracle.system_event[{HOSTNAME},Commit]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -357,7 +357,7 @@
                     <snmp_community/>
                     <multiplier>1</multiplier>
                     <snmp_oid/>
-                    <key>oracle.systemevent[{HOSTNAME},Concurrency]</key>
+                    <key>oracle.system_event[{HOSTNAME},Concurrency]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -400,7 +400,7 @@
                     <snmp_community/>
                     <multiplier>1</multiplier>
                     <snmp_oid/>
-                    <key>oracle.systemevent[{HOSTNAME},Configuration]</key>
+                    <key>oracle.system_event[{HOSTNAME},Configuration]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -443,7 +443,7 @@
                     <snmp_community/>
                     <multiplier>1</multiplier>
                     <snmp_oid/>
-                    <key>oracle.systemevent[{HOSTNAME},CPU]</key>
+                    <key>oracle.system_event[{HOSTNAME},CPU]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -486,7 +486,7 @@
                     <snmp_community/>
                     <multiplier>1</multiplier>
                     <snmp_oid/>
-                    <key>oracle.systemevent[{HOSTNAME},Idle]</key>
+                    <key>oracle.system_event[{HOSTNAME},Idle]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -529,7 +529,7 @@
                     <snmp_community/>
                     <multiplier>1</multiplier>
                     <snmp_oid/>
-                    <key>oracle.systemevent[{HOSTNAME},Network]</key>
+                    <key>oracle.system_event[{HOSTNAME},Network]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -572,7 +572,7 @@
                     <snmp_community/>
                     <multiplier>1</multiplier>
                     <snmp_oid/>
-                    <key>oracle.systemevent[{HOSTNAME},Other]</key>
+                    <key>oracle.system_event[{HOSTNAME},Other]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -615,7 +615,7 @@
                     <snmp_community/>
                     <multiplier>1</multiplier>
                     <snmp_oid/>
-                    <key>oracle.systemevent[{HOSTNAME},Scheduler]</key>
+                    <key>oracle.system_event[{HOSTNAME},Scheduler]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -658,7 +658,7 @@
                     <snmp_community/>
                     <multiplier>1</multiplier>
                     <snmp_oid/>
-                    <key>oracle.systemevent[{HOSTNAME},System I/O]</key>
+                    <key>oracle.system_event[{HOSTNAME},System I/O]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -701,7 +701,7 @@
                     <snmp_community/>
                     <multiplier>1</multiplier>
                     <snmp_oid/>
-                    <key>oracle.systemevent[{HOSTNAME},User I/O]</key>
+                    <key>oracle.system_event[{HOSTNAME},User I/O]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1733,7 +1733,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.pga_total[{HOSTNAME},]</key>
+                    <key>oracle.memory_dynamic_component[{HOSTNAME},PGA Target]</key>
                     <delay>300</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2163,7 +2163,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sga_buffer_cache[{HOSTNAME},]</key>
+                    <key>oracle.memory_dynamic_component[{HOSTNAME},DEFAULT buffer cache]</key>
                     <delay>300</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2206,7 +2206,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sga_java_pool[{HOSTNAME},]</key>
+                    <key>oracle.memory_dynamic_component[{HOSTNAME},java pool]</key>
                     <delay>300</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2249,7 +2249,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sga_large_pool[{HOSTNAME},]</key>
+                    <key>oracle.memory_dynamic_component[{HOSTNAME},large pool]</key>
                     <delay>300</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2292,7 +2292,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sga_log_buffer[{HOSTNAME},]</key>
+                    <key>oracle.sgastat[{HOSTNAME},,log_buffer]</key>
                     <delay>300</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2335,7 +2335,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sga_shared_pool_free_mem[{HOSTNAME},]</key>
+                    <key>oracle.sgastat[{HOSTNAME},shared pool,free memory]</key>
                     <delay>300</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2378,7 +2378,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sga_shared_pool[{HOSTNAME},]</key>
+                    <key>oracle.memory_dynamic_component[{HOSTNAME},shared pool]</key>
                     <delay>300</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2421,7 +2421,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sga_shared_pool_sqlarea[{HOSTNAME},]</key>
+                    <key>oracle.sgastat[{HOSTNAME},shared pool,SQLA]</key>
                     <delay>300</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2464,7 +2464,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sga_stream_pool[{HOSTNAME},]</key>
+                    <key>oracle.memory_dynamic_component[{HOSTNAME},streams pool]</key>
                     <delay>300</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2507,7 +2507,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sga_total[{HOSTNAME},]</key>
+                    <key>oracle.memory_dynamic_component[{HOSTNAME},SGA Target]</key>
                     <delay>300</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -5330,7 +5330,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.systemevent[{HOSTNAME},Administrative]</key>
+                        <key>oracle.system_event[{HOSTNAME},Administrative]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5342,7 +5342,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.systemevent[{HOSTNAME},Network]</key>
+                        <key>oracle.system_event[{HOSTNAME},Network]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5354,7 +5354,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.systemevent[{HOSTNAME},Other]</key>
+                        <key>oracle.system_event[{HOSTNAME},Other]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5366,7 +5366,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.systemevent[{HOSTNAME},System I/O]</key>
+                        <key>oracle.system_event[{HOSTNAME},System I/O]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5378,7 +5378,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.systemevent[{HOSTNAME},Configuration]</key>
+                        <key>oracle.system_event[{HOSTNAME},Configuration]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5390,7 +5390,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.systemevent[{HOSTNAME},Concurrency]</key>
+                        <key>oracle.system_event[{HOSTNAME},Concurrency]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5402,7 +5402,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.systemevent[{HOSTNAME},Scheduler]</key>
+                        <key>oracle.system_event[{HOSTNAME},Scheduler]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5414,7 +5414,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.systemevent[{HOSTNAME},Commit]</key>
+                        <key>oracle.system_event[{HOSTNAME},Commit]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5426,7 +5426,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.systemevent[{HOSTNAME},User I/O]</key>
+                        <key>oracle.system_event[{HOSTNAME},User I/O]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5438,7 +5438,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.systemevent[{HOSTNAME},CPU]</key>
+                        <key>oracle.system_event[{HOSTNAME},CPU]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5450,7 +5450,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.systemevent[{HOSTNAME},Application]</key>
+                        <key>oracle.system_event[{HOSTNAME},Application]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -5929,7 +5929,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.pga_total[{HOSTNAME},]</key>
+                        <key>oracle.memory_dynamic_component[{HOSTNAME},PGA Target]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5941,7 +5941,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sga_total[{HOSTNAME},]</key>
+                        <key>oracle.memory_dynamic_component[{HOSTNAME},SGA Target]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -6193,7 +6193,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sga_stream_pool[{HOSTNAME},]</key>
+                        <key>oracle.memory_dynamic_component[{HOSTNAME},streams pool]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -6205,7 +6205,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sga_buffer_cache[{HOSTNAME},]</key>
+                        <key>oracle.memory_dynamic_component[{HOSTNAME},DEFAULT buffer cache]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -6217,7 +6217,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sga_large_pool[{HOSTNAME},]</key>
+                        <key>oracle.memory_dynamic_component[{HOSTNAME},large pool]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -6229,7 +6229,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sga_shared_pool[{HOSTNAME},]</key>
+                        <key>oracle.memory_dynamic_component[{HOSTNAME},shared pool]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -6241,7 +6241,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sga_java_pool[{HOSTNAME},]</key>
+                        <key>oracle.memory_dynamic_component[{HOSTNAME},java pool]</key>
                     </item>
                 </graph_item>
             </graph_items>
