@@ -1474,7 +1474,7 @@ class ConnectionHandler:
 			elif item.split('.')[1] == 'aq_discover':
 				oracle.logger.debug("DISCOVER QUEUES")
 				sid = arguments
-				rows = oracle.execute(sid, "select owner || '_' || name from dba_queues where dba_queues.owner not like '%SYS%'")
+				rows = oracle.execute(sid, "select owner || '_' || name from dba_queues where dba_queues.owner not like '%SYS%' and queue_type = 'NORMAL_QUEUE'")
 				if rows == -1:
 					value = "ZBX_NOTSUPPORTED"
 				else:
