@@ -627,6 +627,9 @@ class Oracle(object):
 		m = re.search('MIOS_ARG_2', action)
 		if m:
 			action = re.sub('MIOS_ARG_2', fields[1], action)
+                m = re.search('MIOS_ARG_3', action)
+                if m:
+                        action = re.sub('MIOS_ARG_3', fields[2], action)
 
 		if not sid in self.sids:
 			self.logger.error("SID not found in list of SIDS from config file")
