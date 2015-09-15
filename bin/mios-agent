@@ -81,37 +81,33 @@ from compiler import parse
 from compiler.ast import *
 
 def literal_eval(node_or_string):
-     """
-     Safely evaluate an expression node or a string containing a Python
-     expression.  The string or node provided may only consist of the  
-following
-     Python literal structures: strings, numbers, tuples, lists, dicts,  
-booleans,
-     and None.
-     """
-     _safe_names = {'None': None, 'True': True, 'False': False}
-     if isinstance(node_or_string, basestring):
-	 node_or_string = parse(node_or_string, mode='eval')
-     if isinstance(node_or_string, Expression):
-	 node_or_string = node_or_string.node
-     def _convert(node):
-	 if isinstance(node, Const) and isinstance(node.value,
-		 (basestring, int, float, long, complex)):
-	      return node.value
-	 elif isinstance(node, Tuple):
-	     return tuple(map(_convert, node.nodes))
-	 elif isinstance(node, List):
-	     return list(map(_convert, node.nodes))
-	 elif isinstance(node, Dict):
-	     return dict((_convert(k), _convert(v)) for k, v
-			 in node.items)
-	 elif isinstance(node, Name):
-	     if node.name in _safe_names:
-		 return _safe_names[node.name]
-	 elif isinstance(node, UnarySub):
-	     return -_convert(node.expr)
-	 raise ValueError('malformed string')
-     return _convert(node_or_string)
+	"""
+	Safely evaluate an expression node or a string containing a Python
+	expression.  The string or node provided may only consist of the following
+	Python literal structures: strings, numbers, tuples, lists, dicts,  
+	booleans and None.
+	"""
+	_safe_names = {'None': None, 'True': True, 'False': False}
+	if isinstance(node_or_string, basestring):
+		node_or_string = parse(node_or_string, mode='eval')
+	if isinstance(node_or_string, Expression):
+		node_or_string = node_or_string.node
+	def _convert(node):
+		if isinstance(node, Const) and isinstance(node.value, (basestring, int, float, long, complex)):
+			return node.value
+		elif isinstance(node, Tuple):
+			return tuple(map(_convert, node.nodes))
+		elif isinstance(node, List):
+			return list(map(_convert, node.nodes))
+		elif isinstance(node, Dict):
+			return dict((_convert(k), _convert(v)) for k, v in node.items)
+		elif isinstance(node, Name):
+			if node.name in _safe_names:
+				return _safe_names[node.name]
+		elif isinstance(node, UnarySub):
+			return -_convert(node.expr)
+		raise ValueError('malformed string')
+	return _convert(node_or_string)
 
 oracle = None
 probes = None
@@ -125,19 +121,19 @@ class Config:
 
 	def __init__(self, conf_file):
 
-		self.config = None
-		self.listen_ip = ''
-		self.listen_port = 0
-		self.hostname = ''
-		self.domain = ''
-		self.fqdn = getfqdn()
-		self.zabbix_agent = ''
-		self.zabbix_port = 0
-		self.oracle_sids = {}
+		self.config        = None
+		self.listen_ip     = ''
+		self.listen_port   = 0
+		self.hostname      = ''
+		self.domain        = ''
+		self.fqdn          = getfqdn()
+		self.zabbix_agent  = ''
+		self.zabbix_port   = 0
+		self.oracle_sids   = {}
 		self.oracle_oa_dir = ''
-		self.postgres_dbs = {}
-		self.mongo_db = {}
-		self.magent_home = magent_home
+		self.postgres_dbs  = {}
+		self.mongo_db      = {}
+		self.magent_home   = magent_home
 
 		self.conf_file = conf_file
 		if not os.path.exists(self.conf_file):
@@ -201,15 +197,15 @@ class Config:
 				if sid == '':
 					print "No SID specified. Please review example section in config file"
 					exit(1)
-				user = self.config.get(section, 'user')
-				password = self.config.get(section, 'password')
-				host = self.config.get(section, 'host')
-				port = self.config.get(section, 'port')
-				service = self.config.get(section, 'service')
+				user                  = self.config.get(section, 'user')
+				password              = self.config.get(section, 'password')
+				host                  = self.config.get(section, 'host')
+				port                  = self.config.get(section, 'port')
+				service               = self.config.get(section, 'service')
 				self.oracle_sids[sid] = (user, password, host, port, service)
-				self.oracle_oa_dir = self.config.get(section, 'oa_dir')
+				self.oracle_oa_dir    = self.config.get(section, 'oa_dir')
 				global OA_DIR
-				OA_DIR		  = self.oracle_oa_dir
+				OA_DIR		      = self.oracle_oa_dir
 				print ""
 				print section
 				print "Oracle SID     : %s" % sid
@@ -318,12 +314,12 @@ class Config:
 				if dbtype == 'oracle':
 					aantal_sids += 1
 					try:
-						sid = section.split('.')[1]
-						user = new_conf.get(section, 'user')
-						password = new_conf.get(section, 'password')
-						host = new_conf.get(section, 'host')
-						port = new_conf.get(section, 'port')
-						service = new_conf.get(section, 'service')
+						sid              = section.split('.')[1]
+						user             = new_conf.get(section, 'user')
+						password         = new_conf.get(section, 'password')
+						host             = new_conf.get(section, 'host')
+						port             = new_conf.get(section, 'port')
+						service          = new_conf.get(section, 'service')
 						oracle_sids[sid] = (user,password, host, port, service)
 					except:
 						rootLogger.error("SID (%s) not correctly specified in config file. Please review example section in config file" % section)
@@ -332,11 +328,11 @@ class Config:
 				if dbtype == 'postgres':
 					aantal_dbs += 1
 					try:
-						db = section.split('.')[1]
-						host = new_conf.get(section, 'host')
-						port = new_conf.get(section, 'port')
-						user = new_conf.get(section, 'user')
-						password = new_conf.get(section, 'password')
+						db               = section.split('.')[1]
+						host             = new_conf.get(section, 'host')
+						port             = new_conf.get(section, 'port')
+						user             = new_conf.get(section, 'user')
+						password         = new_conf.get(section, 'password')
 						postgres_dbs[db] = (host, port, user, password)
 					except:
 						rootLogger.error("DB (%s) not correctly specified in config file. Please review example section in config file" % section)
@@ -434,22 +430,22 @@ class Oracle(object):
 
 	def __init__(self, instances):
 
-		self.oracle_support = 0
-		self.min_interval = 30
-		self.connections = []
-		self.cursor = []
-		self.version = []
-		self.user = []
-		self.password = []
-		self.host = []
-		self.port = []
-		self.service = []
-		self.sids = []
-		self.instances = instances
-		self.system_events = []
+		self.oracle_support            = 0
+		self.min_interval              = 30
+		self.connections               = []
+		self.cursor                    = []
+		self.version                   = []
+		self.user                      = []
+		self.password                  = []
+		self.host                      = []
+		self.port                      = []
+		self.service                   = []
+		self.sids                      = []
+		self.instances                 = instances
+		self.system_events             = []
 		self.memory_dynamic_components = []
-		self.sgastats = []
-		self.logger = logging.getLogger(type(self).__name__)
+		self.sgastats                  = []
+		self.logger                    = logging.getLogger(type(self).__name__)
 
 		try:
 			import cx_Oracle
@@ -508,11 +504,11 @@ class Oracle(object):
 				self.connections[indx]  = self.cx_Oracle.connect(user="%s" % self.user[indx], password="%s" % self.password[indx], dsn="%s:%s/%s" % (self.host[indx], self.port[indx], self.service[indx]))
 				self.logger.info("Connection succesful (%s)" % self.sids[indx])
 				time.sleep(1)
-				self.cursor[indx] = self.connections[indx].cursor()
-				self.version[indx] = self.connections[indx].version
-				self.system_events[indx] = {'last_update': 0}
+				self.cursor[indx]                    = self.connections[indx].cursor()
+				self.version[indx]                   = self.connections[indx].version
+				self.system_events[indx]             = {'last_update': 0}
 				self.memory_dynamic_components[indx] = {'last_update': 0}
-				self.sgastats[indx] = {'last_update': 0}
+				self.sgastats[indx]                  = {'last_update': 0}
 				self.logger.info("Connected to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
 			except Exception, e:
 				self.logger.critical("Unable to connect to Oracle (%s)" % self.sids[indx])
@@ -627,9 +623,9 @@ class Oracle(object):
 		m = re.search('MIOS_ARG_2', action)
 		if m:
 			action = re.sub('MIOS_ARG_2', fields[1], action)
-                m = re.search('MIOS_ARG_3', action)
-                if m:
-                        action = re.sub('MIOS_ARG_3', fields[2], action)
+		m = re.search('MIOS_ARG_3', action)
+		if m:
+			action = re.sub('MIOS_ARG_3', fields[2], action)
 
 		if not sid in self.sids:
 			self.logger.error("SID not found in list of SIDS from config file")
@@ -895,16 +891,16 @@ class Postgres(object):
 	def __init__(self, instances):
 
 		self.postgres_support = 0
-		self.connections = []
-		self.cursor = []
-		self.version = []
-		self.host = []
-		self.port = []
-		self.user = []
-		self.password = []
-		self.dbs = []
-		self.instances = instances
-		self.logger = logging.getLogger(type(self).__name__)
+		self.connections      = []
+		self.cursor           = []
+		self.version          = []
+		self.host             = []
+		self.port             = []
+		self.user             = []
+		self.password         = []
+		self.dbs              = []
+		self.instances        = instances
+		self.logger           = logging.getLogger(type(self).__name__)
 
 		try:
 			import psycopg2
@@ -1101,7 +1097,7 @@ class NetStats(object):
 	def __init__(self):
 
 		self.net_devices  = []
-		self.stats	= {}
+		self.stats	  = {}
 		self.last_update  = []
 		self.min_interval = 30
 
@@ -1164,17 +1160,16 @@ class Apache(object):
 
 		import urllib
 		import csv
-		self.urllib = urllib
-		self.csv = csv
-		self.stats = {}
-		self.last_update = []
+		self.urllib       = urllib
+		self.csv          = csv
+		self.stats        = {}
+		self.last_update  = []
 		self.min_interval = 30
 		self.tempFilename = '/tmp/apache-status'
-		self.webserver = 'localhost'
-		self.port = '80'
-		self.url = '/server-status?auto'
-		self.logger = logging.getLogger(type(self).__name__)
-
+		self.webserver    = 'localhost'
+		self.port         = '80'
+		self.url          = '/server-status?auto'
+		self.logger       = logging.getLogger(type(self).__name__)
 		self.last_update  = 0
 
 	def getMetrics(self):
@@ -1182,7 +1177,7 @@ class Apache(object):
 		try:
 			ConnectionString = ("http://%s:%s%s") % (self.webserver, self.port, self.url)
 			self.logger.debug("Trying to get metrics using host: %s, port: %s" % (self.webserver, self.port))
-			conn = self.urllib.urlopen(ConnectionString)
+			conn        = self.urllib.urlopen(ConnectionString)
 			URLresponse = conn.read()
 			conn.close()
 			return URLresponse
@@ -1202,18 +1197,18 @@ class Apache(object):
 		ApacheTempFile.close()
 		for Metric in Metrics:
 			if Metric[0] == 'Scoreboard':
-				self.stats['MaxClients'] = len(Metric[1])
-				self.stats['ClosingConnection'] = Metric[1].count('C')
-				self.stats['DNSLookup'] = Metric[1].count('D')
-				self.stats['GracefullyFinishing'] = Metric[1].count('G')
-				self.stats['IdleCleanupOfWorker'] = Metric[1].count('I')
-				self.stats['KeepAlive'] = Metric[1].count('K')
-				self.stats['Logging'] = Metric[1].count('L')
+				self.stats['MaxClients']                   = len(Metric[1])
+				self.stats['ClosingConnection']            = Metric[1].count('C')
+				self.stats['DNSLookup']                    = Metric[1].count('D')
+				self.stats['GracefullyFinishing']          = Metric[1].count('G')
+				self.stats['IdleCleanupOfWorker']          = Metric[1].count('I')
+				self.stats['KeepAlive']                    = Metric[1].count('K')
+				self.stats['Logging']                      = Metric[1].count('L')
 				self.stats['OpenSlotWithNoCurrentProcess'] = Metric[1].count('.')
-				self.stats['ReadingRequest'] = Metric[1].count('R')
-				self.stats['SendingReply'] = Metric[1].count('W')
-				self.stats['StartingUp'] = Metric[1].count('S')
-				self.stats['WaitingForConnection'] = Metric[1].count('_')
+				self.stats['ReadingRequest']               = Metric[1].count('R')
+				self.stats['SendingReply']                 = Metric[1].count('W')
+				self.stats['StartingUp']                   = Metric[1].count('S')
+				self.stats['WaitingForConnection']         = Metric[1].count('_')
 			else:
 				self.stats[Metric[0]] = Metric[1]
 		del Metrics
@@ -1239,15 +1234,15 @@ class DiskStats(object):
 
 	def __init__(self):
 
-		self.device_name = []
-		self.major_minor = []
-		self.filesystems = []
-		self.fs_type = []
-		self.read_write = []
-		self.last_update = 0
-		self.stats = []
+		self.device_name  = []
+		self.major_minor  = []
+		self.filesystems  = []
+		self.fs_type      = []
+		self.read_write   = []
+		self.last_update  = 0
+		self.stats        = []
 		self.MIN_INTERVAL = 30
-		self.logger = logging.getLogger(type(self).__name__)
+		self.logger       = logging.getLogger(type(self).__name__)
 
 		self.get_fs_mapping()
 		self.init_stats()
@@ -1347,11 +1342,11 @@ def flattenDict(d, pre = '', sep = '_'):
 class MongoDB(object):
 
 	def __init__(self):
-		self.metrics = {}
-		self.last_update = []
+		self.metrics      = {}
+		self.last_update  = []
 		self.min_interval = 30
-		self.last_update = 0
-		self.logger = logging.getLogger(type(self).__name__)
+		self.last_update  = 0
+		self.logger       = logging.getLogger(type(self).__name__)
 		self.logger.info("Initializing MongoDB connection")
 		self.updateMetrics()
 
@@ -1854,13 +1849,13 @@ class ConnectionHandler:
 
 	def update_probe(self, data):
 
-		action = data[0]
+		action    = data[0]
 		size_name = int(data[1:10])
-		pointer = 10 + size_name
-		name = data[10:pointer]
+		pointer   = 10 + size_name
+		name      = data[10:pointer]
 		size_data = data[pointer:pointer + 9]
-		pointer = pointer + 9
-		content = data[pointer:]
+		pointer   = pointer + 9
+		content   = data[pointer:]
 
 		f = open(config.magent_home + "/probes/%s" % name, "w")
 		f.write(content)
@@ -1869,7 +1864,7 @@ class ConnectionHandler:
 class createThread(threading.Thread):
 	def __init__(self, target, *args):
 		self.target = target
-		self.args = args
+		self.args   = args
 		threading.Thread.__init__(self)
 	def run(self):
 		rootLogger.info("Creating thread for function %s" % self.target.__name__)
@@ -1904,7 +1899,7 @@ def socketListener():
 	while True:
 		try:
 			con,addr = s.accept()
-			ch = ConnectionHandler(con)
+			ch       = ConnectionHandler(con)
 			ch.start()
 		except:
 			pass
@@ -1949,11 +1944,8 @@ class MagentDaemon(Daemon):
 		global rootLogger
 		global mongodb
 	
-		config_file = ''
-
 		config_file = magent_home + '/conf/mios-agent.conf'
-
-		config  = Config(config_file)
+		config      = Config(config_file)
 		config.parse()
 
 		try:
@@ -1988,9 +1980,9 @@ class MagentDaemon(Daemon):
 		net_stat = NetStats()
 
 		# Creating threads
-		connectionThread = createThread(socketListener)
-#		loggingThread = createThread(monitorLogging, 60)
-#		probesCacheThread = createThread(refreshProbesCache, 600)
+		connectionThread    = createThread(socketListener)
+#		loggingThread       = createThread(monitorLogging, 60)
+#		probesCacheThread   = createThread(refreshProbesCache, 600)
 #		reparseConfigThread = createThread(reparseConfig, 60)
 		#Starting threads
 		rootLogger.info('============================= Start MIOS-AGENT ======================================')
