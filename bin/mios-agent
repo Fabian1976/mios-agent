@@ -886,6 +886,58 @@ class Oracle(object):
 			self.logger.error("ORA: Additional info: %s" % e)
 			return -2
 
+	def query(self, data):
+		fields=[]
+
+		if  data.find('[') > 0:
+			(item, arguments) = data.split('[')
+			arguments = arguments.replace(']','')
+		else:
+			self.logger.error("no oracle sid specified")
+			return None
+		arguments = arguments.rstrip()
+		sid = ''
+		if  data.find(',') != 1:
+			fields = arguments.split(',')
+			sid = fields[0]
+			sql_query = fields[1]
+		else:
+			#Not 1 fields? Then send back NOTSUPPORTED
+			return -1
+
+		if not sid in self.sids:
+			self.logger.error("SID not found in list of SIDS from config file")
+			return -1
+
+		try:
+			indx = self.sids.index(sid)
+			t = threading.Timer(1, self.connections[indx].cancel)
+			t.start()
+			try:
+				self.cursor[indx].execute(sql_query)
+			except Exception, e:
+				t.cancel()
+				self.logger.error("ORA: Failed to execute query: %s" % sql_query)
+				self.logger.error("ORA: Additional info: %s" % e)
+				ORA_error, = e.args
+				if ORA_error.message.split(':')[0] == 'ORA-03113': #Not connected to Oracle
+					return -2 #Forces parent to reconnect
+				else:
+					return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
+			t.cancel()
+			try:
+				value = self.cursor[indx].fetchone()[0]
+			except Exception, e:
+				self.logger.error("ORA: Failed to fetch resultset")
+				self.logger.error("ORA: Additional info: %s" % e)
+				return -1
+			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, sys._getframe().f_code.co_name + ', ' + sql_query, str(value)))
+			return value
+		except Exception, e:
+			self.logger.error("ORA: Error in Oracle connection SID: %s" % sid)
+			self.logger.error("ORA: Additional info: %s" % e)
+			return -2
+
 class Postgres(object):
 
 	def __init__(self, instances):
@@ -1550,6 +1602,21 @@ class ConnectionHandler:
 						time.sleep(5)
 						oracle.reconnect(data)
 						value = oracle.sgastat(data)
+						if value != -2:
+							value = str(value)
+				else:
+					value = str(value)
+			elif item.split('.')[1] == 'query':
+				value = oracle.query(data)
+				if value == -1:
+					value = "ZBX_NOTSUPPORTED"
+				elif value == -2:
+					oracle.logger.error("ORA: Lost connection. Trying to reconnect" % value)
+					while value == -2:
+						oracle.logger.info("ORA reconnect: sleep 5 seconds...")
+						time.sleep(5)
+						oracle.reconnect(data)
+						value = oracle.query(data)
 						if value != -2:
 							value = str(value)
 				else:
