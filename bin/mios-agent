@@ -641,8 +641,8 @@ class Oracle(object):
 				t.cancel()
 				self.logger.error("ORA: Failed to execute query: %s" % action)
 				self.logger.error("ORA: Additional info: %s" % e)
-				ORA_error = e.split(':')[0]
-				if ORA_error == 'ORA-03113': #Not connected to Oracle
+				ORA_error, = e.args
+				if ORA_error.message.split(':')[0] == 'ORA-03113' or ORA_error.message.split(':')[0] == 'ORA-03114': #Connection lost or Not connected to Oracle
 					return -2 #Forces parent to reconnect
 				else:
 					return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
@@ -678,8 +678,8 @@ class Oracle(object):
 				t.cancel()
 				self.logger.error("ORA: Failed to execute query: %s" % action)
 				self.logger.error("ORA: Additional info: %s" % e)
-				ORA_error = e.split(':')[0]
-				if ORA_error == 'ORA-03113' or ORA_error == 'ORA-03114': #Not connected to Oracle
+				ORA_error, = e.args
+				if ORA_error.message.split(':')[0] == 'ORA-03113' or ORA_error.message.split(':')[0] == 'ORA-03114': #Connection lost or Not connected to Oracle
 					return -2 #Forces parent to reconnect
 				else:
 					return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
@@ -736,8 +736,8 @@ class Oracle(object):
 					t.cancel()
 					self.logger.error("ORA: Failed to execute query: %s" % action)
 					self.logger.error("ORA: Additional info: %s" % e)
-					ORA_error = e.split(':')[0]
-					if ORA_error == 'ORA-03113': #Not connected to Oracle
+					ORA_error, = e.args
+					if ORA_error.message.split(':')[0] == 'ORA-03113' or ORA_error.message.split(':')[0] == 'ORA-03114': #Connection lost or Not connected to Oracle
 						return -2 #Forces parent to reconnect
 					else:
 						return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
@@ -753,7 +753,12 @@ class Oracle(object):
 			else:
 				self.logger.debug("Last updates is less then %s seconds ago, so NOT fetching new results but using cache" % self.min_interval)
 				self.logger.debug("System events cache: %s" % self.system_events[indx])
-			value = self.system_events[indx][fields[1]]
+			try:
+				value = self.system_events[indx][fields[1]]
+			except Exception, e:
+				self.logger.error("Failed to retrieve value (not available in resultset)")
+				self.logger.error("Additional info: %s" % e)
+				return -1
 			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, sys._getframe().f_code.co_name + '.' + fields[1], str(value)))
 			return value
 		except Exception, e:
@@ -798,8 +803,8 @@ class Oracle(object):
 					t.cancel()
 					self.logger.error("ORA: Failed to execute query: %s" % action)
 					self.logger.error("ORA: Additional info: %s" % e)
-					ORA_error = e.split(':')[0]
-					if ORA_error == 'ORA-03113': #Not connected to Oracle
+					ORA_error, = e.args
+					if ORA_error.message.split(':')[0] == 'ORA-03113' or ORA_error.message.split(':')[0] == 'ORA-03114': #Connection lost or Not connected to Oracle
 						return -2 #Forces parent to reconnect
 					else:
 						return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
@@ -860,8 +865,8 @@ class Oracle(object):
 					t.cancel()
 					self.logger.error("ORA: Failed to execute query: %s" % action)
 					self.logger.error("ORA: Additional info: %s" % e)
-					ORA_error = e.split(':')[0]
-					if ORA_error == 'ORA-03113': #Not connected to Oracle
+					ORA_error, = e.args
+					if ORA_error.message.split(':')[0] == 'ORA-03113' or ORA_error.message.split(':')[0] == 'ORA-03114': #Connection lost or Not connected to Oracle
 						return -2 #Forces parent to reconnect
 					else:
 						return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
@@ -920,7 +925,7 @@ class Oracle(object):
 				self.logger.error("ORA: Failed to execute query: %s" % sql_query)
 				self.logger.error("ORA: Additional info: %s" % e)
 				ORA_error, = e.args
-				if ORA_error.message.split(':')[0] == 'ORA-03113': #Not connected to Oracle
+				if ORA_error.message.split(':')[0] == 'ORA-03113' or ORA_error.message.split(':')[0] == 'ORA-03114': #Connection lost or Not connected to Oracle
 					return -2 #Forces parent to reconnect
 				else:
 					return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
@@ -1483,7 +1488,7 @@ class ConnectionHandler:
 				oracle.logger.debug("DISCOVER TABLESPACES")
 				sid = arguments
 				rows = oracle.execute(sid, "select tablespace_name from dba_tablespaces where contents = 'PERMANENT'")
-				if rows == -1:
+				if rows == -1 or rows == []:
 					value = "ZBX_NOTSUPPORTED"
 				else:
 					value = '{ "data":['
@@ -1497,7 +1502,7 @@ class ConnectionHandler:
 				oracle.logger.debug("DISCOVER ASM DISKGROUPS")
 				sid = arguments
 				rows = oracle.execute(sid, "select name from v$asm_diskgroup")
-				if rows == -1:
+				if rows == -1 or rows == []:
 					value = "ZBX_NOTSUPPORTED"
 				else:
 					value = '{ "data":['
@@ -1511,7 +1516,7 @@ class ConnectionHandler:
 				oracle.logger.debug("DISCOVER ASM DISKS")
 				sid = arguments
 				rows = oracle.execute(sid, "select label from v$asm_disk")
-				if rows == -1:
+				if rows == -1 or rows == []:
 					value = "ZBX_NOTSUPPORTED"
 				else:
 					value = '{ "data":['
@@ -1525,7 +1530,7 @@ class ConnectionHandler:
 				oracle.logger.debug("DISCOVER QUEUES")
 				sid = arguments
 				rows = oracle.execute(sid, "select owner || '_' || name from dba_queues where dba_queues.owner not like '%SYS%' and queue_type = 'NORMAL_QUEUE'")
-				if rows == -1:
+				if rows == -1 or rows == []:
 					value = "ZBX_NOTSUPPORTED"
 				else:
 					value = '{ "data":['
@@ -1539,7 +1544,7 @@ class ConnectionHandler:
 				oracle.logger.debug("DISCOVER TEMPSPACES")
 				sid = arguments
 				rows = oracle.execute(sid, "select tablespace_name from dba_tablespaces where contents = 'TEMPORARY'")
-				if rows == -1:
+				if rows == -1 or rows == []:
 					value = "ZBX_NOTSUPPORTED"
 				else:
 					value = '{ "data":['
