@@ -34,11 +34,15 @@ cp /opt/mios/mios-agent/conf/logging.conf %{buildroot}/opt/mios/mios-agent/conf/
 cp /opt/mios/mios-agent/conf/mios-agent.conf %{buildroot}/opt/mios/mios-agent/conf/
 cp /opt/mios/mios-agent/init.d/mios-agent %{buildroot}/opt/mios/mios-agent/init.d/
 cp /opt/mios/mios-agent/lib/daemon.pyc %{buildroot}/opt/mios/mios-agent/lib/
-cp /opt/mios/mios-agent/lib/cx_Oracle.so %{buildroot}/opt/mios/mios-agent/lib/
+cp /opt/mios/mios-agent/lib/cx_Oracle_el5.so %{buildroot}/opt/mios/mios-agent/lib/
+cp /opt/mios/mios-agent/lib/cx_Oracle_el6.so %{buildroot}/opt/mios/mios-agent/lib/
+cp /opt/mios/mios-agent/lib/cx_Oracle_el7.so %{buildroot}/opt/mios/mios-agent/lib/
 cp /opt/mios/mios-agent/lib/cloghandler.pyc %{buildroot}/opt/mios/mios-agent/lib/
 cp /opt/mios/mios-agent/lib/portalocker.pyc %{buildroot}/opt/mios/mios-agent/lib/
 cp /opt/mios/mios-agent/probes/* %{buildroot}/opt/mios/mios-agent/probes/
 cp /usr/local/bin/magentlog %{buildroot}/usr/local/bin/
+cp /opt/mios/mios-agent/lib/simplejson/* %{buildroot}/opt/mios/mios-agent/lib/simplejson/
+cp /opt/mios/mios-agent/lib/psycopg2/* %{buildroot}/opt/mios/mios-agent/lib/psycopg2/
 
 %clean
 rm -rf %{buildroot}
@@ -50,11 +54,15 @@ rm -rf %{buildroot}
 %config(noreplace) /opt/mios/mios-agent/conf/mios-agent.conf
 /opt/mios/mios-agent/init.d/mios-agent
 /opt/mios/mios-agent/lib/daemon.pyc
-/opt/mios/mios-agent/lib/cx_Oracle.so
+/opt/mios/mios-agent/lib/cx_Oracle_el5.so
+/opt/mios/mios-agent/lib/cx_Oracle_el6.so
+/opt/mios/mios-agent/lib/cx_Oracle_el7.so
 /opt/mios/mios-agent/lib/cloghandler.pyc
 /opt/mios/mios-agent/lib/portalocker.pyc
 /opt/mios/mios-agent/probes/*
 /usr/local/bin/magentlog
+/opt/mios/mios-agent/lib/simplejson/*
+/opt/mios/mios-agent/lib/psycopg2/*
 
 %post
 ln -s /opt/mios/mios-agent/init.d/mios-agent /etc/init.d/mios-agent
@@ -101,3 +109,5 @@ rm -f /usr/local/bin/magentlog
 %changelog
 * Tue Oct 08 2013 Vermont 24-7 <support@vermont24-7.com> %{version}-%{release}
 - Initial RPM release
+* Thu Sep 17 2015 Vermont 24-7 <support@vermont24-7.com> %{version}-%{release}
+- Added additional library's
