@@ -9,7 +9,8 @@ URL:		http://www.vermont24-7.com
 
 #Requires:	python-json
 Requires(pre):	shadow-utils
-BuildRoot:	%{_topdir}/BUILD/%{name}-%{version}-%{release}-root
+BuildRoot:	%{_topdir}/BUILD/%{name}-%{version}
+%define _rpmfilename %%{NAME}-%%{VERSION}.%%{ARCH}.rpm
 
 %description
 This python program is a proxy between the Zabbix server and Zabbix agent. It provides improved connectivity to
@@ -26,7 +27,8 @@ Oracle databases and Postgres databases.
 mkdir -p %{buildroot}/opt/mios/mios-agent/bin/
 mkdir -p %{buildroot}/opt/mios/mios-agent/conf/
 mkdir -p %{buildroot}/opt/mios/mios-agent/init.d/
-mkdir -p %{buildroot}/opt/mios/mios-agent/lib/
+mkdir -p %{buildroot}/opt/mios/mios-agent/lib/psycopg2/
+mkdir -p %{buildroot}/opt/mios/mios-agent/lib/simplejson/
 mkdir -p %{buildroot}/opt/mios/mios-agent/probes/
 mkdir -p %{buildroot}/usr/local/bin/
 cp /opt/mios/mios-agent/bin/mios-agent %{buildroot}/opt/mios/mios-agent/bin/
@@ -107,7 +109,7 @@ fi
 rm -f /usr/local/bin/magentlog
 
 %changelog
-* Tue Oct 08 2013 Vermont 24-7 <support@vermont24-7.com> %{version}-%{release}
-- Initial RPM release
-* Thu Sep 17 2015 Vermont 24-7 <support@vermont24-7.com> %{version}-%{release}
+* Thu Sep 17 2015 Vermont 24-7 <support@vermont24-7.com> 4.2
 - Added additional library's
+* Tue Oct 08 2013 Vermont 24-7 <support@vermont24-7.com> 1.0
+- Initial RPM release
