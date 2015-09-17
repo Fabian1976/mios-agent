@@ -32,8 +32,7 @@ PostgreSQL:
 MongoDB:
 - Still very limited and still in progess. Not usable yet and no template available yet
 
-It has branches for el5 (CentOS or RedHat 5, python 2.4) and el6 (CentOS or RedHat 6, python 2.6).
-Both branches will be merged to 1 branch in a future release.
+This version works on CentOS or Redhat 5, python 2.4 and Centos or Redhat 6, python 2.6.
 
 ##Installation
 There are several ways to install this. Install it on the DB node where a zabbix-agent is allready present.
