@@ -2086,6 +2086,7 @@ if __name__ == "__main__":
 		if 'start' == sys.argv[1]:
 			daemon.start()
 		elif 'stop' == sys.argv[1]:
+			os.unlink('%s/lib/cx_Oracle.so' % magent_home)
 			daemon.stop()
 		elif 'restart' == sys.argv[1]:
 			daemon.restart()
