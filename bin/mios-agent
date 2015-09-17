@@ -2086,7 +2086,10 @@ if __name__ == "__main__":
 		if 'start' == sys.argv[1]:
 			daemon.start()
 		elif 'stop' == sys.argv[1]:
-			os.unlink('%s/lib/cx_Oracle.so' % magent_home)
+			try:
+				os.unlink('%s/lib/cx_Oracle.so' % magent_home)
+			except: #Symlink apparently got removed outside of the agent. Should not happen, but don't crash. Just continue
+				pass
 			daemon.stop()
 		elif 'restart' == sys.argv[1]:
 			daemon.restart()
