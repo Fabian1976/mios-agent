@@ -46,6 +46,8 @@
 __author__    = "Jan van de Beek, Fabian van der Hoeven"
 __copyright__ = "Copyright (C) 2013 Vermont 24x7"
 __version__   = "4.1"
+supportedOS   = ['redhat', 'centos']
+supportedDIST = ['5', '6', '7']
 
 import sys, os, time, getopt
 # Add mios-agent LIB to path
@@ -1986,6 +1988,19 @@ def checkMAgentEnvironment():
 		magent_home = os.environ['MAGENT_HOME']
 	except:
 		rootLogger.warning("Environment variabele MAGENT_HOME not set. Assuming default of: /opt/mios/mios-agent")
+	osname,distro,osname2 = platform.dist()
+	distroNR = distro[0]
+	if osname in supportedOS and distroNR in supportedDIST:
+		rootLogger.info("OS: el%s detected and supported." % distroNR)
+		try:
+			#Create symlink so that correct version of cx_Oracle is used
+			os.symlink('%s/lib/cx_Oracle_el%s.so' % (magent_home, distroNR), '%s/lib/cx_Oracle.so' % magent_home)
+		except: #Symlink allready exists
+			pass
+	else:
+		rootLogger.error("Unsupported OS: %s, %s" % (osname, distro))
+		print "Unsupported OS: %s, %s" % (osname, distro)
+		sys.exit(1)
 
 def checkOracleEnvironment():
 	try:
