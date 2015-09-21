@@ -1,0 +1,2 @@
+type=oracle
+select num_rows from dba_tables where owner = 'MIOS_ARG_2' and table_name = 'MIOS_ARG_3'

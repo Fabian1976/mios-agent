@@ -1,0 +1,2 @@
+type=oracle
+select sum(reloads) / sum(pins) from v$librarycache

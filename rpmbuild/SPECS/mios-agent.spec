@@ -1,5 +1,5 @@
 Name:		mios-agent
-Version:        4.1
+Version:        4.2
 Release:	1%{?dist}
 Group:		None
 Summary:	A python program which is used for Zabbix monitoring software with improved capability in stead of zabbix-agent
@@ -9,7 +9,8 @@ URL:		http://www.vermont24-7.com
 
 #Requires:	python-json
 Requires(pre):	shadow-utils
-BuildRoot:	%{_topdir}/BUILD/%{name}-%{version}-%{release}-root
+BuildRoot:	%{_topdir}/BUILD/%{name}-%{version}
+%define _rpmfilename %%{NAME}-%%{VERSION}.%%{ARCH}.rpm
 
 %description
 This python program is a proxy between the Zabbix server and Zabbix agent. It provides improved connectivity to
@@ -26,19 +27,24 @@ Oracle databases and Postgres databases.
 mkdir -p %{buildroot}/opt/mios/mios-agent/bin/
 mkdir -p %{buildroot}/opt/mios/mios-agent/conf/
 mkdir -p %{buildroot}/opt/mios/mios-agent/init.d/
-mkdir -p %{buildroot}/opt/mios/mios-agent/lib/
+mkdir -p %{buildroot}/opt/mios/mios-agent/lib/psycopg2/
+mkdir -p %{buildroot}/opt/mios/mios-agent/lib/simplejson/
 mkdir -p %{buildroot}/opt/mios/mios-agent/probes/
 mkdir -p %{buildroot}/usr/local/bin/
 cp /opt/mios/mios-agent/bin/mios-agent %{buildroot}/opt/mios/mios-agent/bin/
 cp /opt/mios/mios-agent/conf/logging.conf %{buildroot}/opt/mios/mios-agent/conf/
 cp /opt/mios/mios-agent/conf/mios-agent.conf %{buildroot}/opt/mios/mios-agent/conf/
 cp /opt/mios/mios-agent/init.d/mios-agent %{buildroot}/opt/mios/mios-agent/init.d/
-cp /opt/mios/mios-agent/lib/daemon.pyc %{buildroot}/opt/mios/mios-agent/lib/
-cp /opt/mios/mios-agent/lib/cx_Oracle.so %{buildroot}/opt/mios/mios-agent/lib/
-cp /opt/mios/mios-agent/lib/cloghandler.pyc %{buildroot}/opt/mios/mios-agent/lib/
-cp /opt/mios/mios-agent/lib/portalocker.pyc %{buildroot}/opt/mios/mios-agent/lib/
+cp /opt/mios/mios-agent/lib/daemon.py %{buildroot}/opt/mios/mios-agent/lib/
+cp /opt/mios/mios-agent/lib/cx_Oracle_el5.so %{buildroot}/opt/mios/mios-agent/lib/
+cp /opt/mios/mios-agent/lib/cx_Oracle_el6.so %{buildroot}/opt/mios/mios-agent/lib/
+cp /opt/mios/mios-agent/lib/cx_Oracle_el7.so %{buildroot}/opt/mios/mios-agent/lib/
+cp /opt/mios/mios-agent/lib/cloghandler.py %{buildroot}/opt/mios/mios-agent/lib/
+cp /opt/mios/mios-agent/lib/portalocker.py %{buildroot}/opt/mios/mios-agent/lib/
 cp /opt/mios/mios-agent/probes/* %{buildroot}/opt/mios/mios-agent/probes/
 cp /usr/local/bin/magentlog %{buildroot}/usr/local/bin/
+cp /opt/mios/mios-agent/lib/simplejson/* %{buildroot}/opt/mios/mios-agent/lib/simplejson/
+cp /opt/mios/mios-agent/lib/psycopg2/* %{buildroot}/opt/mios/mios-agent/lib/psycopg2/
 
 %clean
 rm -rf %{buildroot}
@@ -49,12 +55,16 @@ rm -rf %{buildroot}
 %config(noreplace) /opt/mios/mios-agent/conf/logging.conf
 %config(noreplace) /opt/mios/mios-agent/conf/mios-agent.conf
 /opt/mios/mios-agent/init.d/mios-agent
-/opt/mios/mios-agent/lib/daemon.pyc
-/opt/mios/mios-agent/lib/cx_Oracle.so
-/opt/mios/mios-agent/lib/cloghandler.pyc
-/opt/mios/mios-agent/lib/portalocker.pyc
+/opt/mios/mios-agent/lib/daemon.py
+/opt/mios/mios-agent/lib/cx_Oracle_el5.so
+/opt/mios/mios-agent/lib/cx_Oracle_el6.so
+/opt/mios/mios-agent/lib/cx_Oracle_el7.so
+/opt/mios/mios-agent/lib/cloghandler.py
+/opt/mios/mios-agent/lib/portalocker.py
 /opt/mios/mios-agent/probes/*
 /usr/local/bin/magentlog
+/opt/mios/mios-agent/lib/simplejson/*
+/opt/mios/mios-agent/lib/psycopg2/*
 
 %post
 ln -s /opt/mios/mios-agent/init.d/mios-agent /etc/init.d/mios-agent
@@ -99,5 +109,7 @@ fi
 rm -f /usr/local/bin/magentlog
 
 %changelog
-* Tue Oct 08 2013 Vermont 24-7 <support@vermont24-7.com> %{version}-%{release}
+* Thu Sep 17 2015 Vermont 24-7 <support@vermont24-7.com> 4.2
+- Added additional library's
+* Tue Oct 08 2013 Vermont 24-7 <support@vermont24-7.com> 1.0
 - Initial RPM release

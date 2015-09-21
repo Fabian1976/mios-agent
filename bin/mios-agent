@@ -45,7 +45,9 @@
 
 __author__    = "Jan van de Beek, Fabian van der Hoeven"
 __copyright__ = "Copyright (C) 2013 Vermont 24x7"
-__version__   = "4.1"
+__version__   = "4.2"
+supportedOS   = ['redhat', 'centos']
+supportedDIST = ['5', '6', '7']
 
 import sys, os, time, getopt
 # Add mios-agent LIB to path
@@ -66,9 +68,9 @@ import getopt
 import logging, logging.config
 import cloghandler
 try:
-        import json
+	import json
 except ImportError:
-        import simplejson as json
+	import simplejson as json
 import threading
 try:
 	from daemon import Daemon
@@ -81,37 +83,33 @@ from compiler import parse
 from compiler.ast import *
 
 def literal_eval(node_or_string):
-     """
-     Safely evaluate an expression node or a string containing a Python
-     expression.  The string or node provided may only consist of the  
-following
-     Python literal structures: strings, numbers, tuples, lists, dicts,  
-booleans,
-     and None.
-     """
-     _safe_names = {'None': None, 'True': True, 'False': False}
-     if isinstance(node_or_string, basestring):
-         node_or_string = parse(node_or_string, mode='eval')
-     if isinstance(node_or_string, Expression):
-         node_or_string = node_or_string.node
-     def _convert(node):
-         if isinstance(node, Const) and isinstance(node.value,
-                 (basestring, int, float, long, complex)):
-              return node.value
-         elif isinstance(node, Tuple):
-             return tuple(map(_convert, node.nodes))
-         elif isinstance(node, List):
-             return list(map(_convert, node.nodes))
-         elif isinstance(node, Dict):
-             return dict((_convert(k), _convert(v)) for k, v
-                         in node.items)
-         elif isinstance(node, Name):
-             if node.name in _safe_names:
-                 return _safe_names[node.name]
-         elif isinstance(node, UnarySub):
-             return -_convert(node.expr)
-         raise ValueError('malformed string')
-     return _convert(node_or_string)
+	"""
+	Safely evaluate an expression node or a string containing a Python
+	expression.  The string or node provided may only consist of the following
+	Python literal structures: strings, numbers, tuples, lists, dicts,  
+	booleans and None.
+	"""
+	_safe_names = {'None': None, 'True': True, 'False': False}
+	if isinstance(node_or_string, basestring):
+		node_or_string = parse(node_or_string, mode='eval')
+	if isinstance(node_or_string, Expression):
+		node_or_string = node_or_string.node
+	def _convert(node):
+		if isinstance(node, Const) and isinstance(node.value, (basestring, int, float, long, complex)):
+			return node.value
+		elif isinstance(node, Tuple):
+			return tuple(map(_convert, node.nodes))
+		elif isinstance(node, List):
+			return list(map(_convert, node.nodes))
+		elif isinstance(node, Dict):
+			return dict((_convert(k), _convert(v)) for k, v in node.items)
+		elif isinstance(node, Name):
+			if node.name in _safe_names:
+				return _safe_names[node.name]
+		elif isinstance(node, UnarySub):
+			return -_convert(node.expr)
+		raise ValueError('malformed string')
+	return _convert(node_or_string)
 
 oracle = None
 probes = None
@@ -125,19 +123,19 @@ class Config:
 
 	def __init__(self, conf_file):
 
-		self.config          = None
-		self.listen_ip       = ''
-		self.listen_port     = 0
-		self.hostname        = ''
-		self.domain          = ''
-		self.fqdn            = getfqdn()
-		self.zabbix_agent    = ''
-		self.zabbix_port     = 0
-		self.oracle_sids     = {}
-		self.oracle_oa_dir   = ''
-		self.postgres_dbs    = {}
-		self.mongo_db        = {}
-		self.magent_home     = magent_home
+		self.config        = None
+		self.listen_ip     = ''
+		self.listen_port   = 0
+		self.hostname      = ''
+		self.domain        = ''
+		self.fqdn          = getfqdn()
+		self.zabbix_agent  = ''
+		self.zabbix_port   = 0
+		self.oracle_sids   = {}
+		self.oracle_oa_dir = ''
+		self.postgres_dbs  = {}
+		self.mongo_db      = {}
+		self.magent_home   = magent_home
 
 		self.conf_file = conf_file
 		if not os.path.exists(self.conf_file):
@@ -150,42 +148,42 @@ class Config:
 	def parse(self):
 
 		try:
-			self.listen_ip      = self.config.get('common', 'listen_ip')
+			self.listen_ip = self.config.get('common', 'listen_ip')
 		except:
-			self.listen_ip      = 'localhost'
+			self.listen_ip = 'localhost'
 
 		try:
-			self.listen_port    = int(self.config.get('common', 'listen_port'))
+			self.listen_port = int(self.config.get('common', 'listen_port'))
 		except:
-			self.listen_port    = 10050
+			self.listen_port = 10050
 
 		try:
-			self.hostname       = self.config.get('common', 'hostname')
+			self.hostname = self.config.get('common', 'hostname')
 		except:
-			self.hostname       = platform.node()
+			self.hostname = platform.node()
 
 		try:
-			self.domain         = self.config.get('common', 'domain')
+			self.domain = self.config.get('common', 'domain')
 		except:
-			self.domain         = '.'.join(getfqdn().split('.')[1:])
+			self.domain = '.'.join(getfqdn().split('.')[1:])
 
 		try:
-			self.zabbix_agent   = self.config.get('common', 'zabbix_agent')
+			self.zabbix_agent = self.config.get('common', 'zabbix_agent')
 		except:
-			self.zabbix_agent   = 'localhost'
+			self.zabbix_agent = 'localhost'
 
 		try:
-			self.zabbix_port    = self.config.getint('common', 'zabbix_port')
+			self.zabbix_port = self.config.getint('common', 'zabbix_port')
 		except:
-			self.zabbix_port    = 10051
+			self.zabbix_port = 10051
 
 		print "[common]"
-		print "INI file             : %s" % self.conf_file
-		print "Listen on ip address : %s" % self.listen_ip
-		print "Listen on port       : %d" % self.listen_port
-		print "Hostname             : %s" % self.hostname
-		print "Zabbix agent ip      : %s" % self.zabbix_agent
-		print "Zabbix agent port    : %s" % self.zabbix_port
+		print "INI file            : %s" % self.conf_file
+		print "Listen on ip address: %s" % self.listen_ip
+		print "Listen on port      : %d" % self.listen_port
+		print "Hostname            : %s" % self.hostname
+		print "Zabbix agent ip     : %s" % self.zabbix_agent
+		print "Zabbix agent port   : %s" % self.zabbix_port
 
 		sections = self.config.sections()
 		for section in sections:
@@ -194,51 +192,51 @@ class Config:
 			dbtype = section.split('.')[0]
 			if dbtype == 'oracle':
 				try:
-					sid                     = section.split('.')[1]
+					sid = section.split('.')[1]
 				except:
 					print "No SID specified. Please review example section in config file"
 					exit(1)
 				if sid == '':
 					print "No SID specified. Please review example section in config file"
 					exit(1)
-				user                    = self.config.get(section, 'user')
-				password                = self.config.get(section, 'password')
-				host			= self.config.get(section, 'host')
-				port			= self.config.get(section, 'port')
-				service			= self.config.get(section, 'service')
-				self.oracle_sids[sid]   = (user, password, host, port, service)
-				self.oracle_oa_dir      = self.config.get(section, 'oa_dir')
+				user                  = self.config.get(section, 'user')
+				password              = self.config.get(section, 'password')
+				host                  = self.config.get(section, 'host')
+				port                  = self.config.get(section, 'port')
+				service               = self.config.get(section, 'service')
+				self.oracle_sids[sid] = (user, password, host, port, service)
+				self.oracle_oa_dir    = self.config.get(section, 'oa_dir')
 				global OA_DIR
-				OA_DIR                  = self.oracle_oa_dir
+				OA_DIR		      = self.oracle_oa_dir
 				print ""
 				print section
-				print "Oracle SID		: %s" % sid
-				print "Oracle user		: %s" % user
-				print "Oracle password		: %s" % password
-				print "Oracle OA_DIR		: %s" % self.oracle_oa_dir
+				print "Oracle SID     : %s" % sid
+				print "Oracle user    : %s" % user
+				print "Oracle password: %s" % password
+				print "Oracle OA_DIR  : %s" % self.oracle_oa_dir
 			if dbtype == 'postgres':
 				try:
-					dbname			= section.split('.')[1]
+					dbname = section.split('.')[1]
 				except:
 					print "No DBNAME specified. Please review example section in config file"
 					exit(1)
 				try:
-					host			= self.config.get(section, 'host')
+					host = self.config.get(section, 'host')
 				except:
 					print "No host specified for db: %s. Please review example section in config file" % dbname
 					exit(1)
 				try:
-					port			= self.config.get(section, 'port')
+					port = self.config.get(section, 'port')
 				except:
 					print "No port specified for db: %s. Please review example section in config file" % dbname
 					exit(1)
 				try:
-					user			= self.config.get(section, 'user')
+					user = self.config.get(section, 'user')
 				except:
 					print "No user specified for db: %s. Please review example section in config file" % dbname
 					exit(1)
 				try:
-					password		= self.config.get(section, 'password')
+					password = self.config.get(section, 'password')
 				except:
 					print "No password specified for db: %s. Please review example section in config file" % dbname
 					exit(1)
@@ -252,32 +250,32 @@ class Config:
 				print "Postgres password	: %s" % password
 			if dbtype == 'mongo':
 				try:
-					host			= self.config.get(section, 'host')
+					host = self.config.get(section, 'host')
 				except:
 					print "No host specified for mongodb. Please review example section in config file. Assuming default of localhost"
-					host			= 'localhost'
+					host = 'localhost'
 				try:
-					port			= self.config.get(section, 'port')
+					port = self.config.get(section, 'port')
 				except:
 					print "No port specified for mongodb. Please review example section in config file. Assuming default of 27017"
-					port			= 27017
+					port = 27017
 				try:
-					user			= self.config.get(section, 'user')
+					user = self.config.get(section, 'user')
 				except:
 					print "No user specified for mongodb. Please review example section in config file. Assuming no user is needed"
-					user			= ''
-					password		= ''
+					user = ''
+					password = ''
 				if user <> '':
 					try:
-						password	= self.config.get(section, 'password')
+						password = self.config.get(section, 'password')
 					except:
 						print "No password specified for mongodb (user: %s). Please review example section in config file"
 						exit(1)
 				try:
-					binary			= self.config.get(section, 'bin')
+					binary = self.config.get(section, 'bin')
 				except:
 					print "No binary specified for mongodb. Please review example section in config file. Trying to find executable in default location"
-					binary			= '/usr/bin/mongo'
+					binary = '/usr/bin/mongo'
 					if not os.path.exists(binary):
 						print "Binary not found in default location (/usr/bin). Please add it to the config"
 						exit(1)
@@ -289,11 +287,11 @@ class Config:
 				self.mongo_db[section] = (connection_string)
 				print ""
 				print section
-				print "MongoDB host		: %s" % host
-				print "MongoDB port		: %s" % port
-				print "MongoDB user		: %s" % user
-				print "MongoDB password		: %s" % password
-				print "MongoDB binary		: %s" % binary
+				print "MongoDB host    : %s" % host
+				print "MongoDB port    : %s" % port
+				print "MongoDB user    : %s" % user
+				print "MongoDB password: %s" % password
+				print "MongoDB binary  : %s" % binary
 			if dbtype not in ('oracle', 'postgres', 'mongo'):
 				print "Unsupported database type: %s" % dbtype
 
@@ -318,12 +316,12 @@ class Config:
 				if dbtype == 'oracle':
 					aantal_sids += 1
 					try:
-						sid = section.split('.')[1]
-						user     = new_conf.get(section, 'user')
-						password = new_conf.get(section, 'password')
-						host     = new_conf.get(section, 'host')
-						port     = new_conf.get(section, 'port')
-						service  = new_conf.get(section, 'service')
+						sid              = section.split('.')[1]
+						user             = new_conf.get(section, 'user')
+						password         = new_conf.get(section, 'password')
+						host             = new_conf.get(section, 'host')
+						port             = new_conf.get(section, 'port')
+						service          = new_conf.get(section, 'service')
 						oracle_sids[sid] = (user,password, host, port, service)
 					except:
 						rootLogger.error("SID (%s) not correctly specified in config file. Please review example section in config file" % section)
@@ -332,11 +330,11 @@ class Config:
 				if dbtype == 'postgres':
 					aantal_dbs += 1
 					try:
-						db = section.split('.')[1]
-						host = new_conf.get(section, 'host')
-						port = new_conf.get(section, 'port')
-						user = new_conf.get(section, 'user')
-						password = new_conf.get(section, 'password')
+						db               = section.split('.')[1]
+						host             = new_conf.get(section, 'host')
+						port             = new_conf.get(section, 'port')
+						user             = new_conf.get(section, 'user')
+						password         = new_conf.get(section, 'password')
 						postgres_dbs[db] = (host, port, user, password)
 					except:
 						rootLogger.error("DB (%s) not correctly specified in config file. Please review example section in config file" % section)
@@ -434,18 +432,22 @@ class Oracle(object):
 
 	def __init__(self, instances):
 
-		self.oracle_support  = 0
-		self.connections     = []
-		self.cursor          = []
-		self.version         = []
-		self.user            = []
-		self.password        = []
-		self.host	     = []
-		self.port	     = []
-		self.service	     = []
-		self.sids            = []
-		self.instances       = instances
-		self.logger          = logging.getLogger(type(self).__name__)
+		self.oracle_support            = 0
+		self.min_interval              = 30
+		self.connections               = []
+		self.cursor                    = []
+		self.version                   = []
+		self.user                      = []
+		self.password                  = []
+		self.host                      = []
+		self.port                      = []
+		self.service                   = []
+		self.sids                      = []
+		self.instances                 = instances
+		self.system_events             = []
+		self.memory_dynamic_components = []
+		self.sgastats                  = []
+		self.logger                    = logging.getLogger(type(self).__name__)
 
 		try:
 			import cx_Oracle
@@ -491,6 +493,9 @@ class Oracle(object):
 			self.connections.append(None)
 			self.cursor.append(None)
 			self.version.append('')
+			self.system_events.append(None)
+			self.memory_dynamic_components.append(None)
+			self.sgastats.append(None)
 			indx = self.sids.index(instance)
 			self.connect(indx)
 
@@ -501,8 +506,11 @@ class Oracle(object):
 				self.connections[indx]  = self.cx_Oracle.connect(user="%s" % self.user[indx], password="%s" % self.password[indx], dsn="%s:%s/%s" % (self.host[indx], self.port[indx], self.service[indx]))
 				self.logger.info("Connection succesful (%s)" % self.sids[indx])
 				time.sleep(1)
-				self.cursor[indx]       = self.connections[indx].cursor()
-				self.version[indx]      = self.connections[indx].version
+				self.cursor[indx]                    = self.connections[indx].cursor()
+				self.version[indx]                   = self.connections[indx].version
+				self.system_events[indx]             = {'last_update': 0}
+				self.memory_dynamic_components[indx] = {'last_update': 0}
+				self.sgastats[indx]                  = {'last_update': 0}
 				self.logger.info("Connected to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
 			except Exception, e:
 				self.logger.critical("Unable to connect to Oracle (%s)" % self.sids[indx])
@@ -524,6 +532,9 @@ class Oracle(object):
 				self.connections.append(None)
 				self.cursor.append(None)
 				self.version.append('')
+				self.system_events.append(None)
+				self.memory_dynamic_components.append(None)
+				self.sgastats.append(None)
 				indx = self.sids.index(instance)
 				self.connect(indx)
 
@@ -548,6 +559,9 @@ class Oracle(object):
 		del self.service[indx]
 		del self.sids[indx]
 		del self.version[indx]
+		del self.system_events[indx]
+		del self.memory_dynamic_components[indx]
+		del self.sgastats[indx]
 		del config.oracle_sids[sid]
 
 	def reconnect(self, data):
@@ -558,8 +572,7 @@ class Oracle(object):
 		else:
 			self.logger.error("no oracle sid specified")
 			return None
-		arguments = arguments.replace(' ','')
-		arguments = arguments.rstrip()
+		arguments = arguments.strip()
 		sid = ''
 		if  data.find(',') > 0:
 			fields = arguments.split(',')
@@ -580,8 +593,8 @@ class Oracle(object):
 		except Exception, e:
 			self.logger.critical("Unable to connect to Oracle")
 			self.logger.critical("ORA: Additional information: %s" % e)
-		self.cursor[indx]      = self.connections[indx].cursor()
-		self.version[indx]    = self.connections[indx].version
+		self.cursor[indx] = self.connections[indx].cursor()
+		self.version[indx] = self.connections[indx].version
 		self.logger.info("Connect to Oracle version %s SID: %s" % (self.version[indx], self.sids[indx]))
 
 	def get(self, data):
@@ -598,8 +611,7 @@ class Oracle(object):
 		else:
 			self.logger.error("no oracle sid specified")
 			return None
-		arguments = arguments.replace(' ','')
-		arguments = arguments.rstrip()
+		arguments = arguments.strip()
 		sid = ''
 		if  data.find(',') > 0:
 			fields = arguments.split(',')
@@ -611,6 +623,9 @@ class Oracle(object):
 		m = re.search('MIOS_ARG_2', action)
 		if m:
 			action = re.sub('MIOS_ARG_2', fields[1], action)
+		m = re.search('MIOS_ARG_3', action)
+		if m:
+			action = re.sub('MIOS_ARG_3', fields[2], action)
 
 		if not sid in self.sids:
 			self.logger.error("SID not found in list of SIDS from config file")
@@ -626,8 +641,8 @@ class Oracle(object):
 				t.cancel()
 				self.logger.error("ORA: Failed to execute query: %s" % action)
 				self.logger.error("ORA: Additional info: %s" % e)
-				ORA_error = e.split(':')[0]
-				if ORA_error == 'ORA-03113': #Not connected to Oracle
+				ORA_error, = e.args
+				if ORA_error.message.split(':')[0] == 'ORA-03113' or ORA_error.message.split(':')[0] == 'ORA-03114': #Connection lost or Not connected to Oracle
 					return -2 #Forces parent to reconnect
 				else:
 					return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
@@ -661,10 +676,10 @@ class Oracle(object):
 				self.cursor[indx].execute(query)
 			except Exception, e:
 				t.cancel()
-				self.logger.error("ORA: Failed to execute query: %s" % action)
+				self.logger.error("ORA: Failed to execute query: %s" % query)
 				self.logger.error("ORA: Additional info: %s" % e)
-				ORA_error = e.split(':')[0]
-				if ORA_error == 'ORA-03113' or ORA_error == 'ORA-03114': #Not connected to Oracle
+				ORA_error, = e.args
+				if ORA_error.message.split(':')[0] == 'ORA-03113' or ORA_error.message.split(':')[0] == 'ORA-03114': #Connection lost or Not connected to Oracle
 					return -2 #Forces parent to reconnect
 				else:
 					return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
@@ -680,6 +695,253 @@ class Oracle(object):
 			return value
 		except:
 			self.logger.error("Error in Oracle connection SID: %s" % sid)
+			return -2
+
+	def system_event(self, data):
+		action = "select wait_class, sum(time_waited_micro) from v$system_event group by wait_class \
+			union \
+			select 'CPU', sum(value) from v$sys_time_model where stat_name in ('background cpu time', 'DB CPU')"
+		fields=[]
+
+		if  data.find('[') > 0:
+			(item, arguments) = data.split('[')
+			arguments = arguments.replace(']','')
+		else:
+			self.logger.error("no oracle sid specified")
+			return None
+		arguments = arguments.rstrip()
+		sid = ''
+		if  data.find(',') > 0:
+			fields = arguments.split(',')
+			sid = fields[0].strip()
+			wait_class = fields[1].strip()
+		else:
+			#Only 1 field? Then send back NOTSUPPORTED
+			return -1
+
+		if not sid in self.sids:
+			self.logger.error("SID not found in list of SIDS from config file")
+			return -1
+
+		try:
+			indx = self.sids.index(sid)
+			now = int(time.time())
+			if now - self.system_events[indx]['last_update'] > self.min_interval:
+				self.logger.debug("Last update is longer then %s seconds ago so fetching new results" % self.min_interval)
+				t = threading.Timer(1, self.connections[indx].cancel)
+				t.start()
+				try:
+					self.cursor[indx].execute(action)
+				except Exception, e:
+					t.cancel()
+					self.logger.error("ORA: Failed to execute query: %s" % action)
+					self.logger.error("ORA: Additional info: %s" % e)
+					ORA_error, = e.args
+					if ORA_error.message.split(':')[0] == 'ORA-03113' or ORA_error.message.split(':')[0] == 'ORA-03114': #Connection lost or Not connected to Oracle
+						return -2 #Forces parent to reconnect
+					else:
+						return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
+				t.cancel()
+				try:
+					rows = dict(self.cursor[indx].fetchall())
+					self.system_events[indx] = rows
+					self.system_events[indx]['last_update'] = int(time.time())
+				except Exception, e:
+					self.logger.error("ORA: Failed to fetch result from resultset")
+					self.logger.error("ORA: Additional info: %s" % e)
+					return -1
+			else:
+				self.logger.debug("Last updates is less then %s seconds ago, so NOT fetching new results but using cache" % self.min_interval)
+				self.logger.debug("System events cache: %s" % self.system_events[indx])
+			try:
+				value = self.system_events[indx][wait_class]
+			except Exception, e:
+				self.logger.error("Failed to retrieve value (not available in resultset)")
+				self.logger.error("Additional info: %s" % e)
+				return -1
+			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, sys._getframe().f_code.co_name + '.' + wait_class, str(value)))
+			return value
+		except Exception, e:
+			self.logger.error("ORA: Error in Oracle connection SID: %s" % sid)
+			self.logger.error("ORA: Additional info: %s" % e)
+			return -2
+
+	def memory_dynamic_component(self, data):
+		action = "select component, current_size from v$memory_dynamic_components"
+		fields=[]
+
+		if  data.find('[') > 0:
+			(item, arguments) = data.split('[')
+			arguments = arguments.replace(']','')
+		else:
+			self.logger.error("no oracle sid specified")
+			return None
+		arguments = arguments.rstrip()
+		sid = ''
+		if  data.find(',') > 0:
+			fields = arguments.split(',')
+			sid = fields[0].strip()
+			component = fields[1].strip()
+		else:
+			#Only 1 field? Then send back NOTSUPPORTED
+			return -1
+
+		if not sid in self.sids:
+			self.logger.error("SID not found in list of SIDS from config file")
+			return -1
+
+		try:
+			indx = self.sids.index(sid)
+			now = int(time.time())
+			if now - self.memory_dynamic_components[indx]['last_update'] > self.min_interval:
+				self.logger.debug("Last update is longer then %s seconds ago so fetching new results" % self.min_interval)
+				t = threading.Timer(1, self.connections[indx].cancel)
+				t.start()
+				try:
+					self.cursor[indx].execute(action)
+				except Exception, e:
+					t.cancel()
+					self.logger.error("ORA: Failed to execute query: %s" % action)
+					self.logger.error("ORA: Additional info: %s" % e)
+					ORA_error, = e.args
+					if ORA_error.message.split(':')[0] == 'ORA-03113' or ORA_error.message.split(':')[0] == 'ORA-03114': #Connection lost or Not connected to Oracle
+						return -2 #Forces parent to reconnect
+					else:
+						return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
+				t.cancel()
+				try:
+					rows = dict(self.cursor[indx].fetchall())
+					self.memory_dynamic_components[indx] = rows
+					self.memory_dynamic_components[indx]['last_update'] = int(time.time())
+				except Exception, e:
+					self.logger.error("ORA: Failed to fetch result from resultset")
+					self.logger.error("ORA: Additional info: %s" % e)
+					return -1
+			else:
+				self.logger.debug("Last updates is less then %s seconds ago, so NOT fetching new results but using cache" % self.min_interval)
+				self.logger.debug("Memory dynamic components cache: %s" % self.memory_dynamic_components[indx])
+			value = self.memory_dynamic_components[indx][component]
+			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, sys._getframe().f_code.co_name + '.' + component, str(value)))
+			return value
+		except Exception, e:
+			self.logger.error("ORA: Error in Oracle connection SID: %s" % sid)
+			self.logger.error("ORA: Additional info: %s" % e)
+			return -2
+
+	def sgastat(self, data):
+		action = "select pool || '_' || name, bytes from v$sgastat"
+		fields=[]
+
+		if  data.find('[') > 0:
+			(item, arguments) = data.split('[')
+			arguments = arguments.replace(']','')
+		else:
+			self.logger.error("no oracle sid specified")
+			return None
+		arguments = arguments.rstrip()
+		sid = ''
+		if  data.find(',') != 2:
+			fields = arguments.split(',')
+			sid = fields[0].strip()
+			pool_name = fields[1].strip()
+			pool_component = fields[2].strip()
+		else:
+			#Not 3 fields? Then send back NOTSUPPORTED
+			return -1
+
+		if not sid in self.sids:
+			self.logger.error("SID not found in list of SIDS from config file")
+			return -1
+
+		try:
+			indx = self.sids.index(sid)
+			now = int(time.time())
+			if now - self.sgastats[indx]['last_update'] > self.min_interval:
+				self.logger.debug("Last update is longer then %s seconds ago so fetching new results" % self.min_interval)
+				t = threading.Timer(1, self.connections[indx].cancel)
+				t.start()
+				try:
+					self.cursor[indx].execute(action)
+				except Exception, e:
+					t.cancel()
+					self.logger.error("ORA: Failed to execute query: %s" % action)
+					self.logger.error("ORA: Additional info: %s" % e)
+					ORA_error, = e.args
+					if ORA_error.message.split(':')[0] == 'ORA-03113' or ORA_error.message.split(':')[0] == 'ORA-03114': #Connection lost or Not connected to Oracle
+						return -2 #Forces parent to reconnect
+					else:
+						return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
+				t.cancel()
+				try:
+					rows = dict(self.cursor[indx].fetchall())
+					self.sgastats[indx] = rows
+					self.sgastats[indx]['last_update'] = int(time.time())
+				except Exception, e:
+					self.logger.error("ORA: Failed to fetch result from resultset")
+					self.logger.error("ORA: Additional info: %s" % e)
+					return -1
+			else:
+				self.logger.debug("Last updates is less then %s seconds ago, so NOT fetching new results but using cache" % self.min_interval)
+				self.logger.debug("SGA stats cache: %s" % self.sgastats[indx])
+			value = self.sgastats[indx][pool_name+'_'+pool_component]
+			#value = 1
+			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, sys._getframe().f_code.co_name + '.' + pool_name+'_'+pool_component, str(value)))
+			return value
+		except Exception, e:
+			self.logger.error("ORA: Error in Oracle connection SID: %s" % sid)
+			self.logger.error("ORA: Additional info: %s" % e)
+			return -2
+
+	def query(self, data):
+		fields=[]
+
+		if  data.find('[') > 0:
+			(item, arguments) = data.split('[')
+			arguments = arguments.replace(']','')
+		else:
+			self.logger.error("no oracle sid specified")
+			return None
+		arguments = arguments.rstrip()
+		sid = ''
+		if  data.find(',') != 1:
+			fields = arguments.split(',')
+			sid = fields[0].strip()
+			sql_query = fields[1].strip()
+		else:
+			#Not 1 fields? Then send back NOTSUPPORTED
+			return -1
+
+		if not sid in self.sids:
+			self.logger.error("SID not found in list of SIDS from config file")
+			return -1
+
+		try:
+			indx = self.sids.index(sid)
+			t = threading.Timer(1, self.connections[indx].cancel)
+			t.start()
+			try:
+				self.cursor[indx].execute(sql_query)
+			except Exception, e:
+				t.cancel()
+				self.logger.error("ORA: Failed to execute query: %s" % sql_query)
+				self.logger.error("ORA: Additional info: %s" % e)
+				ORA_error, = e.args
+				if ORA_error.message.split(':')[0] == 'ORA-03113' or ORA_error.message.split(':')[0] == 'ORA-03114': #Connection lost or Not connected to Oracle
+					return -2 #Forces parent to reconnect
+				else:
+					return -1 #Sends back ZBX_NOTSUPPORTED to disable item temporarily
+			t.cancel()
+			try:
+				value = self.cursor[indx].fetchone()[0]
+			except Exception, e:
+				self.logger.error("ORA: Failed to fetch resultset")
+				self.logger.error("ORA: Additional info: %s" % e)
+				return -1
+			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, sys._getframe().f_code.co_name + ', ' + sql_query, str(value)))
+			return value
+		except Exception, e:
+			self.logger.error("ORA: Error in Oracle connection SID: %s" % sid)
+			self.logger.error("ORA: Additional info: %s" % e)
 			return -2
 
 class Postgres(object):
@@ -789,8 +1051,7 @@ class Postgres(object):
 		else:
 			self.logger.error("no postgres db specified")
 			return None
-		arguments = arguments.replace(' ','')
-		arguments = arguments.rstrip()
+		arguments = arguments.strip()
 		db = ''
 		if data.find(',') > 0:
 			fields = arguments.split(',')
@@ -805,9 +1066,9 @@ class Postgres(object):
 		print "indx", indx
 
 		self.connections[indx] = self.psycopg2.connect("host='%s' port='%s' dbname='%s' user='%s' password='%s'" % (self.host[indx], self.port[indx], self.dbs[indx], self.user[indx], self.password[indx]))
-		self.cursor[indx]      = self.connections[indx].cursor()
+		self.cursor[indx] = self.connections[indx].cursor()
 		self.cursor[indx].execute('select version()')
-		self.version[indx]     = self.cursor[indx].fetchone()
+		self.version[indx] = self.cursor[indx].fetchone()
 		self.logger.info("Connect to Postgres version %s DB: %s" % (self.version[indx], self.dbs[indx]))
 
 	def get(self, data):
@@ -824,8 +1085,7 @@ class Postgres(object):
 		else:
 			self.logger.error("no postgres db specified")
 			return None
-		arguments = arguments.replace(' ','')
-		arguments = arguments.rstrip()
+		arguments = arguments.strip()
 		db = ''
 		if  data.find(',') > 0:
 			fields = arguments.split(',')
@@ -893,7 +1153,7 @@ class NetStats(object):
 	def __init__(self):
 
 		self.net_devices  = []
-		self.stats        = {}
+		self.stats	  = {}
 		self.last_update  = []
 		self.min_interval = 30
 
@@ -966,7 +1226,6 @@ class Apache(object):
 		self.port         = '80'
 		self.url          = '/server-status?auto'
 		self.logger       = logging.getLogger(type(self).__name__)
-
 		self.last_update  = 0
 
 	def getMetrics(self):
@@ -974,7 +1233,7 @@ class Apache(object):
 		try:
 			ConnectionString = ("http://%s:%s%s") % (self.webserver, self.port, self.url)
 			self.logger.debug("Trying to get metrics using host: %s, port: %s" % (self.webserver, self.port))
-			conn = self.urllib.urlopen(ConnectionString)
+			conn        = self.urllib.urlopen(ConnectionString)
 			URLresponse = conn.read()
 			conn.close()
 			return URLresponse
@@ -994,18 +1253,18 @@ class Apache(object):
 		ApacheTempFile.close()
 		for Metric in Metrics:
 			if Metric[0] == 'Scoreboard':
-				self.stats['MaxClients'] = len(Metric[1])
-				self.stats['ClosingConnection'] = Metric[1].count('C')
-				self.stats['DNSLookup'] = Metric[1].count('D')
-				self.stats['GracefullyFinishing'] = Metric[1].count('G')
-				self.stats['IdleCleanupOfWorker'] = Metric[1].count('I')
-				self.stats['KeepAlive'] = Metric[1].count('K')
-				self.stats['Logging'] = Metric[1].count('L')
+				self.stats['MaxClients']                   = len(Metric[1])
+				self.stats['ClosingConnection']            = Metric[1].count('C')
+				self.stats['DNSLookup']                    = Metric[1].count('D')
+				self.stats['GracefullyFinishing']          = Metric[1].count('G')
+				self.stats['IdleCleanupOfWorker']          = Metric[1].count('I')
+				self.stats['KeepAlive']                    = Metric[1].count('K')
+				self.stats['Logging']                      = Metric[1].count('L')
 				self.stats['OpenSlotWithNoCurrentProcess'] = Metric[1].count('.')
-				self.stats['ReadingRequest'] = Metric[1].count('R')
-				self.stats['SendingReply'] = Metric[1].count('W')
-				self.stats['StartingUp'] = Metric[1].count('S')
-				self.stats['WaitingForConnection'] = Metric[1].count('_')
+				self.stats['ReadingRequest']               = Metric[1].count('R')
+				self.stats['SendingReply']                 = Metric[1].count('W')
+				self.stats['StartingUp']                   = Metric[1].count('S')
+				self.stats['WaitingForConnection']         = Metric[1].count('_')
 			else:
 				self.stats[Metric[0]] = Metric[1]
 		del Metrics
@@ -1139,7 +1398,7 @@ def flattenDict(d, pre = '', sep = '_'):
 class MongoDB(object):
 
 	def __init__(self):
-		self.metrics = {}
+		self.metrics      = {}
 		self.last_update  = []
 		self.min_interval = 30
 		self.last_update  = 0
@@ -1188,12 +1447,11 @@ class ConnectionHandler:
 
 	def __init__(self, _conn):
 
-		self.conn    = _conn
+		self.conn = _conn
 		self.counter = 1
 
 	def start(self):
 
-		mtype = "ZABBIX"
 		data = self.conn.recv(2048)
 		data_orig = data
 		rootLogger.info("received: %s" % data.rstrip("\n\r"))
@@ -1218,8 +1476,7 @@ class ConnectionHandler:
 		else:
 			item = data
 			item = item.rstrip()
-		arguments = arguments.replace(' ','')
-		arguments = arguments.rstrip()
+		arguments = arguments.strip()
 		fields = arguments.split(',')
 		top_item = item.split('.')[0]
 		rootLogger.debug("Item: %s" % item)
@@ -1229,7 +1486,7 @@ class ConnectionHandler:
 				oracle.logger.debug("DISCOVER TABLESPACES")
 				sid = arguments
 				rows = oracle.execute(sid, "select tablespace_name from dba_tablespaces where contents = 'PERMANENT'")
-				if rows == -1:
+				if rows == -1 or rows == []:
 					value = "ZBX_NOTSUPPORTED"
 				else:
 					value = '{ "data":['
@@ -1239,53 +1496,53 @@ class ConnectionHandler:
 					value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 					value += '] }'
 				oracle.logger.debug('value: %s' % value)
-                        elif item.split('.')[1] == 'asmdiskgroup_discover':
-                                oracle.logger.debug("DISCOVER ASM DISKGROUPS")
-                                sid = arguments
-                                rows = oracle.execute(sid, "select name from v$asm_diskgroup")
-                                if rows == -1:
-                                        value = "ZBX_NOTSUPPORTED"
-                                else:
-                                        value = '{ "data":['
-                                        for row in rows:
-                                                oracle.logger.debug('ASM diskgroup found: %s' % row)
-                                                value += '{ "{#ASMDGNAME}":"%s" },' % row
-                                        value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
-                                        value += '] }'
-                                oracle.logger.debug('value: %s' % value)
-                        elif item.split('.')[1] == 'asmdisk_discover':
-                                oracle.logger.debug("DISCOVER ASM DISKS")
-                                sid = arguments
-                                rows = oracle.execute(sid, "select label from v$asm_disk")
-                                if rows == -1:
-                                        value = "ZBX_NOTSUPPORTED"
-                                else:
-                                        value = '{ "data":['
-                                        for row in rows:
-                                                oracle.logger.debug('ASM disk found: %s' % row)
-                                                value += '{ "{#ASMDNAME}":"%s" },' % row
-                                        value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
-                                        value += '] }'
-                                oracle.logger.debug('value: %s' % value)
-                        elif item.split('.')[1] == 'aq_discover':
-                                oracle.logger.debug("DISCOVER QUEUES")
-                                sid = arguments
-                                rows = oracle.execute(sid, "select owner || '_' || name from dba_queues where dba_queues.owner not like '%SYS%'")
-                                if rows == -1:
-                                        value = "ZBX_NOTSUPPORTED"
-                                else:
-                                        value = '{ "data":['
-                                        for row in rows:
-                                                oracle.logger.debug('QUEUE found: %s' % row)
-                                                value += '{ "{#AQNAME}":"%s" },' % row
-                                        value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
-                                        value += '] }'
-                                oracle.logger.debug('value: %s' % value)
+			elif item.split('.')[1] == 'asmdiskgroup_discover':
+				oracle.logger.debug("DISCOVER ASM DISKGROUPS")
+				sid = arguments
+				rows = oracle.execute(sid, "select name from v$asm_diskgroup")
+				if rows == -1 or rows == []:
+					value = "ZBX_NOTSUPPORTED"
+				else:
+					value = '{ "data":['
+					for row in rows:
+						oracle.logger.debug('ASM diskgroup found: %s' % row)
+						value += '{ "{#ASMDGNAME}":"%s" },' % row
+					value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
+					value += '] }'
+				oracle.logger.debug('value: %s' % value)
+			elif item.split('.')[1] == 'asmdisk_discover':
+				oracle.logger.debug("DISCOVER ASM DISKS")
+				sid = arguments
+				rows = oracle.execute(sid, "select label from v$asm_disk")
+				if rows == -1 or rows == []:
+					value = "ZBX_NOTSUPPORTED"
+				else:
+					value = '{ "data":['
+					for row in rows:
+						oracle.logger.debug('ASM disk found: %s' % row)
+						value += '{ "{#ASMDNAME}":"%s" },' % row
+					value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
+					value += '] }'
+				oracle.logger.debug('value: %s' % value)
+			elif item.split('.')[1] == 'aq_discover':
+				oracle.logger.debug("DISCOVER QUEUES")
+				sid = arguments
+				rows = oracle.execute(sid, "select owner || '_' || name from dba_queues where dba_queues.owner not like '%SYS%' and queue_type = 'NORMAL_QUEUE'")
+				if rows == -1 or rows == []:
+					value = "ZBX_NOTSUPPORTED"
+				else:
+					value = '{ "data":['
+					for row in rows:
+						oracle.logger.debug('QUEUE found: %s' % row)
+						value += '{ "{#AQNAME}":"%s" },' % row
+					value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
+					value += '] }'
+				oracle.logger.debug('value: %s' % value)
 			elif item.split('.')[1] == 'tempspace_discover':
 				oracle.logger.debug("DISCOVER TEMPSPACES")
 				sid = arguments
 				rows = oracle.execute(sid, "select tablespace_name from dba_tablespaces where contents = 'TEMPORARY'")
-				if rows == -1:
+				if rows == -1 or rows == []:
 					value = "ZBX_NOTSUPPORTED"
 				else:
 					value = '{ "data":['
@@ -1307,6 +1564,84 @@ class ConnectionHandler:
 				value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 				value += '] }'
 				oracle.logger.debug('value: %s' % value)
+			#CUSTOM DISCOVERY BY OWN QUERY
+			elif item.split('.')[1] == 'discover':
+				oracle.logger.debug("DISCOVER CUSTOM QUERY")
+				arguments = arguments.split(',')
+				sid = arguments[0].strip()
+				objectname = arguments[1].strip()
+				query = arguments[2].strip()
+				rows = oracle.execute(sid, query)
+				if rows == -1 or rows == []:
+					value = "ZBX_NOTSUPPORTED"
+				else:
+					value = '{ "data":['
+					for row in rows:
+						oracle.logger.debug('%s found: %s' % (objectname, str(row[0])))
+						value += '{ "{#%s}":"%s" },' % (objectname.upper(), str(row[0]))
+					value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
+					value += '] }'
+				oracle.logger.debug('value: %s' % value)
+			elif item.split('.')[1] == 'system_event':
+				value = oracle.system_event(data)
+				if value == -1:
+					value = "ZBX_NOTSUPPORTED"
+				elif value == -2:
+					oracle.logger.error("ORA: Lost connection. Trying to reconnect" % value)
+					while value == -2:
+						oracle.logger.info("ORA reconnect: sleep 5 seconds...")
+						time.sleep(5)
+						oracle.reconnect(data)
+						value = oracle.system_event(data)
+						if value != -2:
+							value = str(value)
+				else:
+					value = str(value)
+			elif item.split('.')[1] == 'memory_dynamic_component':
+				value = oracle.memory_dynamic_component(data)
+				if value == -1:
+					value = "ZBX_NOTSUPPORTED"
+				elif value == -2:
+					oracle.logger.error("ORA: Lost connection. Trying to reconnect" % value)
+					while value == -2:
+						oracle.logger.info("ORA reconnect: sleep 5 seconds...")
+						time.sleep(5)
+						oracle.reconnect(data)
+						value = oracle.memory_dynamic_component(data)
+						if value != -2:
+							value = str(value)
+				else:
+					value = str(value)
+			elif item.split('.')[1] == 'sgastat':
+				value = oracle.sgastat(data)
+				if value == -1:
+					value = "ZBX_NOTSUPPORTED"
+				elif value == -2:
+					oracle.logger.error("ORA: Lost connection. Trying to reconnect" % value)
+					while value == -2:
+						oracle.logger.info("ORA reconnect: sleep 5 seconds...")
+						time.sleep(5)
+						oracle.reconnect(data)
+						value = oracle.sgastat(data)
+						if value != -2:
+							value = str(value)
+				else:
+					value = str(value)
+			elif item.split('.')[1] == 'query':
+				value = oracle.query(data)
+				if value == -1:
+					value = "ZBX_NOTSUPPORTED"
+				elif value == -2:
+					oracle.logger.error("ORA: Lost connection. Trying to reconnect" % value)
+					while value == -2:
+						oracle.logger.info("ORA reconnect: sleep 5 seconds...")
+						time.sleep(5)
+						oracle.reconnect(data)
+						value = oracle.query(data)
+						if value != -2:
+							value = str(value)
+				else:
+					value = str(value)
 			else:
 				value = oracle.get(data)
 				if value == -1:
@@ -1396,7 +1731,7 @@ class ConnectionHandler:
 				except Exception, e:
 #					disk_stat.logger.debug("ERROR: %s" %e)
 					args = { 'READS_COMPLETED': 0, 'READS_MERGED': 1, 'READS_SECTORS': 2, 'READS_TIME': 3, 'WRITES_COMPLETED': 4, 'WRITES_MERGED': 5, 'WRITES_SECTORS': 6, 'WRITES_TIME': 7, 'IO_QUEUE': 8, 'IO_TIME': 9, 'WIO_TIME': 10, 'AVG_IO_TIME': 11, 'AVG_IO_READ_WAIT': 12, 'AVG_IO_WRITE_WAIT': 13, 'AVG_IO_WAIT': 14, 'AVG_REQ_SIZE_READ': 15, 'AVG_REQ_SIZE_WRITE': 16, 'AVG_REQ_SIZE': 17 }
-					value = disk_stat.get_attr(fields[0], args[fields[1].upper()] )
+					value = disk_stat.get_attr(fields[0], args[fields[1].upper().strip()] )
 					value = str(value)
 					rootLogger.debug("Received io arg1: %s arg2: %s send back: %s length: %s" % (fields[0], fields[1], value, len(value)))
 			else:
@@ -1414,12 +1749,12 @@ class ConnectionHandler:
 		elif top_item == 'proc':
 
 			action = 0
-			file   = ''
-			row    = 0
-			col    = 0
-			value  = 0
+			file = ''
+			row = 0
+			col = 0
+			value = 0
 
-			if item not in ["proc.num", "proc.mem"]: #Ignore Zabbix own proc probes
+			if item not in ["proc.num", "proc.mem", "proc.cpu", "proc.pmem"]: #Ignore Zabbix own proc probes
 				action = probes.get_action(item)
 			else:
 				rootLogger.debug("Ignored: %s, directly sent to zabbix agent" % item)
@@ -1602,13 +1937,13 @@ class ConnectionHandler:
 
 	def update_probe(self, data):
 
-		action      = data[0]
-		size_name   = int(data[1:10])
-		pointer     = 10 + size_name
-		name        = data[10:pointer]
-		size_data   = data[pointer:pointer + 9]
-		pointer     = pointer + 9
-		content     = data[pointer:]
+		action    = data[0]
+		size_name = int(data[1:10])
+		pointer   = 10 + size_name
+		name      = data[10:pointer]
+		size_data = data[pointer:pointer + 9]
+		pointer   = pointer + 9
+		content   = data[pointer:]
 
 		f = open(config.magent_home + "/probes/%s" % name, "w")
 		f.write(content)
@@ -1617,7 +1952,7 @@ class ConnectionHandler:
 class createThread(threading.Thread):
 	def __init__(self, target, *args):
 		self.target = target
-		self.args = args
+		self.args   = args
 		threading.Thread.__init__(self)
 	def run(self):
 		rootLogger.info("Creating thread for function %s" % self.target.__name__)
@@ -1652,7 +1987,7 @@ def socketListener():
 	while True:
 		try:
 			con,addr = s.accept()
-			ch = ConnectionHandler(con)
+			ch       = ConnectionHandler(con)
 			ch.start()
 		except:
 			pass
@@ -1667,15 +2002,21 @@ def checkMAgentEnvironment():
 		magent_home = os.environ['MAGENT_HOME']
 	except:
 		rootLogger.warning("Environment variabele MAGENT_HOME not set. Assuming default of: /opt/mios/mios-agent")
+	osname,distro,osname2 = platform.dist()
+	distroNR = distro[0]
+	if osname in supportedOS and distroNR in supportedDIST:
+		rootLogger.info("OS: el%s detected and supported." % distroNR)
+		try:
+			#Create symlink so that correct version of cx_Oracle is used
+			os.symlink('%s/lib/cx_Oracle_el%s.so' % (magent_home, distroNR), '%s/lib/cx_Oracle.so' % magent_home)
+		except: #Symlink allready exists
+			pass
+	else:
+		rootLogger.error("Unsupported OS: %s, %s" % (osname, distro))
+		print "Unsupported OS: %s, %s" % (osname, distro)
+		sys.exit(1)
 
 def checkOracleEnvironment():
-	try:
-		oracle_base = os.environ['ORACLE_BASE']
-	except:
-		rootLogger.critical("Environment variabele ORACLE_BASE not set. MIOS-AGENT will not function without it.")
-		rootLogger.critical("Set this parameter or remove Oracle monitoring from config file")
-		rootLogger.critical("Shutting down")
-		exit(1)
 	try:
 		oracle_home = os.environ['ORACLE_HOME']
 	except:
@@ -1704,11 +2045,8 @@ class MagentDaemon(Daemon):
 		global rootLogger
 		global mongodb
 	
-		config_file = ''
-
 		config_file = magent_home + '/conf/mios-agent.conf'
-
-		config  = Config(config_file)
+		config      = Config(config_file)
 		config.parse()
 
 		try:
@@ -1743,9 +2081,9 @@ class MagentDaemon(Daemon):
 		net_stat = NetStats()
 
 		# Creating threads
-		connectionThread = createThread(socketListener)
-#		loggingThread = createThread(monitorLogging, 60)
-#		probesCacheThread = createThread(refreshProbesCache, 600)
+		connectionThread    = createThread(socketListener)
+#		loggingThread       = createThread(monitorLogging, 60)
+#		probesCacheThread   = createThread(refreshProbesCache, 600)
 #		reparseConfigThread = createThread(reparseConfig, 60)
 		#Starting threads
 		rootLogger.info('============================= Start MIOS-AGENT ======================================')
@@ -1762,6 +2100,10 @@ if __name__ == "__main__":
 		if 'start' == sys.argv[1]:
 			daemon.start()
 		elif 'stop' == sys.argv[1]:
+			try:
+				os.unlink('%s/lib/cx_Oracle.so' % magent_home)
+			except: #Symlink apparently got removed outside of the agent. Should not happen, but don't crash. Just continue
+				pass
 			daemon.stop()
 		elif 'restart' == sys.argv[1]:
 			daemon.restart()

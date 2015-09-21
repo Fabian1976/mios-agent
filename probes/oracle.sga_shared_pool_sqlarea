@@ -1,2 +1,0 @@
-type=oracle
-SELECT ROUND(SUM(decode(pool,'shared pool',decode(name,'SQLA',(bytes),0),0)),2) FROM V$SGASTAT
