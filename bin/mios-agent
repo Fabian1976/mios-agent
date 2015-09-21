@@ -676,7 +676,7 @@ class Oracle(object):
 				self.cursor[indx].execute(query)
 			except Exception, e:
 				t.cancel()
-				self.logger.error("ORA: Failed to execute query: %s" % action)
+				self.logger.error("ORA: Failed to execute query: %s" % query)
 				self.logger.error("ORA: Additional info: %s" % e)
 				ORA_error, = e.args
 				if ORA_error.message.split(':')[0] == 'ORA-03113' or ORA_error.message.split(':')[0] == 'ORA-03114': #Connection lost or Not connected to Oracle
@@ -1563,6 +1563,24 @@ class ConnectionHandler:
 					value += '"{#SIDNAME}":"%s" },' % sid
 				value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
 				value += '] }'
+				oracle.logger.debug('value: %s' % value)
+			#CUSTOM DISCOVERY BY OWN QUERY
+			elif item.split('.')[1] == 'discover':
+				oracle.logger.debug("DISCOVER CUSTOM QUERY")
+				arguments = arguments.split(',')
+				sid = arguments[0].strip()
+				objectname = arguments[1].strip()
+				query = arguments[2].strip()
+				rows = oracle.execute(sid, query)
+				if rows == -1 or rows == []:
+					value = "ZBX_NOTSUPPORTED"
+				else:
+					value = '{ "data":['
+					for row in rows:
+						oracle.logger.debug('%s found: %s' % (objectname, str(row[0])))
+						value += '{ "{#%s}":"%s" },' % (objectname.upper(), str(row[0]))
+					value = value[:-1] # Remove last comma. Zabbix 2.2 is stricter with JSON message structure
+					value += '] }'
 				oracle.logger.debug('value: %s' % value)
 			elif item.split('.')[1] == 'system_event':
 				value = oracle.system_event(data)
