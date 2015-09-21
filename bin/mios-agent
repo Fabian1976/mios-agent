@@ -572,8 +572,7 @@ class Oracle(object):
 		else:
 			self.logger.error("no oracle sid specified")
 			return None
-		arguments = arguments.replace(' ','')
-		arguments = arguments.rstrip()
+		arguments = arguments.strip()
 		sid = ''
 		if  data.find(',') > 0:
 			fields = arguments.split(',')
@@ -612,8 +611,7 @@ class Oracle(object):
 		else:
 			self.logger.error("no oracle sid specified")
 			return None
-		arguments = arguments.replace(' ','')
-		arguments = arguments.rstrip()
+		arguments = arguments.strip()
 		sid = ''
 		if  data.find(',') > 0:
 			fields = arguments.split(',')
@@ -715,8 +713,8 @@ class Oracle(object):
 		sid = ''
 		if  data.find(',') > 0:
 			fields = arguments.split(',')
-			sid = fields[0]
-			wait_class = fields[1]
+			sid = fields[0].strip()
+			wait_class = fields[1].strip()
 		else:
 			#Only 1 field? Then send back NOTSUPPORTED
 			return -1
@@ -756,12 +754,12 @@ class Oracle(object):
 				self.logger.debug("Last updates is less then %s seconds ago, so NOT fetching new results but using cache" % self.min_interval)
 				self.logger.debug("System events cache: %s" % self.system_events[indx])
 			try:
-				value = self.system_events[indx][fields[1]]
+				value = self.system_events[indx][wait_class]
 			except Exception, e:
 				self.logger.error("Failed to retrieve value (not available in resultset)")
 				self.logger.error("Additional info: %s" % e)
 				return -1
-			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, sys._getframe().f_code.co_name + '.' + fields[1], str(value)))
+			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, sys._getframe().f_code.co_name + '.' + wait_class, str(value)))
 			return value
 		except Exception, e:
 			self.logger.error("ORA: Error in Oracle connection SID: %s" % sid)
@@ -782,8 +780,8 @@ class Oracle(object):
 		sid = ''
 		if  data.find(',') > 0:
 			fields = arguments.split(',')
-			sid = fields[0]
-			wait_class = fields[1]
+			sid = fields[0].strip()
+			component = fields[1].strip()
 		else:
 			#Only 1 field? Then send back NOTSUPPORTED
 			return -1
@@ -822,8 +820,8 @@ class Oracle(object):
 			else:
 				self.logger.debug("Last updates is less then %s seconds ago, so NOT fetching new results but using cache" % self.min_interval)
 				self.logger.debug("Memory dynamic components cache: %s" % self.memory_dynamic_components[indx])
-			value = self.memory_dynamic_components[indx][fields[1]]
-			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, sys._getframe().f_code.co_name + '.' + fields[1], str(value)))
+			value = self.memory_dynamic_components[indx][component]
+			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, sys._getframe().f_code.co_name + '.' + component, str(value)))
 			return value
 		except Exception, e:
 			self.logger.error("ORA: Error in Oracle connection SID: %s" % sid)
@@ -844,10 +842,11 @@ class Oracle(object):
 		sid = ''
 		if  data.find(',') != 2:
 			fields = arguments.split(',')
-			sid = fields[0]
-			wait_class = fields[1]
+			sid = fields[0].strip()
+			pool_name = fields[1].strip()
+			pool_component = fields[2].strip()
 		else:
-			#Not 2 fields? Then send back NOTSUPPORTED
+			#Not 3 fields? Then send back NOTSUPPORTED
 			return -1
 
 		if not sid in self.sids:
@@ -884,9 +883,9 @@ class Oracle(object):
 			else:
 				self.logger.debug("Last updates is less then %s seconds ago, so NOT fetching new results but using cache" % self.min_interval)
 				self.logger.debug("SGA stats cache: %s" % self.sgastats[indx])
-			value = self.sgastats[indx][fields[1]+'_'+fields[2]]
+			value = self.sgastats[indx][pool_name+'_'+pool_component]
 			#value = 1
-			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, sys._getframe().f_code.co_name + '.' + fields[1]+'_'+fields[2], str(value)))
+			self.logger.debug("indx: %d sid: %s action: %s value: %s" % (indx, sid, sys._getframe().f_code.co_name + '.' + pool_name+'_'+pool_component, str(value)))
 			return value
 		except Exception, e:
 			self.logger.error("ORA: Error in Oracle connection SID: %s" % sid)
@@ -906,8 +905,8 @@ class Oracle(object):
 		sid = ''
 		if  data.find(',') != 1:
 			fields = arguments.split(',')
-			sid = fields[0]
-			sql_query = fields[1]
+			sid = fields[0].strip()
+			sql_query = fields[1].strip()
 		else:
 			#Not 1 fields? Then send back NOTSUPPORTED
 			return -1
@@ -1052,8 +1051,7 @@ class Postgres(object):
 		else:
 			self.logger.error("no postgres db specified")
 			return None
-		arguments = arguments.replace(' ','')
-		arguments = arguments.rstrip()
+		arguments = arguments.strip()
 		db = ''
 		if data.find(',') > 0:
 			fields = arguments.split(',')
@@ -1087,8 +1085,7 @@ class Postgres(object):
 		else:
 			self.logger.error("no postgres db specified")
 			return None
-		arguments = arguments.replace(' ','')
-		arguments = arguments.rstrip()
+		arguments = arguments.strip()
 		db = ''
 		if  data.find(',') > 0:
 			fields = arguments.split(',')
@@ -1479,8 +1476,7 @@ class ConnectionHandler:
 		else:
 			item = data
 			item = item.rstrip()
-		arguments = arguments.replace(' ','')
-		arguments = arguments.rstrip()
+		arguments = arguments.strip()
 		fields = arguments.split(',')
 		top_item = item.split('.')[0]
 		rootLogger.debug("Item: %s" % item)
@@ -1717,7 +1713,7 @@ class ConnectionHandler:
 				except Exception, e:
 #					disk_stat.logger.debug("ERROR: %s" %e)
 					args = { 'READS_COMPLETED': 0, 'READS_MERGED': 1, 'READS_SECTORS': 2, 'READS_TIME': 3, 'WRITES_COMPLETED': 4, 'WRITES_MERGED': 5, 'WRITES_SECTORS': 6, 'WRITES_TIME': 7, 'IO_QUEUE': 8, 'IO_TIME': 9, 'WIO_TIME': 10, 'AVG_IO_TIME': 11, 'AVG_IO_READ_WAIT': 12, 'AVG_IO_WRITE_WAIT': 13, 'AVG_IO_WAIT': 14, 'AVG_REQ_SIZE_READ': 15, 'AVG_REQ_SIZE_WRITE': 16, 'AVG_REQ_SIZE': 17 }
-					value = disk_stat.get_attr(fields[0], args[fields[1].upper()] )
+					value = disk_stat.get_attr(fields[0], args[fields[1].upper().strip()] )
 					value = str(value)
 					rootLogger.debug("Received io arg1: %s arg2: %s send back: %s length: %s" % (fields[0], fields[1], value, len(value)))
 			else:
