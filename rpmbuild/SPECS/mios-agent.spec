@@ -1,5 +1,5 @@
 Name:		mios-agent
-Version:        4.1
+Version:        4.2
 Release:	1%{?dist}
 Group:		None
 Summary:	A python program which is used for Zabbix monitoring software with improved capability in stead of zabbix-agent
