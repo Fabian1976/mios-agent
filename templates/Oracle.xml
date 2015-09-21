@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>2.0</version>
-    <date>2015-09-17T10:22:40Z</date>
+    <date>2015-09-21T09:32:06Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -744,7 +744,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.parameters_max_db_files[{HOSTNAME},]</key>
+                    <key>oracle.parameters_max_db_files[{HOSTNAME}]</key>
                     <delay>3600</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -787,7 +787,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.used_db_files[{HOSTNAME},]</key>
+                    <key>oracle.used_db_files[{HOSTNAME}]</key>
                     <delay>300</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -830,7 +830,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sysstat_executions[{HOSTNAME},]</key>
+                    <key>oracle.sysstat_executions[{HOSTNAME}]</key>
                     <delay>60</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -873,7 +873,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.flash_recovery_max[{HOSTNAME},]</key>
+                    <key>oracle.flash_recovery_max[{HOSTNAME}]</key>
                     <delay>3600</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -916,7 +916,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.flash_recovery_used[{HOSTNAME},]</key>
+                    <key>oracle.flash_recovery_used[{HOSTNAME}]</key>
                     <delay>60</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -959,7 +959,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.librarycache_hitratio_body[{HOSTNAME},]</key>
+                    <key>oracle.librarycache_hitratio_body[{HOSTNAME}]</key>
                     <delay>3600</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1002,7 +1002,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.librarycache_hitratio_index[{HOSTNAME},]</key>
+                    <key>oracle.librarycache_hitratio_index[{HOSTNAME}]</key>
                     <delay>3600</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1045,7 +1045,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.librarycache_hitratio_misses[{HOSTNAME},]</key>
+                    <key>oracle.librarycache_hitratio_misses[{HOSTNAME}]</key>
                     <delay>3600</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1088,7 +1088,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.librarycache_hitratio_queue[{HOSTNAME},]</key>
+                    <key>oracle.librarycache_hitratio_queue[{HOSTNAME}]</key>
                     <delay>3600</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1131,7 +1131,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.librarycache_hitratio_sqlarea[{HOSTNAME},]</key>
+                    <key>oracle.librarycache_hitratio_sqlarea[{HOSTNAME}]</key>
                     <delay>3600</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1174,7 +1174,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.librarycache_hitratio_table_procedure[{HOSTNAME},]</key>
+                    <key>oracle.librarycache_hitratio_table_procedure[{HOSTNAME}]</key>
                     <delay>3600</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1217,7 +1217,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.librarycache_hitratio_total[{HOSTNAME},]</key>
+                    <key>oracle.librarycache_hitratio_total[{HOSTNAME}]</key>
                     <delay>3600</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1260,7 +1260,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.librarycache_hitratio_trigger[{HOSTNAME},]</key>
+                    <key>oracle.librarycache_hitratio_trigger[{HOSTNAME}]</key>
                     <delay>3600</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1303,7 +1303,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.locks_blocking[{HOSTNAME},]</key>
+                    <key>oracle.locks_blocking[{HOSTNAME}]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1346,7 +1346,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.locks_exclusive[{HOSTNAME},]</key>
+                    <key>oracle.locks_exclusive[{HOSTNAME}]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1389,7 +1389,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.locks_row_exclusive[{HOSTNAME},]</key>
+                    <key>oracle.locks_row_exclusive[{HOSTNAME}]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1432,7 +1432,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.locks_row_share[{HOSTNAME},]</key>
+                    <key>oracle.locks_row_share[{HOSTNAME}]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1475,7 +1475,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.locks_srow_exclusive[{HOSTNAME},]</key>
+                    <key>oracle.locks_srow_exclusive[{HOSTNAME}]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1518,7 +1518,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.locks_share[{HOSTNAME},]</key>
+                    <key>oracle.locks_share[{HOSTNAME}]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1561,7 +1561,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sesstat_open_cursors[{HOSTNAME},]</key>
+                    <key>oracle.sesstat_open_cursors[{HOSTNAME}]</key>
                     <delay>60</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1604,7 +1604,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.parameters_max_open_cursors[{HOSTNAME},]</key>
+                    <key>oracle.parameters_max_open_cursors[{HOSTNAME}]</key>
                     <delay>3600</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1647,7 +1647,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.osstat_cpu_cores[{HOSTNAME},]</key>
+                    <key>oracle.osstat_cpu_cores[{HOSTNAME}]</key>
                     <delay>3600</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1690,7 +1690,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.osstat_db_load[{HOSTNAME},]</key>
+                    <key>oracle.osstat_db_load[{HOSTNAME}]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1733,7 +1733,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.osstat_iowait[{HOSTNAME},]</key>
+                    <key>oracle.osstat_iowait[{HOSTNAME}]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1819,7 +1819,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.process_current_processes[{HOSTNAME},]</key>
+                    <key>oracle.process_current_processes[{HOSTNAME}]</key>
                     <delay>60</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1862,7 +1862,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.parameters_max_processes[{HOSTNAME},]</key>
+                    <key>oracle.parameters_max_processes[{HOSTNAME}]</key>
                     <delay>3600</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1905,7 +1905,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.log_redolog_switch[{HOSTNAME},]</key>
+                    <key>oracle.log_redolog_switch[{HOSTNAME}]</key>
                     <delay>1800</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1948,7 +1948,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.check_rman_daily_backup[{HOSTNAME},]</key>
+                    <key>oracle.check_rman_daily_backup[{HOSTNAME}]</key>
                     <delay>3600</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -1991,7 +1991,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.rman_backup_result[{HOSTNAME},]</key>
+                    <key>oracle.rman_backup_result[{HOSTNAME}]</key>
                     <delay>86400</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2034,7 +2034,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sessions_active[{HOSTNAME},]</key>
+                    <key>oracle.sessions_active[{HOSTNAME}]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2077,7 +2077,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sessions_active_system[{HOSTNAME},]</key>
+                    <key>oracle.sessions_active_system[{HOSTNAME}]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2120,7 +2120,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sessions_inactive[{HOSTNAME},]</key>
+                    <key>oracle.sessions_inactive[{HOSTNAME}]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2163,7 +2163,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sessions_longops[{HOSTNAME},]</key>
+                    <key>oracle.sessions_longops[{HOSTNAME}]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2593,7 +2593,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sysstat_user_commits[{HOSTNAME},]</key>
+                    <key>oracle.sysstat_user_commits[{HOSTNAME}]</key>
                     <delay>60</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2636,7 +2636,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sysstat_logical_reads[{HOSTNAME},]</key>
+                    <key>oracle.sysstat_logical_reads[{HOSTNAME}]</key>
                     <delay>60</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2679,7 +2679,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sysstat_logons[{HOSTNAME},]</key>
+                    <key>oracle.sysstat_logons[{HOSTNAME}]</key>
                     <delay>60</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2722,7 +2722,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sysstat_physical_read_bytes[{HOSTNAME},]</key>
+                    <key>oracle.sysstat_physical_read_bytes[{HOSTNAME}]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2765,7 +2765,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sysstat_physical_read_iops[{HOSTNAME},]</key>
+                    <key>oracle.sysstat_physical_read_iops[{HOSTNAME}]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2808,7 +2808,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sysstat_physical_write_bytes[{HOSTNAME},]</key>
+                    <key>oracle.sysstat_physical_write_bytes[{HOSTNAME}]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2851,7 +2851,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sysstat_physical_write_iops[{HOSTNAME},]</key>
+                    <key>oracle.sysstat_physical_write_iops[{HOSTNAME}]</key>
                     <delay>30</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2894,7 +2894,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.sysstat_user_rollbacks[{HOSTNAME},]</key>
+                    <key>oracle.sysstat_user_rollbacks[{HOSTNAME}]</key>
                     <delay>60</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2937,7 +2937,7 @@
                     <snmp_community/>
                     <multiplier>1</multiplier>
                     <snmp_oid/>
-                    <key>oracle.undospace_blocks_pct_used[{HOSTNAME},]</key>
+                    <key>oracle.undospace_blocks_pct_used[{HOSTNAME}]</key>
                     <delay>300</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -2955,7 +2955,7 @@
                     <snmpv3_privpassphrase/>
                     <formula>100</formula>
                     <delay_flex/>
-                    <params>last(&quot;oracle.undospace_blocks_required[{HOSTNAME},]&quot;) / last(&quot;oracle.undospace_blocks_total[{HOSTNAME},]&quot;)</params>
+                    <params>last(&quot;oracle.undospace_blocks_required[{HOSTNAME}]&quot;) / last(&quot;oracle.undospace_blocks_total[{HOSTNAME}]&quot;)</params>
                     <ipmi_sensor/>
                     <data_type>0</data_type>
                     <authtype>0</authtype>
@@ -2980,7 +2980,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.undospace_blocks_required[{HOSTNAME},]</key>
+                    <key>oracle.undospace_blocks_required[{HOSTNAME}]</key>
                     <delay>300</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -3023,7 +3023,7 @@
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>oracle.undospace_blocks_total[{HOSTNAME},]</key>
+                    <key>oracle.undospace_blocks_total[{HOSTNAME}]</key>
                     <delay>300</delay>
                     <history>35</history>
                     <trends>3650</trends>
@@ -5213,7 +5213,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
     </templates>
     <triggers>
         <trigger>
-            <expression>{Template DB Oracle:oracle.check_rman_daily_backup[{HOSTNAME},].last(0)}=0</expression>
+            <expression>{Template DB Oracle:oracle.check_rman_daily_backup[{HOSTNAME}].last(0)}=0</expression>
             <name>Backup RMAN status on {HOST.NAME}</name>
             <url/>
             <status>0</status>
@@ -5233,7 +5233,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{Template DB Oracle:oracle.used_db_files[{HOSTNAME},].last(0)}&gt;({Template DB Oracle:oracle.parameters_max_db_files[{HOSTNAME},].last(0)}*0.90)</expression>
+            <expression>{Template DB Oracle:oracle.used_db_files[{HOSTNAME}].last(0)}&gt;({Template DB Oracle:oracle.parameters_max_db_files[{HOSTNAME}].last(0)}*0.90)</expression>
             <name>DB files used &gt; 90 pct on {HOST.NAME}</name>
             <url/>
             <status>0</status>
@@ -5243,7 +5243,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{Template DB Oracle:oracle.flash_recovery_used[{HOSTNAME},].last(0)}&gt;({Template DB Oracle:oracle.flash_recovery_max[{HOSTNAME},].last(0)}*0.90)</expression>
+            <expression>{Template DB Oracle:oracle.flash_recovery_used[{HOSTNAME}].last(0)}&gt;({Template DB Oracle:oracle.flash_recovery_max[{HOSTNAME}].last(0)}*0.90)</expression>
             <name>Flash recovery area used &gt; 90 pct on {HOST.NAME}</name>
             <url/>
             <status>0</status>
@@ -5253,7 +5253,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{Template DB Oracle:oracle.librarycache_hitratio_misses[{HOSTNAME},].last()}&gt;1</expression>
+            <expression>{Template DB Oracle:oracle.librarycache_hitratio_misses[{HOSTNAME}].last()}&gt;1</expression>
             <name>Library cache hitratio, to many misses &gt; 1% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
             <url/>
             <status>0</status>
@@ -5263,7 +5263,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{Template DB Oracle:oracle.librarycache_hitratio_total[{HOSTNAME},].last()}&lt;85</expression>
+            <expression>{Template DB Oracle:oracle.librarycache_hitratio_total[{HOSTNAME}].last()}&lt;85</expression>
             <name>Library cache hit ratio is low &lt; 85% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
             <url/>
             <status>0</status>
@@ -5283,7 +5283,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{Template DB Oracle:oracle.process_current_processes[{HOSTNAME},].last(0)}&gt;({Template DB Oracle:oracle.parameters_max_processes[{HOSTNAME},].last(0)}*0.90)</expression>
+            <expression>{Template DB Oracle:oracle.process_current_processes[{HOSTNAME}].last(0)}&gt;({Template DB Oracle:oracle.parameters_max_processes[{HOSTNAME}].last(0)}*0.90)</expression>
             <name>Processes used &gt; 90 pct on {HOST.NAME}</name>
             <url/>
             <status>0</status>
@@ -5293,7 +5293,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{Template DB Oracle:oracle.undospace_blocks_pct_used[{HOSTNAME},].last(0)}&gt;80</expression>
+            <expression>{Template DB Oracle:oracle.undospace_blocks_pct_used[{HOSTNAME}].last(0)}&gt;80</expression>
             <name>Undospace blocks used &gt; 80 pct on {HOST.NAME}</name>
             <url/>
             <status>0</status>
@@ -5303,7 +5303,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
             <dependencies/>
         </trigger>
         <trigger>
-            <expression>{Template DB Oracle:oracle.undospace_blocks_pct_used[{HOSTNAME},].last(0)}&gt;90</expression>
+            <expression>{Template DB Oracle:oracle.undospace_blocks_pct_used[{HOSTNAME}].last(0)}&gt;90</expression>
             <name>Undospace blocks used &gt; 90 pct on {HOST.NAME}</name>
             <url/>
             <status>0</status>
@@ -5341,7 +5341,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sesstat_open_cursors[{HOSTNAME},]</key>
+                        <key>oracle.sesstat_open_cursors[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5353,7 +5353,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.parameters_max_open_cursors[{HOSTNAME},]</key>
+                        <key>oracle.parameters_max_open_cursors[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -5537,7 +5537,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.osstat_db_load[{HOSTNAME},]</key>
+                        <key>oracle.osstat_db_load[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5549,7 +5549,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.osstat_cpu_cores[{HOSTNAME},]</key>
+                        <key>oracle.osstat_cpu_cores[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -5581,7 +5581,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sysstat_executions[{HOSTNAME},]</key>
+                        <key>oracle.sysstat_executions[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -5604,7 +5604,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
             <ymin_item_1>0</ymin_item_1>
             <ymax_item_1>
                 <host>Template DB Oracle</host>
-                <key>oracle.flash_recovery_max[{HOSTNAME},]</key>
+                <key>oracle.flash_recovery_max[{HOSTNAME}]</key>
             </ymax_item_1>
             <graph_items>
                 <graph_item>
@@ -5616,7 +5616,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.flash_recovery_used[{HOSTNAME},]</key>
+                        <key>oracle.flash_recovery_used[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5628,7 +5628,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.flash_recovery_max[{HOSTNAME},]</key>
+                        <key>oracle.flash_recovery_max[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -5660,7 +5660,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.osstat_iowait[{HOSTNAME},]</key>
+                        <key>oracle.osstat_iowait[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -5692,7 +5692,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.librarycache_hitratio_body[{HOSTNAME},]</key>
+                        <key>oracle.librarycache_hitratio_body[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5704,7 +5704,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.librarycache_hitratio_table_procedure[{HOSTNAME},]</key>
+                        <key>oracle.librarycache_hitratio_table_procedure[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5716,7 +5716,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.librarycache_hitratio_total[{HOSTNAME},]</key>
+                        <key>oracle.librarycache_hitratio_total[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5728,7 +5728,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.librarycache_hitratio_sqlarea[{HOSTNAME},]</key>
+                        <key>oracle.librarycache_hitratio_sqlarea[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5740,7 +5740,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.librarycache_hitratio_queue[{HOSTNAME},]</key>
+                        <key>oracle.librarycache_hitratio_queue[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5752,7 +5752,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.librarycache_hitratio_index[{HOSTNAME},]</key>
+                        <key>oracle.librarycache_hitratio_index[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5764,7 +5764,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.librarycache_hitratio_trigger[{HOSTNAME},]</key>
+                        <key>oracle.librarycache_hitratio_trigger[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -5796,7 +5796,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.locks_row_exclusive[{HOSTNAME},]</key>
+                        <key>oracle.locks_row_exclusive[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5808,7 +5808,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.locks_srow_exclusive[{HOSTNAME},]</key>
+                        <key>oracle.locks_srow_exclusive[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5820,7 +5820,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.locks_row_share[{HOSTNAME},]</key>
+                        <key>oracle.locks_row_share[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5832,7 +5832,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.locks_share[{HOSTNAME},]</key>
+                        <key>oracle.locks_share[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5844,7 +5844,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.locks_blocking[{HOSTNAME},]</key>
+                        <key>oracle.locks_blocking[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5856,7 +5856,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.locks_exclusive[{HOSTNAME},]</key>
+                        <key>oracle.locks_exclusive[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -5888,7 +5888,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sysstat_logical_reads[{HOSTNAME},]</key>
+                        <key>oracle.sysstat_logical_reads[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -5920,7 +5920,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sysstat_logons[{HOSTNAME},]</key>
+                        <key>oracle.sysstat_logons[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -5952,7 +5952,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sessions_longops[{HOSTNAME},]</key>
+                        <key>oracle.sessions_longops[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -6028,7 +6028,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sysstat_physical_read_iops[{HOSTNAME},]</key>
+                        <key>oracle.sysstat_physical_read_iops[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -6040,7 +6040,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sysstat_physical_write_iops[{HOSTNAME},]</key>
+                        <key>oracle.sysstat_physical_write_iops[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -6072,7 +6072,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sysstat_physical_write_bytes[{HOSTNAME},]</key>
+                        <key>oracle.sysstat_physical_write_bytes[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -6084,7 +6084,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sysstat_physical_read_bytes[{HOSTNAME},]</key>
+                        <key>oracle.sysstat_physical_read_bytes[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -6116,7 +6116,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.process_current_processes[{HOSTNAME},]</key>
+                        <key>oracle.process_current_processes[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -6128,7 +6128,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.parameters_max_processes[{HOSTNAME},]</key>
+                        <key>oracle.parameters_max_processes[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -6160,7 +6160,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.log_redolog_switch[{HOSTNAME},]</key>
+                        <key>oracle.log_redolog_switch[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -6192,7 +6192,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sessions_active_system[{HOSTNAME},]</key>
+                        <key>oracle.sessions_active_system[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -6204,7 +6204,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sessions_inactive[{HOSTNAME},]</key>
+                        <key>oracle.sessions_inactive[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -6216,7 +6216,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sessions_active[{HOSTNAME},]</key>
+                        <key>oracle.sessions_active[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -6328,7 +6328,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sysstat_user_rollbacks[{HOSTNAME},]</key>
+                        <key>oracle.sysstat_user_rollbacks[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -6340,7 +6340,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.sysstat_user_commits[{HOSTNAME},]</key>
+                        <key>oracle.sysstat_user_commits[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -6372,7 +6372,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.undospace_blocks_total[{HOSTNAME},]</key>
+                        <key>oracle.undospace_blocks_total[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -6384,7 +6384,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.undospace_blocks_required[{HOSTNAME},]</key>
+                        <key>oracle.undospace_blocks_required[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
