@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>2.0</version>
-    <date>2015-08-05T06:08:22Z</date>
+    <date>2015-09-29T10:31:11Z</date>
     <groups>
         <group>
             <name>Oracle database</name>
@@ -243,7 +243,7 @@
     <triggers>
         <trigger>
             <expression>{Template DB Oracle SID discovery:proc.aio-nr[].last(0)}&gt;({Template DB Oracle SID discovery:proc.aio-max-nr[].last(0)}*0.90)</expression>
-            <name>Asynchronous IO slots used &gt; 90 pct on {HOST.NAME}</name>
+            <name>Asynchronous IO slots used &gt; 90% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
             <url/>
             <status>0</status>
             <priority>2</priority>

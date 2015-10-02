@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>2.0</version>
-    <date>2015-09-21T09:32:06Z</date>
+    <date>2015-10-02T09:45:48Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -1994,7 +1994,7 @@
                     <key>oracle.rman_backup_result[{HOSTNAME}]</key>
                     <delay>86400</delay>
                     <history>35</history>
-                    <trends>3650</trends>
+                    <trends>365</trends>
                     <status>0</status>
                     <value_type>4</value_type>
                     <allowed_hosts/>
@@ -3321,7 +3321,7 @@
                     <trigger_prototypes>
                         <trigger_prototype>
                             <expression>({Template DB Oracle:oracle.queue_ready[{HOSTNAME},{#AQNAME}].last()}&gt;15) and ({Template DB Oracle:oracle.queue_ready[{HOSTNAME},{#AQNAME}].last()}&lt;25)</expression>
-                            <name>To many queue messages in ready state &gt; 15 on {HOST.NAME}</name>
+                            <name>To many queue messages in ready state &gt; 15 ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
                             <url/>
                             <status>0</status>
                             <priority>2</priority>
@@ -3330,7 +3330,7 @@
                         </trigger_prototype>
                         <trigger_prototype>
                             <expression>{Template DB Oracle:oracle.queue_ready[{HOSTNAME},{#AQNAME}].last()}&gt;24</expression>
-                            <name>To many queue messages in ready state &gt;= 25 on {HOST.NAME}</name>
+                            <name>To many queue messages in ready state &gt;= 25 ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
                             <url/>
                             <status>0</status>
                             <priority>4</priority>
@@ -3834,7 +3834,7 @@ DROPPED - Disk has been fully expelled from the disk group</description>
                     <trigger_prototypes>
                         <trigger_prototype>
                             <expression>{Template DB Oracle:oracle.asm_disk_readerrs[{HOSTNAME},{#ASMDNAME}].last()}&gt;0</expression>
-                            <name>Disk {#ASMDNAME) has read errors</name>
+                            <name>Disk {#ASMDNAME} has read errors</name>
                             <url/>
                             <status>0</status>
                             <priority>4</priority>
@@ -3843,7 +3843,7 @@ DROPPED - Disk has been fully expelled from the disk group</description>
                         </trigger_prototype>
                         <trigger_prototype>
                             <expression>{Template DB Oracle:oracle.asm_disk_writeerrs[{HOSTNAME},{#ASMDNAME}].last()}&gt;0</expression>
-                            <name>Disk {#ASMDNAME) has write errors</name>
+                            <name>Disk {#ASMDNAME} has write errors</name>
                             <url/>
                             <status>0</status>
                             <priority>4</priority>
@@ -4206,7 +4206,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <trigger_prototypes>
                         <trigger_prototype>
                             <expression>{Template DB Oracle:oracle.asm_diskgroup_usedmb[{HOSTNAME},{#ASMDGNAME}].last()}&gt;({Template DB Oracle:oracle.asm_diskgroup_totalmb[{HOSTNAME},{#ASMDGNAME}].last()}*0.95)</expression>
-                            <name>Free space in ASM diskgroup {#ASMDGNAME} is less than 5% on {HOST.NAME}</name>
+                            <name>Free space in ASM diskgroup {#ASMDGNAME} is less than 5% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
                             <url/>
                             <status>0</status>
                             <priority>4</priority>
@@ -4215,7 +4215,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                         </trigger_prototype>
                         <trigger_prototype>
                             <expression>({Template DB Oracle:oracle.asm_diskgroup_usedmb[{HOSTNAME},{#ASMDGNAME}].last()}&gt;({Template DB Oracle:oracle.asm_diskgroup_totalmb[{HOSTNAME},{#ASMDGNAME}].last()}*0.90)) and ({Template DB Oracle:oracle.asm_diskgroup_usedmb[{HOSTNAME},{#ASMDGNAME}].last()}&lt;({Template DB Oracle:oracle.asm_diskgroup_totalmb[{HOSTNAME},{#ASMDGNAME}].last()}*0.96))</expression>
-                            <name>Free space in ASM diskgroup {#ASMDGNAME} is less than 10% on {HOST.NAME}</name>
+                            <name>Free space in ASM diskgroup {#ASMDGNAME} is less than 10% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
                             <url/>
                             <status>0</status>
                             <priority>2</priority>
@@ -4447,7 +4447,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <trigger_prototypes>
                         <trigger_prototype>
                             <expression>{Template DB Oracle:oracle.tablespace_used_size[{HOSTNAME},{#TBSNAME}].last(0)}&gt;({Template DB Oracle:oracle.tablespace_max_size[{HOSTNAME},{#TBSNAME}].last(0)}*0.95)</expression>
-                            <name>Free space in tablespace {#TBSNAME} is less than 5% on {HOST.NAME}</name>
+                            <name>Free space in tablespace {#TBSNAME} is less than 5% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
                             <url/>
                             <status>0</status>
                             <priority>4</priority>
@@ -4456,7 +4456,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                         </trigger_prototype>
                         <trigger_prototype>
                             <expression>({Template DB Oracle:oracle.tablespace_used_size[{HOSTNAME},{#TBSNAME}].last(0)}&gt;({Template DB Oracle:oracle.tablespace_max_size[{HOSTNAME},{#TBSNAME}].last(0)}*0.90)) and ({Template DB Oracle:oracle.tablespace_used_size[{HOSTNAME},{#TBSNAME}].last(0)}&lt;({Template DB Oracle:oracle.tablespace_max_size[{HOSTNAME},{#TBSNAME}].last(0)}*0.96))</expression>
-                            <name>Free space in tablespace {#TBSNAME} is less than 10% on {HOST.NAME}</name>
+                            <name>Free space in tablespace {#TBSNAME} is less than 10% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
                             <url/>
                             <status>0</status>
                             <priority>2</priority>
@@ -4697,7 +4697,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <trigger_prototypes>
                         <trigger_prototype>
                             <expression>{Template DB Oracle:oracle.tempspace_used_size[{HOSTNAME},{#TMPSNAME}].last(0)}&gt;({Template DB Oracle:oracle.tempspace_max_size[{HOSTNAME},{#TMPSNAME}].last(0)}*0.95)</expression>
-                            <name>Free space in tempspace {#TMPSNAME} is less than 5% on {HOST.NAME}</name>
+                            <name>Free space in tempspace {#TMPSNAME} is less than 5% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
                             <url/>
                             <status>0</status>
                             <priority>4</priority>
@@ -4706,7 +4706,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                         </trigger_prototype>
                         <trigger_prototype>
                             <expression>({Template DB Oracle:oracle.tempspace_used_size[{HOSTNAME},{#TMPSNAME}].last(0)}&gt;({Template DB Oracle:oracle.tempspace_max_size[{HOSTNAME},{#TMPSNAME}].last(0)}*0.90)) and ({Template DB Oracle:oracle.tempspace_used_size[{HOSTNAME},{#TMPSNAME}].last(0)}&lt;({Template DB Oracle:oracle.tempspace_max_size[{HOSTNAME},{#TMPSNAME}].last(0)}*0.96))</expression>
-                            <name>Free space in tempspace {#TMPSNAME} is less than 10% on {HOST.NAME}</name>
+                            <name>Free space in tempspace {#TMPSNAME} is less than 10% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
                             <url/>
                             <status>0</status>
                             <priority>2</priority>
@@ -5234,7 +5234,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
         </trigger>
         <trigger>
             <expression>{Template DB Oracle:oracle.used_db_files[{HOSTNAME}].last(0)}&gt;({Template DB Oracle:oracle.parameters_max_db_files[{HOSTNAME}].last(0)}*0.90)</expression>
-            <name>DB files used &gt; 90 pct on {HOST.NAME}</name>
+            <name>DB files used &gt; 90%  ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
             <url/>
             <status>0</status>
             <priority>2</priority>
@@ -5244,7 +5244,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
         </trigger>
         <trigger>
             <expression>{Template DB Oracle:oracle.flash_recovery_used[{HOSTNAME}].last(0)}&gt;({Template DB Oracle:oracle.flash_recovery_max[{HOSTNAME}].last(0)}*0.90)</expression>
-            <name>Flash recovery area used &gt; 90 pct on {HOST.NAME}</name>
+            <name>Flash recovery area used &gt; 90% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
             <url/>
             <status>0</status>
             <priority>4</priority>
@@ -5284,7 +5284,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
         </trigger>
         <trigger>
             <expression>{Template DB Oracle:oracle.process_current_processes[{HOSTNAME}].last(0)}&gt;({Template DB Oracle:oracle.parameters_max_processes[{HOSTNAME}].last(0)}*0.90)</expression>
-            <name>Processes used &gt; 90 pct on {HOST.NAME}</name>
+            <name>Processes used &gt; 90% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
             <url/>
             <status>0</status>
             <priority>2</priority>
@@ -5294,7 +5294,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
         </trigger>
         <trigger>
             <expression>{Template DB Oracle:oracle.undospace_blocks_pct_used[{HOSTNAME}].last(0)}&gt;80</expression>
-            <name>Undospace blocks used &gt; 80 pct on {HOST.NAME}</name>
+            <name>Undospace blocks used &gt; 80% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
             <url/>
             <status>0</status>
             <priority>2</priority>
@@ -5304,7 +5304,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
         </trigger>
         <trigger>
             <expression>{Template DB Oracle:oracle.undospace_blocks_pct_used[{HOSTNAME}].last(0)}&gt;90</expression>
-            <name>Undospace blocks used &gt; 90 pct on {HOST.NAME}</name>
+            <name>Undospace blocks used &gt; 90% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
             <url/>
             <status>0</status>
             <priority>4</priority>
@@ -5377,6 +5377,18 @@ MOUNTED - Instance is successfully serving the disk group to its database client
             <ymax_item_1>0</ymax_item_1>
             <graph_items>
                 <graph_item>
+                    <sortorder>0</sortorder>
+                    <drawtype>0</drawtype>
+                    <color>33FF33</color>
+                    <yaxisside>0</yaxisside>
+                    <calc_fnc>2</calc_fnc>
+                    <type>0</type>
+                    <item>
+                        <host>Template DB Oracle</host>
+                        <key>oracle.system_event[{HOSTNAME},CPU]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
                     <sortorder>8</sortorder>
                     <drawtype>0</drawtype>
                     <color>888888</color>
@@ -5386,90 +5398,6 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <item>
                         <host>Template DB Oracle</host>
                         <key>oracle.system_event[{HOSTNAME},Administrative]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
-                    <sortorder>9</sortorder>
-                    <drawtype>0</drawtype>
-                    <color>CCCCCC</color>
-                    <yaxisside>0</yaxisside>
-                    <calc_fnc>2</calc_fnc>
-                    <type>0</type>
-                    <item>
-                        <host>Template DB Oracle</host>
-                        <key>oracle.system_event[{HOSTNAME},Network]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
-                    <sortorder>10</sortorder>
-                    <drawtype>0</drawtype>
-                    <color>FFCCFF</color>
-                    <yaxisside>0</yaxisside>
-                    <calc_fnc>2</calc_fnc>
-                    <type>0</type>
-                    <item>
-                        <host>Template DB Oracle</host>
-                        <key>oracle.system_event[{HOSTNAME},Other]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
-                    <sortorder>3</sortorder>
-                    <drawtype>0</drawtype>
-                    <color>CCCCFF</color>
-                    <yaxisside>0</yaxisside>
-                    <calc_fnc>2</calc_fnc>
-                    <type>0</type>
-                    <item>
-                        <host>Template DB Oracle</host>
-                        <key>oracle.system_event[{HOSTNAME},System I/O]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
-                    <sortorder>7</sortorder>
-                    <drawtype>0</drawtype>
-                    <color>999900</color>
-                    <yaxisside>0</yaxisside>
-                    <calc_fnc>2</calc_fnc>
-                    <type>0</type>
-                    <item>
-                        <host>Template DB Oracle</host>
-                        <key>oracle.system_event[{HOSTNAME},Configuration]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
-                    <sortorder>4</sortorder>
-                    <drawtype>0</drawtype>
-                    <color>555500</color>
-                    <yaxisside>0</yaxisside>
-                    <calc_fnc>2</calc_fnc>
-                    <type>0</type>
-                    <item>
-                        <host>Template DB Oracle</host>
-                        <key>oracle.system_event[{HOSTNAME},Concurrency]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
-                    <sortorder>1</sortorder>
-                    <drawtype>0</drawtype>
-                    <color>CCFFFF</color>
-                    <yaxisside>0</yaxisside>
-                    <calc_fnc>2</calc_fnc>
-                    <type>0</type>
-                    <item>
-                        <host>Template DB Oracle</host>
-                        <key>oracle.system_event[{HOSTNAME},Scheduler]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
-                    <sortorder>6</sortorder>
-                    <drawtype>0</drawtype>
-                    <color>FFFF99</color>
-                    <yaxisside>0</yaxisside>
-                    <calc_fnc>2</calc_fnc>
-                    <type>0</type>
-                    <item>
-                        <host>Template DB Oracle</host>
-                        <key>oracle.system_event[{HOSTNAME},Commit]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5485,15 +5413,87 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     </item>
                 </graph_item>
                 <graph_item>
-                    <sortorder>0</sortorder>
+                    <sortorder>10</sortorder>
                     <drawtype>0</drawtype>
-                    <color>33FF33</color>
+                    <color>FFCCFF</color>
                     <yaxisside>0</yaxisside>
                     <calc_fnc>2</calc_fnc>
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.system_event[{HOSTNAME},CPU]</key>
+                        <key>oracle.system_event[{HOSTNAME},Other]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>9</sortorder>
+                    <drawtype>0</drawtype>
+                    <color>CCCCCC</color>
+                    <yaxisside>0</yaxisside>
+                    <calc_fnc>2</calc_fnc>
+                    <type>0</type>
+                    <item>
+                        <host>Template DB Oracle</host>
+                        <key>oracle.system_event[{HOSTNAME},Network]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>3</sortorder>
+                    <drawtype>0</drawtype>
+                    <color>CCCCFF</color>
+                    <yaxisside>0</yaxisside>
+                    <calc_fnc>2</calc_fnc>
+                    <type>0</type>
+                    <item>
+                        <host>Template DB Oracle</host>
+                        <key>oracle.system_event[{HOSTNAME},System I/O]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <drawtype>0</drawtype>
+                    <color>CCFFFF</color>
+                    <yaxisside>0</yaxisside>
+                    <calc_fnc>2</calc_fnc>
+                    <type>0</type>
+                    <item>
+                        <host>Template DB Oracle</host>
+                        <key>oracle.system_event[{HOSTNAME},Scheduler]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>7</sortorder>
+                    <drawtype>0</drawtype>
+                    <color>999900</color>
+                    <yaxisside>0</yaxisside>
+                    <calc_fnc>2</calc_fnc>
+                    <type>0</type>
+                    <item>
+                        <host>Template DB Oracle</host>
+                        <key>oracle.system_event[{HOSTNAME},Configuration]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>6</sortorder>
+                    <drawtype>0</drawtype>
+                    <color>FFFF99</color>
+                    <yaxisside>0</yaxisside>
+                    <calc_fnc>2</calc_fnc>
+                    <type>0</type>
+                    <item>
+                        <host>Template DB Oracle</host>
+                        <key>oracle.system_event[{HOSTNAME},Commit]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>4</sortorder>
+                    <drawtype>0</drawtype>
+                    <color>555500</color>
+                    <yaxisside>0</yaxisside>
+                    <calc_fnc>2</calc_fnc>
+                    <type>0</type>
+                    <item>
+                        <host>Template DB Oracle</host>
+                        <key>oracle.system_event[{HOSTNAME},Concurrency]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5529,18 +5529,6 @@ MOUNTED - Instance is successfully serving the disk group to its database client
             <ymax_item_1>0</ymax_item_1>
             <graph_items>
                 <graph_item>
-                    <sortorder>1</sortorder>
-                    <drawtype>5</drawtype>
-                    <color>66FF66</color>
-                    <yaxisside>0</yaxisside>
-                    <calc_fnc>7</calc_fnc>
-                    <type>0</type>
-                    <item>
-                        <host>Template DB Oracle</host>
-                        <key>oracle.osstat_db_load[{HOSTNAME}]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
                     <sortorder>0</sortorder>
                     <drawtype>0</drawtype>
                     <color>FF3333</color>
@@ -5550,6 +5538,18 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <item>
                         <host>Template DB Oracle</host>
                         <key>oracle.osstat_cpu_cores[{HOSTNAME}]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <drawtype>5</drawtype>
+                    <color>66FF66</color>
+                    <yaxisside>0</yaxisside>
+                    <calc_fnc>7</calc_fnc>
+                    <type>0</type>
+                    <item>
+                        <host>Template DB Oracle</host>
+                        <key>oracle.osstat_db_load[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -5608,18 +5608,6 @@ MOUNTED - Instance is successfully serving the disk group to its database client
             </ymax_item_1>
             <graph_items>
                 <graph_item>
-                    <sortorder>1</sortorder>
-                    <drawtype>5</drawtype>
-                    <color>6666FF</color>
-                    <yaxisside>0</yaxisside>
-                    <calc_fnc>2</calc_fnc>
-                    <type>0</type>
-                    <item>
-                        <host>Template DB Oracle</host>
-                        <key>oracle.flash_recovery_used[{HOSTNAME}]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
                     <sortorder>0</sortorder>
                     <drawtype>0</drawtype>
                     <color>FF3333</color>
@@ -5629,6 +5617,18 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <item>
                         <host>Template DB Oracle</host>
                         <key>oracle.flash_recovery_max[{HOSTNAME}]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <drawtype>5</drawtype>
+                    <color>6666FF</color>
+                    <yaxisside>0</yaxisside>
+                    <calc_fnc>2</calc_fnc>
+                    <type>0</type>
+                    <item>
+                        <host>Template DB Oracle</host>
+                        <key>oracle.flash_recovery_used[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -5684,39 +5684,15 @@ MOUNTED - Instance is successfully serving the disk group to its database client
             <ymax_item_1>0</ymax_item_1>
             <graph_items>
                 <graph_item>
-                    <sortorder>0</sortorder>
+                    <sortorder>2</sortorder>
                     <drawtype>0</drawtype>
-                    <color>C80000</color>
+                    <color>0000C8</color>
                     <yaxisside>0</yaxisside>
                     <calc_fnc>7</calc_fnc>
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.librarycache_hitratio_body[{HOSTNAME}]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
-                    <sortorder>4</sortorder>
-                    <drawtype>0</drawtype>
-                    <color>00C8C8</color>
-                    <yaxisside>0</yaxisside>
-                    <calc_fnc>7</calc_fnc>
-                    <type>0</type>
-                    <item>
-                        <host>Template DB Oracle</host>
-                        <key>oracle.librarycache_hitratio_table_procedure[{HOSTNAME}]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
-                    <sortorder>6</sortorder>
-                    <drawtype>2</drawtype>
-                    <color>C8C8C8</color>
-                    <yaxisside>0</yaxisside>
-                    <calc_fnc>7</calc_fnc>
-                    <type>0</type>
-                    <item>
-                        <host>Template DB Oracle</host>
-                        <key>oracle.librarycache_hitratio_total[{HOSTNAME}]</key>
+                        <key>oracle.librarycache_hitratio_queue[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5732,15 +5708,15 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     </item>
                 </graph_item>
                 <graph_item>
-                    <sortorder>2</sortorder>
-                    <drawtype>0</drawtype>
-                    <color>0000C8</color>
+                    <sortorder>6</sortorder>
+                    <drawtype>2</drawtype>
+                    <color>C8C8C8</color>
                     <yaxisside>0</yaxisside>
                     <calc_fnc>7</calc_fnc>
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.librarycache_hitratio_queue[{HOSTNAME}]</key>
+                        <key>oracle.librarycache_hitratio_total[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5767,6 +5743,30 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                         <key>oracle.librarycache_hitratio_trigger[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
+                <graph_item>
+                    <sortorder>4</sortorder>
+                    <drawtype>0</drawtype>
+                    <color>00C8C8</color>
+                    <yaxisside>0</yaxisside>
+                    <calc_fnc>7</calc_fnc>
+                    <type>0</type>
+                    <item>
+                        <host>Template DB Oracle</host>
+                        <key>oracle.librarycache_hitratio_table_procedure[{HOSTNAME}]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>0</sortorder>
+                    <drawtype>0</drawtype>
+                    <color>C80000</color>
+                    <yaxisside>0</yaxisside>
+                    <calc_fnc>7</calc_fnc>
+                    <type>0</type>
+                    <item>
+                        <host>Template DB Oracle</host>
+                        <key>oracle.librarycache_hitratio_body[{HOSTNAME}]</key>
+                    </item>
+                </graph_item>
             </graph_items>
         </graph>
         <graph>
@@ -5788,6 +5788,18 @@ MOUNTED - Instance is successfully serving the disk group to its database client
             <ymax_item_1>0</ymax_item_1>
             <graph_items>
                 <graph_item>
+                    <sortorder>0</sortorder>
+                    <drawtype>0</drawtype>
+                    <color>00C800</color>
+                    <yaxisside>0</yaxisside>
+                    <calc_fnc>2</calc_fnc>
+                    <type>0</type>
+                    <item>
+                        <host>Template DB Oracle</host>
+                        <key>oracle.locks_exclusive[{HOSTNAME}]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
                     <sortorder>1</sortorder>
                     <drawtype>0</drawtype>
                     <color>EE0000</color>
@@ -5797,30 +5809,6 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <item>
                         <host>Template DB Oracle</host>
                         <key>oracle.locks_row_exclusive[{HOSTNAME}]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
-                    <sortorder>3</sortorder>
-                    <drawtype>0</drawtype>
-                    <color>00AAAA</color>
-                    <yaxisside>0</yaxisside>
-                    <calc_fnc>2</calc_fnc>
-                    <type>0</type>
-                    <item>
-                        <host>Template DB Oracle</host>
-                        <key>oracle.locks_srow_exclusive[{HOSTNAME}]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
-                    <sortorder>2</sortorder>
-                    <drawtype>0</drawtype>
-                    <color>9999FF</color>
-                    <yaxisside>0</yaxisside>
-                    <calc_fnc>2</calc_fnc>
-                    <type>0</type>
-                    <item>
-                        <host>Template DB Oracle</host>
-                        <key>oracle.locks_row_share[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -5836,6 +5824,30 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     </item>
                 </graph_item>
                 <graph_item>
+                    <sortorder>2</sortorder>
+                    <drawtype>0</drawtype>
+                    <color>9999FF</color>
+                    <yaxisside>0</yaxisside>
+                    <calc_fnc>2</calc_fnc>
+                    <type>0</type>
+                    <item>
+                        <host>Template DB Oracle</host>
+                        <key>oracle.locks_row_share[{HOSTNAME}]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>3</sortorder>
+                    <drawtype>0</drawtype>
+                    <color>00AAAA</color>
+                    <yaxisside>0</yaxisside>
+                    <calc_fnc>2</calc_fnc>
+                    <type>0</type>
+                    <item>
+                        <host>Template DB Oracle</host>
+                        <key>oracle.locks_srow_exclusive[{HOSTNAME}]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
                     <sortorder>5</sortorder>
                     <drawtype>0</drawtype>
                     <color>000000</color>
@@ -5845,18 +5857,6 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <item>
                         <host>Template DB Oracle</host>
                         <key>oracle.locks_blocking[{HOSTNAME}]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
-                    <sortorder>0</sortorder>
-                    <drawtype>0</drawtype>
-                    <color>00C800</color>
-                    <yaxisside>0</yaxisside>
-                    <calc_fnc>2</calc_fnc>
-                    <type>0</type>
-                    <item>
-                        <host>Template DB Oracle</host>
-                        <key>oracle.locks_exclusive[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -6108,18 +6108,6 @@ MOUNTED - Instance is successfully serving the disk group to its database client
             <ymax_item_1>0</ymax_item_1>
             <graph_items>
                 <graph_item>
-                    <sortorder>0</sortorder>
-                    <drawtype>5</drawtype>
-                    <color>33FF33</color>
-                    <yaxisside>0</yaxisside>
-                    <calc_fnc>7</calc_fnc>
-                    <type>0</type>
-                    <item>
-                        <host>Template DB Oracle</host>
-                        <key>oracle.process_current_processes[{HOSTNAME}]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
                     <sortorder>1</sortorder>
                     <drawtype>0</drawtype>
                     <color>FF3333</color>
@@ -6129,6 +6117,18 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <item>
                         <host>Template DB Oracle</host>
                         <key>oracle.parameters_max_processes[{HOSTNAME}]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>0</sortorder>
+                    <drawtype>5</drawtype>
+                    <color>33FF33</color>
+                    <yaxisside>0</yaxisside>
+                    <calc_fnc>7</calc_fnc>
+                    <type>0</type>
+                    <item>
+                        <host>Template DB Oracle</host>
+                        <key>oracle.process_current_processes[{HOSTNAME}]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -6240,18 +6240,6 @@ MOUNTED - Instance is successfully serving the disk group to its database client
             <ymax_item_1>0</ymax_item_1>
             <graph_items>
                 <graph_item>
-                    <sortorder>4</sortorder>
-                    <drawtype>0</drawtype>
-                    <color>770000</color>
-                    <yaxisside>0</yaxisside>
-                    <calc_fnc>2</calc_fnc>
-                    <type>0</type>
-                    <item>
-                        <host>Template DB Oracle</host>
-                        <key>oracle.memory_dynamic_component[{HOSTNAME},streams pool]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
                     <sortorder>2</sortorder>
                     <drawtype>0</drawtype>
                     <color>00CCCC</color>
@@ -6264,15 +6252,27 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     </item>
                 </graph_item>
                 <graph_item>
-                    <sortorder>0</sortorder>
+                    <sortorder>1</sortorder>
                     <drawtype>0</drawtype>
-                    <color>888800</color>
+                    <color>6666FF</color>
                     <yaxisside>0</yaxisside>
                     <calc_fnc>2</calc_fnc>
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.memory_dynamic_component[{HOSTNAME},large pool]</key>
+                        <key>oracle.memory_dynamic_component[{HOSTNAME},java pool]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>4</sortorder>
+                    <drawtype>0</drawtype>
+                    <color>770000</color>
+                    <yaxisside>0</yaxisside>
+                    <calc_fnc>2</calc_fnc>
+                    <type>0</type>
+                    <item>
+                        <host>Template DB Oracle</host>
+                        <key>oracle.memory_dynamic_component[{HOSTNAME},streams pool]</key>
                     </item>
                 </graph_item>
                 <graph_item>
@@ -6288,15 +6288,15 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     </item>
                 </graph_item>
                 <graph_item>
-                    <sortorder>1</sortorder>
+                    <sortorder>0</sortorder>
                     <drawtype>0</drawtype>
-                    <color>6666FF</color>
+                    <color>888800</color>
                     <yaxisside>0</yaxisside>
                     <calc_fnc>2</calc_fnc>
                     <type>0</type>
                     <item>
                         <host>Template DB Oracle</host>
-                        <key>oracle.memory_dynamic_component[{HOSTNAME},java pool]</key>
+                        <key>oracle.memory_dynamic_component[{HOSTNAME},large pool]</key>
                     </item>
                 </graph_item>
             </graph_items>
