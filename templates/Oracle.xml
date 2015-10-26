@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>2.0</version>
-    <date>2015-10-20T10:43:24Z</date>
+    <date>2015-10-26T10:09:38Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -4217,7 +4217,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                         </trigger_prototype>
                         <trigger_prototype>
                             <expression>{Template DB Oracle:oracle.asm_diskgroup_usedmb[{HOSTNAME},{#ASMDGNAME}].last()}&gt;({Template DB Oracle:oracle.asm_diskgroup_totalmb[{HOSTNAME},{#ASMDGNAME}].last()}*0.95)</expression>
-                            <name>Free space in ASM diskgroup {#ASMDGNAME} is less than 5% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
+                            <name>Free space in ASM diskgroup {#ASMDGNAME} is less than 5% ({ITEM.LASTVALUE} of {ITEM.LASTVALUE2} used) on {HOST.NAME}</name>
                             <url/>
                             <status>0</status>
                             <priority>4</priority>
@@ -4226,7 +4226,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                         </trigger_prototype>
                         <trigger_prototype>
                             <expression>({Template DB Oracle:oracle.asm_diskgroup_usedmb[{HOSTNAME},{#ASMDGNAME}].last()}&gt;({Template DB Oracle:oracle.asm_diskgroup_totalmb[{HOSTNAME},{#ASMDGNAME}].last()}*0.90)) and ({Template DB Oracle:oracle.asm_diskgroup_usedmb[{HOSTNAME},{#ASMDGNAME}].last()}&lt;({Template DB Oracle:oracle.asm_diskgroup_totalmb[{HOSTNAME},{#ASMDGNAME}].last()}*0.96))</expression>
-                            <name>Free space in ASM diskgroup {#ASMDGNAME} is less than 10% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
+                            <name>Free space in ASM diskgroup {#ASMDGNAME} is less than 10% ({ITEM.LASTVALUE} of {ITEM.LASTVALUE2} used) on {HOST.NAME}</name>
                             <url/>
                             <status>0</status>
                             <priority>2</priority>
@@ -4458,7 +4458,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <trigger_prototypes>
                         <trigger_prototype>
                             <expression>{Template DB Oracle:oracle.tablespace_used_size[{HOSTNAME},{#TBSNAME}].last(0)}&gt;({Template DB Oracle:oracle.tablespace_max_size[{HOSTNAME},{#TBSNAME}].last(0)}*0.95)</expression>
-                            <name>Free space in tablespace {#TBSNAME} is less than 5% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
+                            <name>Free space in tablespace {#TBSNAME} is less than 5% ({ITEM.LASTVALUE} of {ITEM.LASTVALUE2} used) on {HOST.NAME}</name>
                             <url/>
                             <status>0</status>
                             <priority>4</priority>
@@ -4467,7 +4467,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                         </trigger_prototype>
                         <trigger_prototype>
                             <expression>({Template DB Oracle:oracle.tablespace_used_size[{HOSTNAME},{#TBSNAME}].last(0)}&gt;({Template DB Oracle:oracle.tablespace_max_size[{HOSTNAME},{#TBSNAME}].last(0)}*0.90)) and ({Template DB Oracle:oracle.tablespace_used_size[{HOSTNAME},{#TBSNAME}].last(0)}&lt;({Template DB Oracle:oracle.tablespace_max_size[{HOSTNAME},{#TBSNAME}].last(0)}*0.96))</expression>
-                            <name>Free space in tablespace {#TBSNAME} is less than 10% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
+                            <name>Free space in tablespace {#TBSNAME} is less than 10% ({ITEM.LASTVALUE} of {ITEM.LASTVALUE2} used) on {HOST.NAME}</name>
                             <url/>
                             <status>0</status>
                             <priority>2</priority>
@@ -4708,7 +4708,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                     <trigger_prototypes>
                         <trigger_prototype>
                             <expression>{Template DB Oracle:oracle.tempspace_used_size[{HOSTNAME},{#TMPSNAME}].last(0)}&gt;({Template DB Oracle:oracle.tempspace_max_size[{HOSTNAME},{#TMPSNAME}].last(0)}*0.95)</expression>
-                            <name>Free space in tempspace {#TMPSNAME} is less than 5% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
+                            <name>Free space in tempspace {#TMPSNAME} is less than 5% ({ITEM.LASTVALUE} of {ITEM.LASTVALUE2} used) on {HOST.NAME}</name>
                             <url/>
                             <status>0</status>
                             <priority>4</priority>
@@ -4717,7 +4717,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
                         </trigger_prototype>
                         <trigger_prototype>
                             <expression>({Template DB Oracle:oracle.tempspace_used_size[{HOSTNAME},{#TMPSNAME}].last(0)}&gt;({Template DB Oracle:oracle.tempspace_max_size[{HOSTNAME},{#TMPSNAME}].last(0)}*0.90)) and ({Template DB Oracle:oracle.tempspace_used_size[{HOSTNAME},{#TMPSNAME}].last(0)}&lt;({Template DB Oracle:oracle.tempspace_max_size[{HOSTNAME},{#TMPSNAME}].last(0)}*0.96))</expression>
-                            <name>Free space in tempspace {#TMPSNAME} is less than 10% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
+                            <name>Free space in tempspace {#TMPSNAME} is less than 10% ({ITEM.LASTVALUE} of {ITEM.LASTVALUE2} used) on {HOST.NAME}</name>
                             <url/>
                             <status>0</status>
                             <priority>2</priority>
@@ -5245,7 +5245,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
         </trigger>
         <trigger>
             <expression>{Template DB Oracle:oracle.used_db_files[{HOSTNAME}].last(0)}&gt;({Template DB Oracle:oracle.parameters_max_db_files[{HOSTNAME}].last(0)}*0.90)</expression>
-            <name>DB files used &gt; 90%  ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
+            <name>DB files used &gt; 90%  ({ITEM.LASTVALUE} of {ITEM.LASTVALUE2} used) on {HOST.NAME}</name>
             <url/>
             <status>0</status>
             <priority>2</priority>
@@ -5255,7 +5255,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
         </trigger>
         <trigger>
             <expression>{Template DB Oracle:oracle.flash_recovery_used[{HOSTNAME}].last(0)}&gt;({Template DB Oracle:oracle.flash_recovery_max[{HOSTNAME}].last(0)}*0.90)</expression>
-            <name>Flash recovery area used &gt; 90% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
+            <name>Flash recovery area used &gt; 90% ({ITEM.LASTVALUE} of {ITEM.LASTVALUE2} used) on {HOST.NAME}</name>
             <url/>
             <status>0</status>
             <priority>4</priority>
@@ -5295,7 +5295,7 @@ MOUNTED - Instance is successfully serving the disk group to its database client
         </trigger>
         <trigger>
             <expression>{Template DB Oracle:oracle.process_current_processes[{HOSTNAME}].last(0)}&gt;({Template DB Oracle:oracle.parameters_max_processes[{HOSTNAME}].last(0)}*0.90)</expression>
-            <name>Processes used &gt; 90% ({ITEM.LASTVALUE}) on {HOST.NAME}</name>
+            <name>Processes used &gt; 90% ({ITEM.LASTVALUE} of {ITEM.LASTVALUE2} used) on {HOST.NAME}</name>
             <url/>
             <status>0</status>
             <priority>2</priority>
