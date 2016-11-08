@@ -1,0 +1,26 @@
+#This file will be build by the puppet code
+[common]
+listen_ip       = 127.0.0.1
+listen_port     = 10050
+zabbix_agent    = 127.0.0.1
+zabbix_port     = 10053
+
+#Sections should be defined as follows:
+# [dbtype.name]
+# Supported dbtypes currently are:
+# - Oracle (name = sid)
+# - Postgres (name = dbname)
+
+[oracle.sid]
+#user     = mios
+#password = m0n1t0R
+#host     = localhost
+#port     = 1521
+#service  = sid.example.com
+#oa_dir   = /opt/oracle/admin
+
+#[postgres.postgres]
+#user     = postgres
+#password = postgres
+#host     = localhost
+#port     = 5432

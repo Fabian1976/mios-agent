@@ -1,6 +1,6 @@
 Name:		mios-agent
-Version:        4.2
-Release:	1%{?dist}
+Version:        4.3
+Release:	1%
 Group:		None
 Summary:	A python program which is used for Zabbix monitoring software with improved capability in stead of zabbix-agent
 Group:		MIOS-utils
@@ -11,6 +11,7 @@ URL:		http://www.vermont24-7.com
 Requires(pre):	shadow-utils
 BuildRoot:	%{_topdir}/BUILD/%{name}-%{version}
 %define _rpmfilename %%{NAME}-%%{VERSION}.%%{ARCH}.rpm
+%define _unpackaged_files_terminate_build 0
 
 %description
 This python program is a proxy between the Zabbix server and Zabbix agent. It provides improved connectivity to
@@ -32,8 +33,8 @@ mkdir -p %{buildroot}/opt/mios/mios-agent/lib/simplejson/
 mkdir -p %{buildroot}/opt/mios/mios-agent/probes/
 mkdir -p %{buildroot}/usr/local/bin/
 cp /opt/mios/mios-agent/bin/mios-agent %{buildroot}/opt/mios/mios-agent/bin/
-cp /opt/mios/mios-agent/conf/logging.conf %{buildroot}/opt/mios/mios-agent/conf/
-cp /opt/mios/mios-agent/conf/mios-agent.conf %{buildroot}/opt/mios/mios-agent/conf/
+cp /opt/mios/mios-agent/conf/logging.conf.example %{buildroot}/opt/mios/mios-agent/conf/
+cp /opt/mios/mios-agent/conf/mios-agent.conf.example %{buildroot}/opt/mios/mios-agent/conf/
 cp /opt/mios/mios-agent/init.d/mios-agent %{buildroot}/opt/mios/mios-agent/init.d/
 cp /opt/mios/mios-agent/lib/daemon.py %{buildroot}/opt/mios/mios-agent/lib/
 cp /opt/mios/mios-agent/lib/cx_Oracle_el5.so %{buildroot}/opt/mios/mios-agent/lib/
@@ -52,8 +53,8 @@ rm -rf %{buildroot}
 
 %files
 /opt/mios/mios-agent/bin/mios-agent
-%config(noreplace) /opt/mios/mios-agent/conf/logging.conf
-%config(noreplace) /opt/mios/mios-agent/conf/mios-agent.conf
+/opt/mios/mios-agent/conf/logging.conf.example
+/opt/mios/mios-agent/conf/mios-agent.conf.example
 /opt/mios/mios-agent/init.d/mios-agent
 /opt/mios/mios-agent/lib/daemon.py
 /opt/mios/mios-agent/lib/cx_Oracle_el5.so
@@ -86,7 +87,7 @@ echo "#export ORACLE_HOME=\$ORACLE_BASE/product/\$ORACLE_VERSION/db" >> /opt/mio
 echo "#export ORACLE_SID=DBNAAM" >> /opt/mios/.bash_profile
 echo "#export LD_LIBRARY_PATH=\$ORACLE_HOME/lib" >> /opt/mios/.bash_profile
 echo -e "\nPlease set the ORACLE environment if you wish to monitor an Oracle database in /opt/mios/.bash_profile\n"
-echo -e "Make the appropiate changes in /opt/mios/mios-agent/conf/mios-agent.conf and then start the agent as follows:"
+echo -e "Create /opt/mios/mios-agent/conf/mios-agent.conf and logging.conf based on the exmaples in the same folder. Then start the agent as follows:"
 echo -e "    /etc/init.d/mios-agent start\n"
 echo -e "The mios-agent service had been added to chkconfig so it will autostart at future reboots.\n"
 echo -e "The log can be viewed with the command \"magentlog\""

@@ -45,7 +45,7 @@
 
 __author__    = "Jan van de Beek, Fabian van der Hoeven"
 __copyright__ = "Copyright (C) 2013 Vermont 24x7"
-__version__   = "4.2"
+__version__   = "4.3"
 supportedOS   = ['redhat', 'centos']
 supportedDIST = ['5', '6', '7']
 
