@@ -18,8 +18,8 @@ This python program is a proxy between the Zabbix server and Zabbix agent. It pr
 Oracle databases and Postgres databases.
 
 %pre
-/usr/bin/getent group vermont > /dev/null || /usr/sbin/groupadd -g 400 vermont
-/usr/bin/getent passwd mios > /dev/null || /usr/sbin/useradd -g vermont -d /opt/mios -s /bin/bash -m mios
+/usr/bin/getent group mios > /dev/null || /usr/sbin/groupadd -g 400 mios
+/usr/bin/getent passwd mios > /dev/null || /usr/sbin/useradd -g mios -d /opt/mios -s /bin/bash -m mios
 
 %build
 
@@ -71,11 +71,11 @@ rm -rf %{buildroot}
 ln -s /opt/mios/mios-agent/init.d/mios-agent /etc/init.d/mios-agent
 mkdir -p -m 775 /var/log/mios
 mkdir -p -m 770 /var/run/mios
-chown -R mios:vermont /opt/mios
-chown mios:vermont /var/log/mios
-chown mios:vermont /var/run/mios
+chown -R mios:mios /opt/mios
+chown mios:mios /var/log/mios
+chown mios:mios /var/run/mios
 chmod -R 770 /opt/mios
-chown mios:vermont /usr/local/bin/magentlog
+chown mios:mios /usr/local/bin/magentlog
 chmod 775 /usr/local/bin/magentlog
 
 /sbin/chkconfig --add mios-agent
@@ -111,6 +111,11 @@ fi
 rm -f /usr/local/bin/magentlog
 
 %changelog
+* Tue Nov 08 2016 Vermont 24-7 <support@vermont24-7.com> 4.3
+- Made triggers in templates better readable
+- Fixed ASM diskgroup monitoring
+- Updated some templates
+- Removed distribution code from rpm spec
 * Thu Sep 17 2015 Vermont 24-7 <support@vermont24-7.com> 4.2
 - Added additional library's
 * Tue Oct 08 2013 Vermont 24-7 <support@vermont24-7.com> 1.0
