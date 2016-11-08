@@ -1,6 +1,6 @@
 Name:		mios-agent
 Version:        4.3
-Release:	1%
+Release:	2
 Group:		None
 Summary:	A python program which is used for Zabbix monitoring software with improved capability in stead of zabbix-agent
 Group:		MIOS-utils
@@ -86,7 +86,8 @@ echo "#export ORACLE_VERSION=11.2.0.3" >> /opt/mios/.bash_profile
 echo "#export ORACLE_HOME=\$ORACLE_BASE/product/\$ORACLE_VERSION/db" >> /opt/mios/.bash_profile
 echo "#export ORACLE_SID=DBNAAM" >> /opt/mios/.bash_profile
 echo "#export LD_LIBRARY_PATH=\$ORACLE_HOME/lib" >> /opt/mios/.bash_profile
-echo -e "\nPlease set the ORACLE environment if you wish to monitor an Oracle database in /opt/mios/.bash_profile\n"
+echo -e "\nPlease set the ORACLE environment if you wish to monitor an Oracle database in /opt/mios/.bash_profile."
+echo -e "Also make sure user mios can read the \$ORACLE_HOME/lib folder.\n"
 echo -e "Create /opt/mios/mios-agent/conf/mios-agent.conf and logging.conf based on the exmaples in the same folder. Then start the agent as follows:"
 echo -e "    /etc/init.d/mios-agent start\n"
 echo -e "The mios-agent service had been added to chkconfig so it will autostart at future reboots.\n"
