@@ -1,4 +1,4 @@
-#MIOS-agent
+# MIOS-agent
 
 The MIOS-agent is mainly an addition to the Zabbix-agent and functions as a proxy between the Zabbix-server and agent. It's primary goal is to provide connection pooling to several database backends.
 
@@ -12,7 +12,7 @@ Oracle:
 - Auto discovery of ASM diskgroups
 - Auto discovery of ASM disks
 - Auto discovery of Advanced Queuing
-- Monitoring if cache hitratio's
+- Monitoring of cache hitratio's
 - PGA/SGA monitoring
 - Flash recovery monitoring
 - Process and session monitoring
@@ -29,19 +29,10 @@ PostgreSQL:
 - Replication status monitoring
 - Cache hitratio monitoring
 
-MongoDB:
-- Still very limited and still in progess. Not usable yet and no template available yet
-
-<<<<<<< HEAD
-It has branches for el5 (CentOS or RedHat 5, python 2.4) and el6 (CentOS or RedHat 6, python 2.6)
-=======
-This version works on CentOS or Redhat 5, python 2.4 and Centos or Redhat 6, python 2.6.
->>>>>>> release-4.2
-
-##Installation
+## Installation
 There are several ways to install this. Install it on the DB node where a zabbix-agent is allready present.
 
-###Building the RPM
+### Building the RPM
 You can clone this repo:
 ```
 git clone https://github.com/Fabian1976/mios-agent.git
@@ -110,7 +101,7 @@ Now you can start the mios-agent (don't forget to restart the zabbix-agent first
 ```
 You can view the log in /var/log/mios/mios-agent.log (or use the command magentlog). stdout and stderr are written to /tmp/mios-agent.stdout(err)
 
-###Manual installation
+### Manual installation
 
 Or you can install everything manually like follows:
 - Create a user called mios with it's home folder set to "/opt/mios"
@@ -198,14 +189,14 @@ Now you can start the mios-agent (don't forget to restart the zabbix-agent first
 ```
 You can view the log in /var/log/mios/mios-agent.log (or use the command magentlog). stdout and stderr are written to /tmp/mios-agent.stdout(err)
 
-##Using the templates
+## Using the templates
 The templates used by Zabbix are in the templates folder of this repo (who would of thought).
 
 Import these template on the Zabbix-server. First import the Oracle.xml of Postgres.xml template, and then the Oracle SID discovery.xml and Postgres DB discovery.xml templates.
 
 Assign the Oracle SID discovery template to the host on which the mios-agent was installed, and wait for the auto-discovery to complete (usualy within the hour).
 
-##How does the mios-agent work
+## How does the mios-agent work
 When you add the SID discovery template to a host, it will sent this request to the agent:
 ```
 oracle.sid_discover
@@ -244,6 +235,6 @@ You can also build custom probes for your own tables like this.
 
 There is also a file called sync_probes in the probes folder. This can be used to sync probes from a different server to the Oracle server.
 
-##Todo:
+## Todo:
 Make the mios-agent more efficient. An example:
 To monitor a tablespace, the agent now uses 3 querys per tablespace. In the future this will be 1 query to gather all info. This will be modified in the agent. No template modification will be necessary. The same goes for the ASM monitoring.
